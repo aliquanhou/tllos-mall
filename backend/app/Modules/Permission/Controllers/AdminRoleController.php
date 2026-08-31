@@ -1,13 +1,13 @@
 <?php
 namespace App\Modules\Permission\Controllers;
 use App\Core\Controllers\BaseController;
-use App\Modules\Permission\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 class AdminRoleController extends BaseController
 {
     public function index(Request $request)
     {
-        $query = Role::query();
+        $query = DB::table('roles');
         if ($request->keyword) $query->where('name', 'like', '%'.$request->keyword.'%');
         if ($request->status !== null) $query->where('status', $request->status);
         $list = $query->orderBy('id', 'desc')->paginate($request->limit ?? 20);
@@ -15,27 +15,32 @@ class AdminRoleController extends BaseController
     }
     public function show($id)
     {
-        $item = Role::find($id);
-        if (!$item) return $this->error('角色管理不存在');
+        $item = DB::table('roles')->where('id', $id)->first();
+        if (!$item) return $this->error('数据不存在');
         return $this->success($item);
     }
     public function store(Request $request)
     {
-        $item = Role::create($request->all());
-        return $this->success($item, '创建成功');
+        $data = $request->all();
+        $data['created_at'] = now();
+        $data['updated_at'] = now();
+        $id = DB::table('roles')->insertGetId($data);
+        return $this->success(DB::table('roles')->where('id', $id)->first(), '创建成功');
     }
     public function update(Request $request, $id)
     {
-        $item = Role::find($id);
-        if (!$item) return $this->error('角色管理不存在');
-        $item->update($request->all());
-        return $this->success($item, '更新成功');
+        $item = DB::table('roles')->where('id', $id)->first();
+        if (!$item) return $this->error('数据不存在');
+        $data = $request->all();
+        $data['updated_at'] = now();
+        DB::table('roles')->where('id', $id)->update($data);
+        return $this->success(DB::table('roles')->where('id', $id)->first(), '更新成功');
     }
     public function destroy($id)
     {
-        $item = Role::find($id);
-        if (!$item) return $this->error('角色管理不存在');
-        $item->delete();
+        $item = DB::table('roles')->where('id', $id)->first();
+        if (!$item) return $this->error('数据不存在');
+        DB::table('roles')->where('id', $id)->delete();
         return $this->success(null, '删除成功');
     }
 }

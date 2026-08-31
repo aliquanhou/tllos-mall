@@ -1,13 +1,13 @@
 <?php
 namespace App\Modules\Application\Controllers;
 use App\Core\Controllers\BaseController;
-use App\Modules\Application\Models\Notice;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 class AdminNoticeController extends BaseController
 {
     public function index(Request $request)
     {
-        $query = Notice::query();
+        $query = DB::table('notices');
         if ($request->keyword) $query->where('name', 'like', '%'.$request->keyword.'%');
         if ($request->status !== null) $query->where('status', $request->status);
         $list = $query->orderBy('id', 'desc')->paginate($request->limit ?? 20);
@@ -15,27 +15,32 @@ class AdminNoticeController extends BaseController
     }
     public function show($id)
     {
-        $item = Notice::find($id);
-        if (!$item) return $this->error('消息管理不存在');
+        $item = DB::table('notices')->where('id', $id)->first();
+        if (!$item) return $this->error('数据不存在');
         return $this->success($item);
     }
     public function store(Request $request)
     {
-        $item = Notice::create($request->all());
-        return $this->success($item, '创建成功');
+        $data = $request->all();
+        $data['created_at'] = now();
+        $data['updated_at'] = now();
+        $id = DB::table('notices')->insertGetId($data);
+        return $this->success(DB::table('notices')->where('id', $id)->first(), '创建成功');
     }
     public function update(Request $request, $id)
     {
-        $item = Notice::find($id);
-        if (!$item) return $this->error('消息管理不存在');
-        $item->update($request->all());
-        return $this->success($item, '更新成功');
+        $item = DB::table('notices')->where('id', $id)->first();
+        if (!$item) return $this->error('数据不存在');
+        $data = $request->all();
+        $data['updated_at'] = now();
+        DB::table('notices')->where('id', $id)->update($data);
+        return $this->success(DB::table('notices')->where('id', $id)->first(), '更新成功');
     }
     public function destroy($id)
     {
-        $item = Notice::find($id);
-        if (!$item) return $this->error('消息管理不存在');
-        $item->delete();
+        $item = DB::table('notices')->where('id', $id)->first();
+        if (!$item) return $this->error('数据不存在');
+        DB::table('notices')->where('id', $id)->delete();
         return $this->success(null, '删除成功');
     }
 }

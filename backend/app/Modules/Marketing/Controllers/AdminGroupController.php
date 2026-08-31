@@ -1,13 +1,13 @@
 <?php
 namespace App\Modules\Marketing\Controllers;
 use App\Core\Controllers\BaseController;
-use App\Modules\Marketing\Models\Group;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 class AdminGroupController extends BaseController
 {
     public function index(Request $request)
     {
-        $query = Group::query();
+        $query = DB::table('groups');
         if ($request->keyword) $query->where('name', 'like', '%'.$request->keyword.'%');
         if ($request->status !== null) $query->where('status', $request->status);
         $list = $query->orderBy('id', 'desc')->paginate($request->limit ?? 20);
@@ -15,27 +15,32 @@ class AdminGroupController extends BaseController
     }
     public function show($id)
     {
-        $item = Group::find($id);
-        if (!$item) return $this->error('拼团活动不存在');
+        $item = DB::table('groups')->where('id', $id)->first();
+        if (!$item) return $this->error('数据不存在');
         return $this->success($item);
     }
     public function store(Request $request)
     {
-        $item = Group::create($request->all());
-        return $this->success($item, '创建成功');
+        $data = $request->all();
+        $data['created_at'] = now();
+        $data['updated_at'] = now();
+        $id = DB::table('groups')->insertGetId($data);
+        return $this->success(DB::table('groups')->where('id', $id)->first(), '创建成功');
     }
     public function update(Request $request, $id)
     {
-        $item = Group::find($id);
-        if (!$item) return $this->error('拼团活动不存在');
-        $item->update($request->all());
-        return $this->success($item, '更新成功');
+        $item = DB::table('groups')->where('id', $id)->first();
+        if (!$item) return $this->error('数据不存在');
+        $data = $request->all();
+        $data['updated_at'] = now();
+        DB::table('groups')->where('id', $id)->update($data);
+        return $this->success(DB::table('groups')->where('id', $id)->first(), '更新成功');
     }
     public function destroy($id)
     {
-        $item = Group::find($id);
-        if (!$item) return $this->error('拼团活动不存在');
-        $item->delete();
+        $item = DB::table('groups')->where('id', $id)->first();
+        if (!$item) return $this->error('数据不存在');
+        DB::table('groups')->where('id', $id)->delete();
         return $this->success(null, '删除成功');
     }
 }
