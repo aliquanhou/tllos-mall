@@ -24,7 +24,7 @@ class ProductController extends BaseController
         elseif ($sort == 'price_asc') $query->orderBy('price', 'asc');
         elseif ($sort == 'price_desc') $query->orderBy('price', 'desc');
         elseif ($sort == 'new') $query->orderBy('created_at', 'desc');
-        else $query->orderBy('sort', 'desc')->orderBy('id', 'desc');
+        else $query->orderBy('id', 'desc');
 
         $page = $request->page ?: 1;
         $limit = $request->limit ?: 20;

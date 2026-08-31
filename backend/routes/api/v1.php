@@ -488,3 +488,52 @@ Route::prefix('admin/admin-dept')->middleware('auth:sanctum')->group(function ()
         return response()->json(['code'=>200,'message'=>'success','data'=>['list'=>$list,'total'=>count($list)]]);
     });
 });
+
+// 用户端 - 地址管理
+Route::middleware('auth:sanctum')->group(function() {
+    Route::get('/user/addresses', [\App\Modules\UserCenter\Controllers\AddressController::class,'lists']);
+    Route::post('/user/addresses', [\App\Modules\UserCenter\Controllers\AddressController::class,'add']);
+    Route::put('/user/addresses/{id}', [\App\Modules\UserCenter\Controllers\AddressController::class,'edit']);
+    Route::delete('/user/addresses/{id}', [\App\Modules\UserCenter\Controllers\AddressController::class,'delete']);
+    Route::get('/user/addresses/{id}', [\App\Modules\UserCenter\Controllers\AddressController::class,'detail']);
+    // 收藏
+    Route::get('/user/collects', [\App\Modules\UserCenter\Controllers\CollectController::class,'lists']);
+    Route::post('/user/collects', [\App\Modules\UserCenter\Controllers\CollectController::class,'add']);
+    Route::post('/user/collects/cancel', [\App\Modules\UserCenter\Controllers\CollectController::class,'cancel']);
+    Route::delete('/user/collects/{id}', [\App\Modules\UserCenter\Controllers\CollectController::class,'delete']);
+    // 优惠券
+    Route::get('/user/coupons', [\App\Modules\UserCenter\Controllers\UserCouponController::class,'lists']);
+    Route::post('/user/coupons/receive', [\App\Modules\UserCenter\Controllers\UserCouponController::class,'receive']);
+    // 用户中心
+    Route::get('/user/center', [\App\Modules\UserCenter\Controllers\UserCenterController::class,'center']);
+    Route::get('/user/info', [\App\Modules\UserCenter\Controllers\UserCenterController::class,'info']);
+    Route::put('/user/info', [\App\Modules\UserCenter\Controllers\UserCenterController::class,'updateInfo']);
+    // 售后
+    Route::get('/user/after-sale', [\App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'lists']);
+    Route::post('/user/after-sale', [\App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'add']);
+    Route::get('/user/after-sale/{id}', [\App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'detail']);
+    Route::post('/user/after-sale/{id}/cancel', [\App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'cancel']);
+});
+
+// 商家端API
+Route::prefix('merchant')->group(function() {
+    Route::post('/login', [\App\Modules\Merchant\Controllers\MerchantAuthController::class,'login']);
+    Route::middleware('auth:sanctum')->group(function() {
+        Route::post('/logout', [\App\Modules\Merchant\Controllers\MerchantAuthController::class,'logout']);
+        Route::get('/info', [\App\Modules\Merchant\Controllers\MerchantAuthController::class,'info']);
+        Route::get('/workbench', [\App\Modules\Merchant\Controllers\MerchantWorkbenchController::class,'index']);
+        // 商品管理
+        Route::get('/goods', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'lists']);
+        Route::post('/goods', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'add']);
+        Route::put('/goods/{id}', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'edit']);
+        Route::delete('/goods/{id}', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'delete']);
+        Route::get('/goods/{id}', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'detail']);
+        // 订单管理
+        Route::get('/orders', [\App\Modules\Merchant\Controllers\MerchantOrderController::class,'lists']);
+        Route::get('/orders/{id}', [\App\Modules\Merchant\Controllers\MerchantOrderController::class,'detail']);
+        Route::post('/orders/{id}/ship', [\App\Modules\Merchant\Controllers\MerchantOrderController::class,'ship']);
+        // 店铺管理
+        Route::get('/shop', [\App\Modules\Merchant\Controllers\MerchantShopController::class,'detail']);
+        Route::put('/shop', [\App\Modules\Merchant\Controllers\MerchantShopController::class,'edit']);
+    });
+});

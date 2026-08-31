@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 class ApplicationController extends BaseController
 {
     public function depositList(Request $request) {
-        $query = DB::table('user_balances as ub')->join('users as u','ub.user_id','=','u.id')->select('ub.*','u.nickname','u.mobile');
+        $query = DB::table('user_recharges as ub')->join('users as u','ub.user_id','=','u.id')->select('ub.*','u.nickname','u.mobile');
         if ($request->filled('keyword')) $query->where(function($q)use($request){$q->where('u.nickname','like','%'.$request->keyword.'%')->orWhere('u.mobile','like','%'.$request->keyword.'%');});
         $total = $query->count(); $page=$request->get('page',1); $limit=$request->get('limit',20);
         $list = $query->orderBy('ub.id','desc')->offset(($page-1)*$limit)->limit($limit)->get();

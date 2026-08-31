@@ -4,27 +4,23 @@ vendor/
 
 # Environment
 .env
+.env.backup
 .env.local
-.env.*.local
 
 # Build outputs
 admin/dist/
 merchant/dist/
 h5/dist/
+backend/public/build/
 
 # Logs
-storage/logs/*.log
 backend/storage/logs/*.log
-
-# Cache
-storage/framework/cache/
-storage/framework/sessions/
-storage/framework/views/
-bootstrap/cache/
-backend/storage/framework/cache/
-backend/storage/framework/sessions/
-backend/storage/framework/views/
-backend/bootstrap/cache/
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+!backend/storage/framework/cache/.gitkeep
+!backend/storage/framework/sessions/.gitkeep
+!backend/storage/framework/views/.gitkeep
 
 # IDE
 .idea/
@@ -36,7 +32,13 @@ backend/bootstrap/cache/
 .DS_Store
 Thumbs.db
 
+# SSH
+*.pem
+*.key
+
+# Database
+*.sql
+*.sqlite
+
 # Temp
-*.tmp
-*.bak
-seed_data.php
+/tmp/

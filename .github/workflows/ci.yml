@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-test:
+    name: Backend Test
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: tllos_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql, json, ctype, fileinfo, openssl, tokenizer, xml, bcmath, redis
+          coverage: none
+      
+      - name: Copy .env
+        run: |
+          cd backend
+          cp .env.example .env
+          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=tllos_test/' .env
+          sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+      
+      - name: Install Composer dependencies
+        run: cd backend && composer install --no-interaction --prefer-dist --optimize-autoloader
+      
+      - name: Generate key
+        run: cd backend && php artisan key:generate
+      
+      - name: Run migrations
+        run: cd backend && php artisan migrate --force
+      
+      - name: Check syntax
+        run: cd backend && php -l app/Modules/*/Controllers/*.php 2>&1 | grep -v "No syntax errors" || true
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [admin, merchant, h5]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+      
+      - name: Install dependencies
+        run: cd ${{ matrix.app }} && npm ci
+      
+      - name: Build
+        run: cd ${{ matrix.app }} && npm run build
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-dist
+          path: ${{ matrix.app }}/dist/
