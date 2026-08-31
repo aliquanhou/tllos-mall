@@ -82,4 +82,21 @@ class AdminProductController extends BaseController
         $product->save();
         return $this->success(['status' => $product->status], '操作成功');
     }
+
+    public function batchUpdate(Request $request)
+    {
+        $ids = $request->input("ids", []);
+        $data = $request->except("ids");
+        if (empty($ids)) return $this->error("请选择商品");
+        \App\Modules\Product\Models\Product::whereIn("id", $ids)->update($data);
+        return $this->success(["updated" => count($ids)]);
+    }
+
+    public function batchDelete(Request $request)
+    {
+        $ids = $request->input("ids", []);
+        if (empty($ids)) return $this->error("请选择商品");
+        \App\Modules\Product\Models\Product::whereIn("id", $ids)->delete();
+        return $this->success(["deleted" => count($ids)]);
+    }
 }
