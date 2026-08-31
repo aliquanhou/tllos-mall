@@ -141,3 +141,14 @@ Route::prefix('admin/coupons')->middleware('auth:sanctum')->group(function () {
     Route::post('/{id}/toggle-status', [App\Modules\Marketing\Controllers\CouponController::class, 'toggleStatus']);
     Route::delete('/{id}', [App\Modules\Marketing\Controllers\CouponController::class, 'destroy']);
 });
+
+// 财务管理
+Route::prefix('admin/finance')->middleware('auth:sanctum')->group(function () {
+    Route::get('/income', [App\Modules\Finance\Controllers\FinanceController::class, 'income']);
+    Route::get('/refund', [App\Modules\Finance\Controllers\FinanceController::class, 'refund']);
+    Route::get('/withdraw', [App\Modules\Finance\Controllers\FinanceController::class, 'withdraw']);
+    Route::post('/withdraw/{id}/audit', [App\Modules\Finance\Controllers\FinanceController::class, 'withdrawAudit']);
+    Route::post('/withdraw/{id}/pay', [App\Modules\Finance\Controllers\FinanceController::class, 'withdrawPay']);
+    Route::get('/settlement', [App\Modules\Finance\Controllers\FinanceController::class, 'settlement']);
+    Route::post('/settlement/{id}/confirm', [App\Modules\Finance\Controllers\FinanceController::class, 'settlementConfirm']);
+});
