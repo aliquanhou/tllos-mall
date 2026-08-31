@@ -120,3 +120,13 @@ Route::prefix('admin/comments')->middleware('auth:sanctum')->group(function () {
     Route::post('/{id}/toggle-show', [App\Modules\Product\Controllers\CommentController::class, 'toggleShow']);
     Route::delete('/{id}', [App\Modules\Product\Controllers\CommentController::class, 'destroy']);
 });
+
+// 商家管理
+Route::prefix('admin/merchants')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Merchant\Controllers\MerchantController::class, 'index']);
+    Route::get('/{id}', [App\Modules\Merchant\Controllers\MerchantController::class, 'show']);
+    Route::post('/{id}/audit', [App\Modules\Merchant\Controllers\MerchantController::class, 'audit']);
+    Route::post('/{id}/toggle-status', [App\Modules\Merchant\Controllers\MerchantController::class, 'toggleStatus']);
+    Route::put('/{id}', [App\Modules\Merchant\Controllers\MerchantController::class, 'update']);
+    Route::delete('/{id}', [App\Modules\Merchant\Controllers\MerchantController::class, 'destroy']);
+});
