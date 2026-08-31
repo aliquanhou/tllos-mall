@@ -102,3 +102,21 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::put('/users/{id}', [\App\Modules\User\Controllers\AdminUserController::class, 'update']);
     Route::post('/users/{id}/toggle-status', [\App\Modules\User\Controllers\AdminUserController::class, 'toggleStatus']);
 });
+
+// 商品分类管理
+Route::prefix('admin/categories')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Product\Controllers\CategoryController::class, 'index']);
+    Route::get('/tree', [App\Modules\Product\Controllers\CategoryController::class, 'tree']);
+    Route::post('/', [App\Modules\Product\Controllers\CategoryController::class, 'store']);
+    Route::put('/{id}', [App\Modules\Product\Controllers\CategoryController::class, 'update']);
+    Route::delete('/{id}', [App\Modules\Product\Controllers\CategoryController::class, 'destroy']);
+});
+
+// 商品评价管理
+Route::prefix('admin/comments')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Product\Controllers\CommentController::class, 'index']);
+    Route::get('/{id}', [App\Modules\Product\Controllers\CommentController::class, 'show']);
+    Route::post('/{id}/reply', [App\Modules\Product\Controllers\CommentController::class, 'reply']);
+    Route::post('/{id}/toggle-show', [App\Modules\Product\Controllers\CommentController::class, 'toggleShow']);
+    Route::delete('/{id}', [App\Modules\Product\Controllers\CommentController::class, 'destroy']);
+});
