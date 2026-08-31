@@ -195,3 +195,34 @@ Route::prefix('admin/marketing')->middleware('auth:sanctum')->group(function () 
     Route::put('/discount/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'discountUpdate']);
     Route::delete('/discount/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'discountDestroy']);
 });
+
+// 应用管理
+Route::prefix('admin/application')->middleware('auth:sanctum')->group(function () {
+    Route::get('/deposit', [App\Modules\Application\Controllers\ApplicationController::class, 'depositList']);
+    Route::get('/material', [App\Modules\Application\Controllers\ApplicationController::class, 'materialList']);
+    Route::get('/article', [App\Modules\Application\Controllers\ApplicationController::class, 'articleList']);
+    Route::post('/article', [App\Modules\Application\Controllers\ApplicationController::class, 'articleStore']);
+    Route::put('/article/{id}', [App\Modules\Application\Controllers\ApplicationController::class, 'articleUpdate']);
+    Route::delete('/article/{id}', [App\Modules\Application\Controllers\ApplicationController::class, 'articleDestroy']);
+    Route::get('/article-categories', [App\Modules\Application\Controllers\ApplicationController::class, 'articleCategories']);
+    Route::get('/notice', [App\Modules\Application\Controllers\ApplicationController::class, 'noticeList']);
+    Route::post('/notice', [App\Modules\Application\Controllers\ApplicationController::class, 'noticeStore']);
+    Route::put('/notice/{id}', [App\Modules\Application\Controllers\ApplicationController::class, 'noticeUpdate']);
+    Route::delete('/notice/{id}', [App\Modules\Application\Controllers\ApplicationController::class, 'noticeDestroy']);
+    Route::get('/kefu', [App\Modules\Application\Controllers\ApplicationController::class, 'kefuSetting']);
+    Route::post('/kefu', [App\Modules\Application\Controllers\ApplicationController::class, 'kefuSave']);
+    Route::get('/collect', [App\Modules\Application\Controllers\ApplicationController::class, 'collectList']);
+});
+
+// 权限管理
+Route::prefix('admin/permission')->middleware('auth:sanctum')->group(function () {
+    Route::get('/role', [App\Modules\Permission\Controllers\PermissionController::class, 'roleList']);
+    Route::post('/role', [App\Modules\Permission\Controllers\PermissionController::class, 'roleStore']);
+    Route::put('/role/{id}', [App\Modules\Permission\Controllers\PermissionController::class, 'roleUpdate']);
+    Route::delete('/role/{id}', [App\Modules\Permission\Controllers\PermissionController::class, 'roleDestroy']);
+    Route::get('/menu', [App\Modules\Permission\Controllers\PermissionController::class, 'menuList']);
+    Route::get('/dept', [App\Modules\Permission\Controllers\PermissionController::class, 'deptList']);
+    Route::post('/dept', [App\Modules\Permission\Controllers\PermissionController::class, 'deptStore']);
+    Route::put('/dept/{id}', [App\Modules\Permission\Controllers\PermissionController::class, 'deptUpdate']);
+    Route::delete('/dept/{id}', [App\Modules\Permission\Controllers\PermissionController::class, 'deptDestroy']);
+});

@@ -1,0 +1,10 @@
+import request from '@/utils/request'
+export const getRoleList = () => request({ url: '/admin/permission/role', method: 'get' })
+export const createRole = data => request({ url: '/admin/permission/role', method: 'post', data })
+export const updateRole = (id, data) => request({ url: `/admin/permission/role/${id}`, method: 'put', data })
+export const deleteRole = id => request({ url: `/admin/permission/role/${id}`, method: 'delete' })
+export const getMenuList = () => request({ url: '/admin/permission/menu', method: 'get' })
+export const getDeptList = () => request({ url: '/admin/permission/dept', method: 'get' })
+export const createDept = data => request({ url: '/admin/permission/dept', method: 'post', data })
+export const updateDept = (id, data) => request({ url: `/admin/permission/dept/${id}`, method: 'put', data })
+export const deleteDept = id => request({ url: `/admin/permission/dept/${id}`, method: 'delete' })
