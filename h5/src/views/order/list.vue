@@ -1,95 +1,134 @@
 <template>
-  <div class="order-list">
-    <div class="list-header">
-      <button class="back-btn" @click="$router.back()">←</button>
-      <span>{{ t('order.title') }}</span>
-    </div>
+  <div class="order-list-page">
     <div class="order-tabs">
-      <span v-for="tab in tabs" :key="tab.key" :class="{ active: currentTab === tab.key }" @click="currentTab = tab.key">{{ t(tab.name) }}</span>
+      <div class="tab" :class="{active: currentTab === ''}" @click="switchTab('')">全部</div>
+      <div class="tab" :class="{active: currentTab === '0'}" @click="switchTab('0')">待支付</div>
+      <div class="tab" :class="{active: currentTab === '1'}" @click="switchTab('1')">待发货</div>
+      <div class="tab" :class="{active: currentTab === '2'}" @click="switchTab('2')">待收货</div>
+      <div class="tab" :class="{active: currentTab === '3'}" @click="switchTab('3')">已完成</div>
     </div>
-    <div class="order-cards">
-      <div v-for="order in orders" :key="order.id" class="order-card card">
+
+    <div class="order-list" v-if="orders.length">
+      <div class="order-card" v-for="order in orders" :key="order.id" @click="goDetail(order.id)">
         <div class="order-header">
-          <span class="order-no">{{ t('order.orderNo') }}: {{ order.orderNo }}</span>
-          <span class="order-status" :class="order.statusClass">{{ order.status }}</span>
+          <span class="order-no">订单号: {{ order.order_no }}</span>
+          <span class="order-status" :class="statusClass[order.status]">{{ statusMap[order.status] }}</span>
         </div>
         <div class="order-items">
-          <div v-for="item in order.items" :key="item.id" class="order-item">
-            <div class="item-img" :style="{ background: item.color }"></div>
+          <div class="order-item" v-for="item in order.items" :key="item.id">
+            <img :src="item.product_image" :alt="item.product_name" />
             <div class="item-info">
-              <div class="item-name ellipsis">{{ item.name }}</div>
-              <div class="item-price">¥{{ item.price }} × {{ item.quantity }}</div>
+              <div class="item-name">{{ item.product_name }}</div>
+              <div class="item-sku" v-if="item.sku_text">{{ item.sku_text }}</div>
+            </div>
+            <div class="item-right">
+              <div class="item-price">¥{{ item.price }}</div>
+              <div class="item-qty">x{{ item.quantity }}</div>
             </div>
           </div>
         </div>
         <div class="order-footer">
-          <span class="order-total">共{{ order.totalCount }}件 合计: <span class="price">¥{{ order.totalAmount }}</span></span>
-        </div>
-        <div class="order-actions">
-          <button v-if="order.status === '待付款'" class="action-btn primary" @click="payOrder(order)">立即付款</button>
-          <button v-if="order.status === '待发货'" class="action-btn" @click="remindOrder(order)">提醒发货</button>
-          <button v-if="order.status === '待收货'" class="action-btn primary" @click="confirmOrder(order)">确认收货</button>
-          <button class="action-btn" @click="viewDetail(order)">订单详情</button>
+          <span class="total-label">共{{ totalQty(order) }}件商品 合计:</span>
+          <span class="total-price">¥{{ order.pay_amount }}</span>
+          <div class="order-actions" @click.stop>
+            <button v-if="order.status === 0" class="action-btn danger" @click="cancelOrder(order)">取消订单</button>
+            <button v-if="order.status === 0" class="action-btn primary" @click="payOrder(order)">去支付</button>
+            <button v-if="order.status === 2" class="action-btn primary" @click="confirmOrder(order)">确认收货</button>
+            <button v-if="order.status === 3" class="action-btn" @click="buyAgain(order)">再次购买</button>
+          </div>
         </div>
       </div>
     </div>
-    <div v-if="orders.length === 0" class="empty">{{ t('common.empty') }}</div>
+
+    <div class="empty" v-else-if="!loading">
+      <div class="empty-icon">📦</div>
+      <div class="empty-text">暂无订单</div>
+      <button class="go-shop-btn" @click="goHome">去逛逛</button>
+    </div>
+    <div class="loading" v-if="loading">加载中...</div>
   </div>
 </template>
+
 <script setup>
-import { ref, computed } from 'vue'
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
-const currentTab = ref('all')
-const tabs = [
-  { key: 'all', name: 'order.all' },
-  { key: 'pending', name: 'order.pending' },
-  { key: 'paid', name: 'order.paid' },
-  { key: 'shipped', name: 'order.shipped' },
-  { key: 'completed', name: 'order.completed' }
-]
-const allOrders = [
-  { id: 1, orderNo: 'TLL202608310001', status: '待付款', statusClass: 'pending', totalCount: 2, totalAmount: '1298.00',
-    items: [{ id: 101, name: 'TLLOS 商城系统 标准版', price: '999.00', quantity: 1, color: '#e3f2fd' }, { id: 102, name: '秒杀拼团优惠券工具包', price: '299.00', quantity: 1, color: '#fff3e0' }] },
-  { id: 2, orderNo: 'TLL202608300002', status: '待发货', statusClass: 'paid', totalCount: 1, totalAmount: '2999.00',
-    items: [{ id: 201, name: '多商户 SaaS 解决方案', price: '2999.00', quantity: 1, color: '#fce4ec' }] },
-  { id: 3, orderNo: 'TLL202608290003', status: '待收货', statusClass: 'shipped', totalCount: 1, totalAmount: '1999.00',
-    items: [{ id: 301, name: '小程序+H5+APP 三端合一', price: '1999.00', quantity: 1, color: '#f3e5f5' }] },
-  { id: 4, orderNo: 'TLL202608280004', status: '已完成', statusClass: 'completed', totalCount: 3, totalAmount: '1497.00',
-    items: [{ id: 401, name: '分销裂变营销系统', price: '599.00', quantity: 1, color: '#e8f5e9' }, { id: 402, name: 'Vue3 管理后台模板', price: '299.00', quantity: 2, color: '#e0f7fa' }] }
-]
-const orders = computed(() => currentTab.value === 'all' ? allOrders : allOrders.filter(o => o.statusClass === currentTab.value))
-const payOrder = order => alert('支付功能开发中')
-const remindOrder = order => alert('已提醒商家发货')
-const confirmOrder = order => alert('确认收货功能开发中')
-const viewDetail = order => alert('订单详情开发中')
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getOrderList, cancelOrder as cancelApi, confirmOrder as confirmApi } from '@/api/order'
+
+const route = useRoute()
+const router = useRouter()
+const orders = ref([])
+const currentTab = ref(route.query.status || '')
+const loading = ref(false)
+
+const statusMap = { 0: '待支付', 1: '待发货', 2: '待收货', 3: '已完成', 4: '已取消', 5: '退款中', 6: '已退款' }
+const statusClass = { 0: 'wait-pay', 1: 'wait-ship', 2: 'wait-confirm', 3: 'completed', 4: 'cancelled', 5: 'refunding', 6: 'refunded' }
+
+const fetchOrders = async () => {
+  loading.value = true
+  try {
+    const params = { page: 1, limit: 20 }
+    if (currentTab.value !== '') params.status = currentTab.value
+    const res = await getOrderList(params)
+    orders.value = res.data.list || []
+  } catch (e) { console.error(e) } finally { loading.value = false }
+}
+
+const switchTab = tab => { currentTab.value = tab; fetchOrders() }
+const totalQty = order => order.items?.reduce((sum, i) => sum + i.quantity, 0) || 0
+const goDetail = id => router.push(`/order/${id}`)
+const goHome = () => router.push('/')
+
+const cancelOrder = async order => {
+  if (!confirm('确定取消该订单？')) return
+  try { await cancelApi(order.id); alert('订单已取消'); fetchOrders() } catch (e) { alert(e.message || '取消失败') }
+}
+
+const confirmOrder = async order => {
+  if (!confirm('确定确认收货？')) return
+  try { await confirmApi(order.id); alert('已确认收货'); fetchOrders() } catch (e) { alert(e.message || '操作失败') }
+}
+
+const payOrder = order => alert('即将跳转到支付页')
+const buyAgain = order => router.push('/')
+
+onMounted(fetchOrders)
 </script>
+
 <style scoped>
-.order-list { min-height: 100vh; background: var(--bg); }
-.list-header { display: flex; align-items: center; padding: 12px 16px; background: #fff; font-size: 16px; font-weight: 500; }
-.back-btn { background: none; border: none; font-size: 20px; cursor: pointer; margin-right: 12px; }
-.order-tabs { display: flex; background: #fff; padding: 0 12px; border-bottom: 1px solid var(--border); overflow-x: auto; }
-.order-tabs span { padding: 12px 14px; font-size: 13px; color: var(--text-secondary); white-space: nowrap; cursor: pointer; }
-.order-tabs span.active { color: var(--primary); font-weight: 500; border-bottom: 2px solid var(--primary); }
-.order-cards { padding: 10px; }
-.order-card { margin-bottom: 10px; padding: 0; }
-.order-header { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
-.order-no { color: var(--text-secondary); }
-.order-status { font-weight: 500; }
-.order-status.pending { color: var(--danger); }
-.order-status.paid { color: var(--warning); }
-.order-status.shipped { color: var(--primary); }
-.order-status.completed { color: var(--success); }
+.order-list-page { padding-bottom: 20px; background: #f5f5f5; min-height: 100vh; }
+.order-tabs { display: flex; background: #fff; position: sticky; top: 0; z-index: 10; }
+.tab { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; color: #666; position: relative; }
+.tab.active { color: #ff4444; font-weight: bold; }
+.tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 30px; height: 2px; background: #ff4444; }
+.order-list { padding: 10px 15px; }
+.order-card { background: #fff; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+.order-header { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f5f5f5; }
+.order-no { font-size: 12px; color: #999; }
+.order-status { font-size: 13px; font-weight: 500; }
+.order-status.wait-pay { color: #ff9500; }
+.order-status.wait-ship { color: #007aff; }
+.order-status.wait-confirm { color: #ff4444; }
+.order-status.completed { color: #34c759; }
+.order-status.cancelled, .order-status.refunded { color: #999; }
+.order-status.refunding { color: #ff3b30; }
 .order-items { padding: 12px; }
-.order-item { display: flex; gap: 10px; margin-bottom: 10px; }
-.order-item:last-child { margin-bottom: 0; }
-.item-img { width: 60px; height: 60px; border-radius: 6px; flex-shrink: 0; }
+.order-item { display: flex; gap: 10px; padding: 6px 0; }
+.order-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
 .item-info { flex: 1; min-width: 0; }
-.item-name { font-size: 13px; margin-bottom: 4px; }
-.item-price { font-size: 12px; color: var(--text-secondary); }
-.order-footer { padding: 10px 12px; border-top: 1px solid var(--border); text-align: right; font-size: 13px; }
-.order-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); }
-.action-btn { padding: 6px 16px; border: 1px solid var(--border); background: #fff; border-radius: 16px; font-size: 12px; cursor: pointer; color: var(--text); }
-.action-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-.empty { text-align: center; padding: 60px; color: var(--text-secondary); font-size: 14px; }
+.item-name { font-size: 13px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-sku { font-size: 11px; color: #999; margin-top: 4px; }
+.item-right { text-align: right; flex-shrink: 0; }
+.item-price { font-size: 14px; color: #333; }
+.item-qty { font-size: 12px; color: #999; margin-top: 4px; }
+.order-footer { display: flex; align-items: center; padding: 12px; border-top: 1px solid #f5f5f5; flex-wrap: wrap; gap: 8px; }
+.total-label { font-size: 13px; color: #666; margin-left: auto; }
+.total-price { font-size: 16px; color: #ff4444; font-weight: bold; }
+.order-actions { display: flex; gap: 8px; width: 100%; justify-content: flex-end; }
+.action-btn { padding: 6px 16px; border: 1px solid #ddd; border-radius: 16px; font-size: 13px; color: #666; background: #fff; }
+.action-btn.primary { background: #ff4444; color: #fff; border-color: #ff4444; }
+.action-btn.danger { color: #ff4444; border-color: #ff4444; }
+.empty, .loading { text-align: center; padding: 60px 20px; }
+.empty-icon { font-size: 50px; margin-bottom: 12px; }
+.empty-text { color: #999; font-size: 14px; margin-bottom: 16px; }
+.go-shop-btn { padding: 8px 24px; background: #ff4444; color: #fff; border: none; border-radius: 16px; font-size: 13px; }
 </style>
