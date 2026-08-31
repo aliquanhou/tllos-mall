@@ -178,3 +178,20 @@ Route::prefix('admin/distribute')->middleware('auth:sanctum')->group(function ()
     Route::get('/settings', [App\Modules\Distribute\Controllers\DistributeController::class, 'getSettings']);
     Route::post('/settings', [App\Modules\Distribute\Controllers\DistributeController::class, 'saveSettings']);
 });
+
+// 营销活动
+Route::prefix('admin/marketing')->middleware('auth:sanctum')->group(function () {
+    Route::get('/seckill', [App\Modules\Marketing\Controllers\MarketingController::class, 'seckillList']);
+    Route::post('/seckill', [App\Modules\Marketing\Controllers\MarketingController::class, 'seckillStore']);
+    Route::put('/seckill/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'seckillUpdate']);
+    Route::delete('/seckill/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'seckillDestroy']);
+    Route::get('/seckill/{id}/goods', [App\Modules\Marketing\Controllers\MarketingController::class, 'seckillGoods']);
+    Route::get('/group', [App\Modules\Marketing\Controllers\MarketingController::class, 'groupList']);
+    Route::post('/group', [App\Modules\Marketing\Controllers\MarketingController::class, 'groupStore']);
+    Route::put('/group/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'groupUpdate']);
+    Route::delete('/group/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'groupDestroy']);
+    Route::get('/discount', [App\Modules\Marketing\Controllers\MarketingController::class, 'discountList']);
+    Route::post('/discount', [App\Modules\Marketing\Controllers\MarketingController::class, 'discountStore']);
+    Route::put('/discount/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'discountUpdate']);
+    Route::delete('/discount/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'discountDestroy']);
+});

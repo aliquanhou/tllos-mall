@@ -1,0 +1,13 @@
+import request from '@/utils/request'
+export const getSeckillList = params => request({ url: '/admin/marketing/seckill', method: 'get', params })
+export const createSeckill = data => request({ url: '/admin/marketing/seckill', method: 'post', data })
+export const updateSeckill = (id, data) => request({ url: `/admin/marketing/seckill/${id}`, method: 'put', data })
+export const deleteSeckill = id => request({ url: `/admin/marketing/seckill/${id}`, method: 'delete' })
+export const getGroupList = params => request({ url: '/admin/marketing/group', method: 'get', params })
+export const createGroup = data => request({ url: '/admin/marketing/group', method: 'post', data })
+export const updateGroup = (id, data) => request({ url: `/admin/marketing/group/${id}`, method: 'put', data })
+export const deleteGroup = id => request({ url: `/admin/marketing/group/${id}`, method: 'delete' })
+export const getDiscountList = () => request({ url: '/admin/marketing/discount', method: 'get' })
+export const createDiscount = data => request({ url: '/admin/marketing/discount', method: 'post', data })
+export const updateDiscount = (id, data) => request({ url: `/admin/marketing/discount/${id}`, method: 'put', data })
+export const deleteDiscount = id => request({ url: `/admin/marketing/discount/${id}`, method: 'delete' })
