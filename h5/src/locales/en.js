@@ -1,0 +1,9 @@
+export default {
+  common: { home: 'Home', category: 'Category', cart: 'Cart', user: 'Me', search: 'Search', login: 'Sign In', register: 'Sign Up', logout: 'Sign Out', confirm: 'Confirm', cancel: 'Cancel', save: 'Save', delete: 'Delete', edit: 'Edit', add: 'Add to Cart', buyNow: 'Buy Now', all: 'All', sales: 'Sales', price: 'Price', newArrivals: 'New', recommend: 'Recommend', hot: 'Hot', loading: 'Loading...', noMore: 'No More', empty: 'No Data', total: 'Total', checkout: 'Checkout', selectAll: 'Select All' },
+  home: { title: 'TLLOS Mall', searchPlaceholder: 'Search products', flashSale: 'Flash Sale', newProducts: 'New Arrivals', hotProducts: 'Hot List', categories: 'Categories', viewAll: 'View All' },
+  product: { detail: 'Product Detail', specs: 'Specs', images: 'Images', description: 'Description', reviews: 'Reviews', related: 'Related', stock: 'Stock', sold: 'Sold', shipping: 'Shipping' },
+  cart: { title: 'Shopping Cart', empty: 'Your cart is empty', goShopping: 'Go Shopping', edit: 'Edit', done: 'Done', selected: 'Selected', items: 'items', total: 'Total', checkout: 'Checkout', invalid: 'Invalid' },
+  order: { title: 'My Orders', all: 'All', pending: 'Pending', paid: 'Paid', shipped: 'Shipped', completed: 'Completed', refund: 'Refund', orderNo: 'Order No.', createTime: 'Order Time', amount: 'Amount', status: 'Status' },
+  user: { title: 'Profile', orders: 'My Orders', settings: 'Settings', address: 'Address', coupons: 'Coupons', favorites: 'Favorites', history: 'History', customerService: 'Service', about: 'About', loginFirst: 'Please login first', nickname: 'Nickname', mobile: 'Mobile' },
+  login: { title: 'Sign In', mobile: 'Mobile', password: 'Password', smsCode: 'Code', getCode: 'Get Code', loginBtn: 'Sign In', registerBtn: 'Sign Up', noAccount: "Don't have account?", haveAccount: 'Have account?', remember: 'Remember', forgotPassword: 'Forgot password?' }
+}
