@@ -5,5 +5,5 @@
   </el-card>
 </template>
 <script setup>
-const title = '商家列表'
+const title = '会员折扣'
 </script>

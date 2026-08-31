@@ -5,5 +5,5 @@
   </el-card>
 </template>
 <script setup>
-const title = '商家列表'
+const title = '文章资讯'
 </script>
