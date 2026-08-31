@@ -94,3 +94,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/refunds', [\App\Modules\Order\Controllers\AdminOrderController::class, 'refundList']);
     Route::post('/refunds/{id}/audit', [\App\Modules\Order\Controllers\AdminOrderController::class, 'refundAudit']);
 });
+
+// 管理端用户管理
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::get('/users', [\App\Modules\User\Controllers\AdminUserController::class, 'index']);
+    Route::get('/users/{id}', [\App\Modules\User\Controllers\AdminUserController::class, 'show']);
+    Route::put('/users/{id}', [\App\Modules\User\Controllers\AdminUserController::class, 'update']);
+    Route::post('/users/{id}/toggle-status', [\App\Modules\User\Controllers\AdminUserController::class, 'toggleStatus']);
+});
