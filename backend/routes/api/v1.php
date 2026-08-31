@@ -130,3 +130,14 @@ Route::prefix('admin/merchants')->middleware('auth:sanctum')->group(function () 
     Route::put('/{id}', [App\Modules\Merchant\Controllers\MerchantController::class, 'update']);
     Route::delete('/{id}', [App\Modules\Merchant\Controllers\MerchantController::class, 'destroy']);
 });
+
+// 优惠券管理
+Route::prefix('admin/coupons')->middleware('auth:sanctum')->group(function () {
+    Route::get('/records', [App\Modules\Marketing\Controllers\CouponController::class, 'records']);
+    Route::get('/', [App\Modules\Marketing\Controllers\CouponController::class, 'index']);
+    Route::get('/{id}', [App\Modules\Marketing\Controllers\CouponController::class, 'show']);
+    Route::post('/', [App\Modules\Marketing\Controllers\CouponController::class, 'store']);
+    Route::put('/{id}', [App\Modules\Marketing\Controllers\CouponController::class, 'update']);
+    Route::post('/{id}/toggle-status', [App\Modules\Marketing\Controllers\CouponController::class, 'toggleStatus']);
+    Route::delete('/{id}', [App\Modules\Marketing\Controllers\CouponController::class, 'destroy']);
+});
