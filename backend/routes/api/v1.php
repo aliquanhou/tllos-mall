@@ -163,3 +163,18 @@ Route::prefix('admin/system')->middleware('auth:sanctum')->group(function () {
     Route::delete('/express/{id}', [App\Modules\System\Controllers\SystemController::class, 'expressDestroy']);
     Route::get('/logs', [App\Modules\System\Controllers\SystemController::class, 'logList']);
 });
+
+// 分销管理
+Route::prefix('admin/distribute')->middleware('auth:sanctum')->group(function () {
+    Route::get('/overview', [App\Modules\Distribute\Controllers\DistributeController::class, 'overview']);
+    Route::get('/agents', [App\Modules\Distribute\Controllers\DistributeController::class, 'agents']);
+    Route::post('/agents/{id}/audit', [App\Modules\Distribute\Controllers\DistributeController::class, 'agentAudit']);
+    Route::get('/levels', [App\Modules\Distribute\Controllers\DistributeController::class, 'levels']);
+    Route::post('/levels', [App\Modules\Distribute\Controllers\DistributeController::class, 'levelStore']);
+    Route::put('/levels/{id}', [App\Modules\Distribute\Controllers\DistributeController::class, 'levelUpdate']);
+    Route::get('/orders', [App\Modules\Distribute\Controllers\DistributeController::class, 'orders']);
+    Route::get('/goods', [App\Modules\Distribute\Controllers\DistributeController::class, 'goods']);
+    Route::post('/goods/{id}/toggle', [App\Modules\Distribute\Controllers\DistributeController::class, 'goodsToggle']);
+    Route::get('/settings', [App\Modules\Distribute\Controllers\DistributeController::class, 'getSettings']);
+    Route::post('/settings', [App\Modules\Distribute\Controllers\DistributeController::class, 'saveSettings']);
+});
