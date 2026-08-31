@@ -152,3 +152,14 @@ Route::prefix('admin/finance')->middleware('auth:sanctum')->group(function () {
     Route::get('/settlement', [App\Modules\Finance\Controllers\FinanceController::class, 'settlement']);
     Route::post('/settlement/{id}/confirm', [App\Modules\Finance\Controllers\FinanceController::class, 'settlementConfirm']);
 });
+
+// 系统设置
+Route::prefix('admin/system')->middleware('auth:sanctum')->group(function () {
+    Route::get('/config', [App\Modules\System\Controllers\SystemController::class, 'getConfig']);
+    Route::post('/config', [App\Modules\System\Controllers\SystemController::class, 'saveConfig']);
+    Route::get('/express', [App\Modules\System\Controllers\SystemController::class, 'expressList']);
+    Route::post('/express', [App\Modules\System\Controllers\SystemController::class, 'expressStore']);
+    Route::put('/express/{id}', [App\Modules\System\Controllers\SystemController::class, 'expressUpdate']);
+    Route::delete('/express/{id}', [App\Modules\System\Controllers\SystemController::class, 'expressDestroy']);
+    Route::get('/logs', [App\Modules\System\Controllers\SystemController::class, 'logList']);
+});
