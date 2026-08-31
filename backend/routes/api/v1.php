@@ -413,3 +413,78 @@ Route::prefix('admin/web-setting')->middleware('auth:sanctum')->group(function (
     Route::get('/copyright', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'getCopyright']);
     Route::post('/copyright', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'setCopyright']);
 });
+
+// 渠道配置
+Route::prefix('admin/channel')->middleware('auth:sanctum')->group(function () {
+    Route::get('/{channel}/config', [App\Modules\Channel\Controllers\ChannelSettingController::class, 'getConfig']);
+    Route::post('/{channel}/config', [App\Modules\Channel\Controllers\ChannelSettingController::class, 'setConfig']);
+    Route::get('/oa/menu', [App\Modules\Channel\Controllers\OfficialAccountMenuController::class, 'detail']);
+    Route::post('/oa/menu', [App\Modules\Channel\Controllers\OfficialAccountMenuController::class, 'save']);
+    Route::post('/oa/menu/publish', [App\Modules\Channel\Controllers\OfficialAccountMenuController::class, 'saveAndPublish']);
+    Route::get('/oa/reply', [App\Modules\Channel\Controllers\OfficialAccountReplyController::class, 'lists']);
+    Route::post('/oa/reply', [App\Modules\Channel\Controllers\OfficialAccountReplyController::class, 'add']);
+    Route::put('/oa/reply/{id}', [App\Modules\Channel\Controllers\OfficialAccountReplyController::class, 'edit']);
+    Route::delete('/oa/reply/{id}', [App\Modules\Channel\Controllers\OfficialAccountReplyController::class, 'delete']);
+});
+
+// 系统信息
+Route::prefix('admin/system-info')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\SystemConfig\Controllers\SystemInfoController::class, 'info']);
+});
+
+// 系统升级
+Route::prefix('admin/upgrade')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\SystemConfig\Controllers\UpgradeController::class, 'lists']);
+    Route::post('/download', [App\Modules\SystemConfig\Controllers\UpgradeController::class, 'downloadPkg']);
+    Route::post('/upgrade', [App\Modules\SystemConfig\Controllers\UpgradeController::class, 'upgrade']);
+});
+
+// 代码生成器
+Route::prefix('admin/generator')->middleware('auth:sanctum')->group(function () {
+    Route::get('/tables', [App\Modules\Tools\Controllers\GeneratorController::class, 'getModels']);
+    Route::get('/table', [App\Modules\Tools\Controllers\GeneratorController::class, 'selectTable']);
+    Route::get('/data', [App\Modules\Tools\Controllers\GeneratorController::class, 'dataTable']);
+    Route::post('/generate', [App\Modules\Tools\Controllers\GeneratorController::class, 'generate']);
+    Route::get('/preview', [App\Modules\Tools\Controllers\GeneratorController::class, 'preview']);
+    Route::get('/download', [App\Modules\Tools\Controllers\GeneratorController::class, 'download']);
+});
+
+// 数据导出
+Route::prefix('admin/export')->middleware('auth:sanctum')->group(function () {
+    Route::post('/', [App\Modules\Tools\Controllers\DownloadController::class, 'export']);
+});
+
+// 商品SKU
+Route::prefix('admin/goods-sku')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Product\Controllers\GoodsSkuController::class, 'index']);
+    Route::post('/', [App\Modules\Product\Controllers\GoodsSkuController::class, 'store']);
+    Route::put('/{id}', [App\Modules\Product\Controllers\GoodsSkuController::class, 'update']);
+    Route::delete('/{id}', [App\Modules\Product\Controllers\GoodsSkuController::class, 'destroy']);
+});
+
+// 订单日志
+Route::prefix('admin/order-log')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Order\Controllers\OrderLogController::class, 'index']);
+});
+
+// 用户认证
+Route::prefix('admin/user-auth')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\User\Controllers\UserAuthController::class, 'index']);
+    Route::post('/{id}/audit', [App\Modules\User\Controllers\UserAuthController::class, 'audit']);
+});
+
+// 商家端权限
+Route::prefix('admin/shop-permission')->middleware('auth:sanctum')->group(function () {
+    Route::get('/admins', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'adminList']);
+    Route::get('/roles', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'roleList']);
+    Route::get('/depts', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'deptList']);
+    Route::get('/jobs', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'jobList']);
+});
+
+// 管理员部门
+Route::prefix('admin/admin-dept')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', function() {
+        $list = \Illuminate\Support\Facades\DB::table('admin_depts')->orderBy('sort','asc')->get();
+        return response()->json(['code'=>200,'message'=>'success','data'=>['list'=>$list,'total'=>count($list)]]);
+    });
+});
