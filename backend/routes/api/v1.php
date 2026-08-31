@@ -321,3 +321,95 @@ Route::prefix('admin/system-config')->middleware('auth:sanctum')->group(function
     Route::get('/files', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'files']);
     Route::get('/file-categories', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'fileCategories']);
 });
+
+// 管理员管理
+Route::prefix('admin/admin-manage')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\AdminManage\Controllers\AdminManageController::class, 'index']);
+    Route::post('/', [App\Modules\AdminManage\Controllers\AdminManageController::class, 'store']);
+    Route::put('/{id}', [App\Modules\AdminManage\Controllers\AdminManageController::class, 'update']);
+    Route::delete('/{id}', [App\Modules\AdminManage\Controllers\AdminManageController::class, 'destroy']);
+});
+
+// 岗位管理
+Route::prefix('admin/jobs')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\AdminManage\Controllers\JobController::class, 'index']);
+    Route::get('/all', [App\Modules\AdminManage\Controllers\JobController::class, 'all']);
+    Route::post('/', [App\Modules\AdminManage\Controllers\JobController::class, 'store']);
+    Route::put('/{id}', [App\Modules\AdminManage\Controllers\JobController::class, 'update']);
+    Route::delete('/{id}', [App\Modules\AdminManage\Controllers\JobController::class, 'destroy']);
+});
+
+// 配送方式
+Route::prefix('admin/delivery-type')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\SystemConfig\Controllers\DeliveryTypeController::class, 'index']);
+    Route::post('/', [App\Modules\SystemConfig\Controllers\DeliveryTypeController::class, 'store']);
+    Route::put('/{id}', [App\Modules\SystemConfig\Controllers\DeliveryTypeController::class, 'update']);
+    Route::delete('/{id}', [App\Modules\SystemConfig\Controllers\DeliveryTypeController::class, 'destroy']);
+});
+
+// 订单设置
+Route::prefix('admin/order-setting')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\SystemConfig\Controllers\OrderSettingController::class, 'getConfig']);
+    Route::post('/', [App\Modules\SystemConfig\Controllers\OrderSettingController::class, 'saveConfig']);
+});
+
+// 拼团开团
+Route::prefix('admin/pt-open')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Marketing\Controllers\PtOpenController::class, 'index']);
+});
+
+// 商家菜单
+Route::prefix('admin/shop-menu')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\ShopCenter\Controllers\ShopMenuController::class, 'index']);
+    Route::post('/', [App\Modules\ShopCenter\Controllers\ShopMenuController::class, 'store']);
+    Route::put('/{id}', [App\Modules\ShopCenter\Controllers\ShopMenuController::class, 'update']);
+    Route::delete('/{id}', [App\Modules\ShopCenter\Controllers\ShopMenuController::class, 'destroy']);
+});
+
+// 通知设置
+Route::prefix('admin/notice-setting')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\SystemConfig\Controllers\NoticeSettingController::class, 'index']);
+    Route::put('/{id}', [App\Modules\SystemConfig\Controllers\NoticeSettingController::class, 'update']);
+});
+
+// 短信配置
+Route::prefix('admin/sms-config')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\SystemConfig\Controllers\SmsConfigController::class, 'getConfig']);
+    Route::post('/', [App\Modules\SystemConfig\Controllers\SmsConfigController::class, 'setConfig']);
+});
+
+// 存储设置
+Route::prefix('admin/storage')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\SystemConfig\Controllers\StorageController::class, 'detail']);
+    Route::post('/', [App\Modules\SystemConfig\Controllers\StorageController::class, 'setup']);
+    Route::post('/change', [App\Modules\SystemConfig\Controllers\StorageController::class, 'change']);
+});
+
+// 系统缓存
+Route::prefix('admin/cache')->middleware('auth:sanctum')->group(function () {
+    Route::post('/clear', [App\Modules\SystemConfig\Controllers\CacheController::class, 'clear']);
+});
+
+// 交易设置
+Route::prefix('admin/transaction-setting')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\SystemConfig\Controllers\TransactionSettingController::class, 'getConfig']);
+    Route::post('/', [App\Modules\SystemConfig\Controllers\TransactionSettingController::class, 'setConfig']);
+});
+
+// 用户设置
+Route::prefix('admin/user-setting')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\SystemConfig\Controllers\UserSettingController::class, 'getConfig']);
+    Route::post('/', [App\Modules\SystemConfig\Controllers\UserSettingController::class, 'setConfig']);
+    Route::get('/register', [App\Modules\SystemConfig\Controllers\UserSettingController::class, 'getRegisterConfig']);
+    Route::post('/register', [App\Modules\SystemConfig\Controllers\UserSettingController::class, 'setRegisterConfig']);
+});
+
+// 网站设置
+Route::prefix('admin/web-setting')->middleware('auth:sanctum')->group(function () {
+    Route::get('/website', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'getWebsite']);
+    Route::post('/website', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'setWebsite']);
+    Route::get('/agreement', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'getAgreement']);
+    Route::post('/agreement', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'setAgreement']);
+    Route::get('/copyright', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'getCopyright']);
+    Route::post('/copyright', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'setCopyright']);
+});
