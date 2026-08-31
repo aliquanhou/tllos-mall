@@ -226,3 +226,98 @@ Route::prefix('admin/permission')->middleware('auth:sanctum')->group(function ()
     Route::put('/dept/{id}', [App\Modules\Permission\Controllers\PermissionController::class, 'deptUpdate']);
     Route::delete('/dept/{id}', [App\Modules\Permission\Controllers\PermissionController::class, 'deptDestroy']);
 });
+
+// 订单售后
+Route::prefix('admin/after-sale')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\AfterSale\Controllers\AfterSaleController::class, 'index']);
+    Route::get('/{id}', [App\Modules\AfterSale\Controllers\AfterSaleController::class, 'show']);
+    Route::post('/{id}/audit', [App\Modules\AfterSale\Controllers\AfterSaleController::class, 'audit']);
+    Route::post('/{id}/complete', [App\Modules\AfterSale\Controllers\AfterSaleController::class, 'complete']);
+});
+
+// 用户中心
+Route::prefix('admin/user-center')->middleware('auth:sanctum')->group(function () {
+    Route::get('/levels', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'levels']);
+    Route::post('/levels', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'levelStore']);
+    Route::put('/levels/{id}', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'levelUpdate']);
+    Route::delete('/levels/{id}', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'levelDestroy']);
+    Route::get('/recharges', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'recharges']);
+    Route::get('/withdraws', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'withdraws']);
+    Route::post('/withdraws/{id}/audit', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'withdrawAudit']);
+    Route::post('/withdraws/{id}/pay', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'withdrawPay']);
+    Route::get('/addresses', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'addresses']);
+    Route::get('/account-logs', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'accountLogs']);
+});
+
+// 商家中心
+Route::prefix('admin/shop-center')->middleware('auth:sanctum')->group(function () {
+    Route::get('/categories', [App\Modules\ShopCenter\Controllers\ShopCenterController::class, 'categories']);
+    Route::post('/categories', [App\Modules\ShopCenter\Controllers\ShopCenterController::class, 'categoryStore']);
+    Route::put('/categories/{id}', [App\Modules\ShopCenter\Controllers\ShopCenterController::class, 'categoryUpdate']);
+    Route::delete('/categories/{id}', [App\Modules\ShopCenter\Controllers\ShopCenterController::class, 'categoryDestroy']);
+    Route::get('/banks/{shop_id}', [App\Modules\ShopCenter\Controllers\ShopCenterController::class, 'banks']);
+    Route::get('/account-logs', [App\Modules\ShopCenter\Controllers\ShopCenterController::class, 'accountLogs']);
+});
+
+// 分销申请
+Route::prefix('admin/distribute/apply')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Distribute\Controllers\DistributionApplyController::class, 'index']);
+    Route::post('/{id}/audit', [App\Modules\Distribute\Controllers\DistributionApplyController::class, 'audit']);
+});
+
+// 商城公告
+Route::prefix('admin/announcement')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Announcement\Controllers\AnnouncementController::class, 'index']);
+    Route::post('/', [App\Modules\Announcement\Controllers\AnnouncementController::class, 'store']);
+    Route::put('/{id}', [App\Modules\Announcement\Controllers\AnnouncementController::class, 'update']);
+    Route::delete('/{id}', [App\Modules\Announcement\Controllers\AnnouncementController::class, 'destroy']);
+});
+
+// 装修管理
+Route::prefix('admin/decorate')->middleware('auth:sanctum')->group(function () {
+    Route::get('/pages', [App\Modules\Decorate\Controllers\DecorateController::class, 'pages']);
+    Route::put('/pages/{id}', [App\Modules\Decorate\Controllers\DecorateController::class, 'pageSave']);
+    Route::get('/tabbars', [App\Modules\Decorate\Controllers\DecorateController::class, 'tabbars']);
+    Route::post('/tabbars', [App\Modules\Decorate\Controllers\DecorateController::class, 'tabbarStore']);
+    Route::put('/tabbars/{id}', [App\Modules\Decorate\Controllers\DecorateController::class, 'tabbarUpdate']);
+    Route::delete('/tabbars/{id}', [App\Modules\Decorate\Controllers\DecorateController::class, 'tabbarDestroy']);
+    Route::get('/category-ads', [App\Modules\Decorate\Controllers\DecorateController::class, 'categoryAds']);
+});
+
+// 支付场景
+Route::prefix('admin/pay-scene')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Pay\Controllers\PaySceneController::class, 'index']);
+    Route::post('/', [App\Modules\Pay\Controllers\PaySceneController::class, 'store']);
+    Route::put('/{id}', [App\Modules\Pay\Controllers\PaySceneController::class, 'update']);
+    Route::delete('/{id}', [App\Modules\Pay\Controllers\PaySceneController::class, 'destroy']);
+});
+
+// 结算记录
+Route::prefix('admin/settlement-record')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Modules\Finance\Controllers\SettlementRecordController::class, 'index']);
+});
+
+// 系统配置
+Route::prefix('admin/system-config')->middleware('auth:sanctum')->group(function () {
+    Route::get('/dict-types', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'dictTypes']);
+    Route::post('/dict-types', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'dictTypeStore']);
+    Route::put('/dict-types/{id}', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'dictTypeUpdate']);
+    Route::delete('/dict-types/{id}', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'dictTypeDestroy']);
+    Route::get('/dict-datas', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'dictDatas']);
+    Route::post('/dict-datas', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'dictDataStore']);
+    Route::put('/dict-datas/{id}', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'dictDataUpdate']);
+    Route::delete('/dict-datas/{id}', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'dictDataDestroy']);
+    Route::get('/hot-searches', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'hotSearches']);
+    Route::post('/hot-searches', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'hotSearchStore']);
+    Route::put('/hot-searches/{id}', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'hotSearchUpdate']);
+    Route::delete('/hot-searches/{id}', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'hotSearchDestroy']);
+    Route::get('/crontabs', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'crontabs']);
+    Route::post('/crontabs/{id}/toggle', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'crontabToggle']);
+    Route::get('/areas', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'areas']);
+    Route::get('/express-templates', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'expressTemplates']);
+    Route::post('/express-templates', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'expressTemplateStore']);
+    Route::put('/express-templates/{id}', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'expressTemplateUpdate']);
+    Route::delete('/express-templates/{id}', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'expressTemplateDestroy']);
+    Route::get('/files', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'files']);
+    Route::get('/file-categories', [App\Modules\SystemConfig\Controllers\SystemConfigController::class, 'fileCategories']);
+});
