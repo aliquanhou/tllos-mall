@@ -72,6 +72,7 @@ Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'lo
     Route::post('/stock-warnings/setting', [\App\Modules\Product\Controllers\StockWarningController::class,'setting']);
 
     // 用户积分
+    Route::get('/user-points/rules', [\App\Modules\UserCenter\Controllers\PointLogController::class,'rules']);
     Route::get('/user-points', [\App\Modules\UserCenter\Controllers\PointLogController::class,'index']);
     Route::post('/user-points', [\App\Modules\UserCenter\Controllers\PointLogController::class,'store']);
 
@@ -1157,6 +1158,8 @@ Route::prefix('admin/order-log')->middleware('auth:sanctum')->group(function () 
 Route::prefix('admin/user-auth')->middleware('auth:sanctum')->group(function () {
 
     Route::get('/', [App\Modules\User\Controllers\UserAuthController::class, 'index']);
+
+    Route::get('/{id}', [App\Modules\User\Controllers\UserAuthController::class, 'show']);
 
     Route::post('/{id}/audit', [App\Modules\User\Controllers\UserAuthController::class, 'audit']);
 

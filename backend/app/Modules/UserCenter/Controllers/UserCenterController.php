@@ -3,39 +3,83 @@ namespace App\Modules\UserCenter\Controllers;
 use App\Core\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-class UserCenterController extends BaseController {
+class UserCenterController extends BaseController
+{
     public function center(Request $request) {
         $user = $request->user();
-        return $this->success(['user_info'=>$user,'order_count'=>0,'coupon_count'=>0,'collect_count'=>0,'balance'=>0,'points'=>0]);
+        return $this->success(['user'=>$user,'order_count'=>DB::table('orders')->where('user_id',$user->id)->count(),'favorite_count'=>DB::table('user_favorites')->where('user_id',$user->id)->count()]);
     }
     public function info(Request $request) { return $this->success($request->user()); }
     public function updateInfo(Request $request) {
-        $userId = $request->user()->id;
-        $data = $request->only(['nickname','avatar','gender']);
-        DB::table('users')->where('id',$userId)->update($data);
+        $v=$request->validate(['nickname'=>'sometimes|nullable|string|max:50','avatar'=>'sometimes|nullable|string','email'=>'sometimes|nullable|email']);
+        DB::table('users')->where('id',$request->user()->id)->update($v);
         return $this->success(null,'更新成功');
     }
     public function levels(Request $request) {
-        try {
-            $list = DB::table('user_levels')->orderBy('id','asc')->get();
-            return $this->success(['list'=>$list,'total'=>count($list)]);
-        } catch (\Exception $e) {
-            return $this->success(['list'=>[],'total'=>0,'error'=>$e->getMessage()]);
-        }
+        $list=DB::table('user_levels')->orderBy('level','asc')->get();
+        $stats=DB::table('users')->select('level_id',DB::raw('COUNT(*) as count'))->groupBy('level_id')->get();
+        return $this->success(['list'=>$list,'stats'=>$stats,'total'=>count($list)]);
     }
     public function levelStore(Request $request) {
-        $data = $request->only(['name','level','discount','points','status']);
-        $data['created_at'] = now();
-        $id = DB::table('user_levels')->insertGetId($data);
-        return $this->success(['id'=>$id],'创建成功');
+        $v=$request->validate(['name'=>'required|string|max:100','level'=>'nullable|integer','discount'=>'nullable|numeric','points'=>'nullable|integer','benefits'=>'nullable|string','upgrade_points'=>'nullable|integer','is_default'=>'nullable|integer','status'=>'nullable|integer']);
+        $v['created_at']=now();$v['updated_at']=now();
+        return $this->success(['id'=>DB::table('user_levels')->insertGetId($v)],'创建成功');
     }
-    public function levelUpdate(Request $request, $id) {
-        $data = $request->only(['name','level','discount','points','status']);
-        DB::table('user_levels')->where('id',$id)->update($data);
+    public function levelUpdate(Request $request,$id) {
+        $v=$request->validate(['name'=>'sometimes|required|string|max:100','level'=>'sometimes|integer','discount'=>'sometimes|numeric','points'=>'sometimes|integer','benefits'=>'sometimes|nullable|string','upgrade_points'=>'sometimes|integer','is_default'=>'sometimes|integer','status'=>'sometimes|integer']);
+        $v['updated_at']=now();
+        DB::table('user_levels')->where('id',$id)->update($v);
         return $this->success(null,'更新成功');
     }
     public function levelDestroy($id) {
+        $c=DB::table('users')->where('level_id',$id)->count();
+        if($c>0) return $this->error("该等级下有{$c}个用户");
         DB::table('user_levels')->where('id',$id)->delete();
         return $this->success(null,'删除成功');
+    }
+    public function recharges(Request $request) {
+        $q=DB::table('user_recharges as r')->leftJoin('users as u','r.user_id','=','u.id')->select('r.*','u.nickname','u.mobile');
+        if($request->filled('status'))$q->where('r.status',$request->status);
+        if($request->filled('keyword'))$q->where(function($q)use($request){$q->where('u.nickname','like','%'.$request->keyword.'%')->orWhere('u.mobile','like','%'.$request->keyword.'%')->orWhere('r.pay_no','like','%'.$request->keyword.'%');});
+        $total=$q->count();$page=$request->input('page',1);$limit=$request->input('limit',20);
+        $list=$q->orderBy('r.id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
+        $stats=['total_amount'=>DB::table('user_recharges')->where('status',1)->sum('amount'),'total_count'=>DB::table('user_recharges')->where('status',1)->count(),'pending_count'=>DB::table('user_recharges')->where('status',0)->count()];
+        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
+    }
+    public function withdraws(Request $request) {
+        $q=DB::table('withdraws as w')->leftJoin('users as u','w.user_id','=','u.id')->select('w.*','u.nickname','u.mobile');
+        if($request->filled('status'))$q->where('w.status',$request->status);
+        if($request->filled('keyword'))$q->where(function($q)use($request){$q->where('u.nickname','like','%'.$request->keyword.'%')->orWhere('u.mobile','like','%'.$request->keyword.'%')->orWhere('w.pay_account','like','%'.$request->keyword.'%');});
+        $total=$q->count();$page=$request->input('page',1);$limit=$request->input('limit',20);
+        $list=$q->orderBy('w.id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
+        $stats=['pending_count'=>DB::table('withdraws')->where('status',0)->count(),'pending_amount'=>DB::table('withdraws')->where('status',0)->sum('actual_amount'),'paid_count'=>DB::table('withdraws')->where('status',3)->count()];
+        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
+    }
+    public function withdrawAudit(Request $request,$id) {
+        $v=$request->validate(['status'=>'required|integer|in:1,2','audit_remark'=>'nullable|string']);
+        $w=DB::table('withdraws')->where('id',$id)->first();
+        if(!$w)return $this->error('提现记录不存在');
+        if($w->status!=0)return $this->error('该提现已处理');
+        $up=['status'=>$v['status'],'audit_remark'=>$v['audit_remark']??null,'audit_at'=>now(),'admin_id'=>$request->user()->id??1];
+        if($v['status']==2){DB::table('users')->where('id',$w->user_id)->increment('balance',$w->amount);}
+        DB::table('withdraws')->where('id',$id)->update($up);
+        return $this->success(null,$v['status']==1?'审核通过':'审核拒绝');
+    }
+    public function withdrawPay(Request $request,$id) {
+        $w=DB::table('withdraws')->where('id',$id)->first();
+        if(!$w)return $this->error('提现记录不存在');
+        if($w->status!=1)return $this->error('该提现未通过审核或已打款');
+        DB::table('withdraws')->where('id',$id)->update(['status'=>3,'paid_at'=>now(),'pay_no'=>'PAY'.date('YmdHis').rand(1000,9999),'admin_id'=>$request->user()->id??1]);
+        return $this->success(null,'打款成功');
+    }
+    public function accountLogs(Request $request) {
+        $q=DB::table('user_balance_logs as l')->leftJoin('users as u','l.user_id','=','u.id')->select('l.*','u.nickname','u.mobile');
+        if($request->filled('user_id'))$q->where('l.user_id',$request->user_id);
+        if($request->filled('type'))$q->where('l.type',$request->type);
+        if($request->filled('keyword'))$q->where(function($q)use($request){$q->where('u.nickname','like','%'.$request->keyword.'%')->orWhere('l.order_no','like','%'.$request->keyword.'%')->orWhere('l.remark','like','%'.$request->keyword.'%');});
+        $total=$q->count();$page=$request->input('page',1);$limit=$request->input('limit',20);
+        $list=$q->orderBy('l.id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
+        $stats=DB::table('user_balance_logs')->select('type',DB::raw('SUM(amount) as total_amount,COUNT(*) as count'))->groupBy('type')->get();
+        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
     }
 }
