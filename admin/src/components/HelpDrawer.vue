@@ -94,7 +94,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { Loading, Reading, Connection, Grid, Link, CircleCheck, Operation } from '@element-plus/icons-vue'
+import { Loading, Reading, Connection, Grid, Link, CircleCheck, Operation, QuestionFilled, FullScreen, Aim, Close } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
 const props = defineProps({
@@ -113,6 +113,7 @@ const visible = computed({
 
 const loading = ref(false)
 const doc = ref(null)
+const isFullscreen = ref(false)
 const showFull = ref(false)
 const renderedMarkdown = ref('')
 
@@ -258,4 +259,27 @@ const viewFull = () => {
   justify-content: center;
   height: 300px;
 }
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #ebeef5;
+  margin: -20px -20px 16px -20px;
+  background: #fafafa;
+}
+.drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+.drawer-actions {
+  display: flex;
+  gap: 4px;
+}
+
 </style>

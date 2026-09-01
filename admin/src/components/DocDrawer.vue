@@ -1,5 +1,30 @@
 <template>
-  <el-drawer :modal="false" append-to-body v-model="visible" :title="docTitle" direction="rtl" size="600px">
+  <el-drawer :modal="false" append-to-body
+    v-model="visible"
+    direction="rtl"
+    :size="isFullscreen ? '90%' : '650px'"
+    :with-header="false"
+  >
+    <!-- 自定义标题栏 -->
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <el-icon><Document /></el-icon>
+        <span>{{ title }}</span>
+        <el-tag size="small" type="info" style="margin-left:8px">技术文档</el-tag>
+      </div>
+      <div class="drawer-actions">
+        <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏展开'" placement="bottom">
+          <el-button text @click="toggleFullscreen">
+            <el-icon><FullScreen v-if="!isFullscreen" /><Aim v-else /></el-icon>
+          </el-button>
+        </el-tooltip>
+        <el-tooltip content="关闭" placement="bottom">
+          <el-button text @click="visible = false">
+            <el-icon><Close /></el-icon>
+          </el-button>
+        </el-tooltip>
+      </div>
+    </div>
     <template #header>
       <div style="display:flex;align-items:center">
         <span style="font-size:20px;margin-right:8px">📘</span>
@@ -64,4 +89,53 @@ watch(()=>[props.modelValue,props.module,props.page],([v])=>{if(v)load()},{immed
 .md-body blockquote{border-left:4px solid #67c23a;padding:8px 16px;margin:16px 0;background:#f0f9eb;color:#67c23a}
 .md-body ul,.md-body ol{padding-left:24px}
 .md-body li{margin:6px 0}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #ebeef5;
+  margin: -20px -20px 16px -20px;
+  background: #fafafa;
+}
+.drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+.drawer-actions {
+  display: flex;
+  gap: 4px;
+}
+.drawer-actions .el-button {
+  padding: 4px 8px;
+}
+/* 全屏模式下的内容优化 */
+:deep(.el-drawer__body) {
+  overflow-x: hidden;
+}
+/* 表格横向滚动 */
+.markdown-body table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.markdown-body table th,
+.markdown-body table td {
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+/* 代码块横向滚动 */
+.markdown-body pre {
+  overflow-x: auto;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+}
+
 </style>
