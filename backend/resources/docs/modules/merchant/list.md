@@ -1,160 +1,123 @@
 # 商家列表
 
 ## 1. 页面概述
-### 功能描述
-管理所有入驻商家，支持审核、禁用
+商家列表管理平台所有入驻商家，支持查看商家信息、审核状态、账户余额、商品/订单统计，以及启用/禁用商家。商家是多商户商城的核心主体，每个商家拥有独立的商品、订单、财务体系。
 
 ### 核心指标
-| 指标 | 含义 | 业务价值 |
-|------|------|----------|
-| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
-| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
-| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
-| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
+| 指标 | 数据来源 | 含义 |
+|------|----------|------|
+| 全部 | merchants COUNT(*) | 商家总数 |
+| 待审核 | status=0 | 等待入驻审核 |
+| 已通过 | status=1 | 正常经营 |
+| 已拒绝 | status=2 | 审核拒绝 |
+| 已禁用 | status=3 | 平台禁用 |
 
-### 使用场景
-1. 日常管理：新增/编辑/删除数据
-2. 数据查询：搜索筛选定位记录
-3. 状态管理：启用/禁用/审核操作
-4. 数据统计：查看业务数据趋势
+### 商家状态枚举
+| status | 状态 | 说明 |
+|--------|------|------|
+| 0 | 待审核 | 提交入驻申请，等待审核 |
+| 1 | 已通过 | 审核通过，正常经营 |
+| 2 | 已拒绝 | 审核拒绝 |
+| 3 | 已禁用 | 平台禁用 |
 
----
+## 2. API接口清单
+| 方法 | 路径 | 控制器方法 | 说明 |
+|------|------|-----------|------|
+| GET | /api/v1/admin/merchants | MerchantController@index | 商家列表（分页+筛选+统计） |
+| GET | /api/v1/admin/merchants/{id} | MerchantController@show | 商家详情 |
+| PUT | /api/v1/admin/merchants/{id} | MerchantController@update | 编辑商家信息 |
+| DELETE | /api/v1/admin/merchants/{id} | MerchantController@destroy | 删除商家（软删除） |
+| POST | /api/v1/admin/merchants/{id}/toggle-status | MerchantController@toggleStatus | 启用/禁用商家 |
 
-## 2. API接口清单（基于真实控制器实现）
-| 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
-|------|------|-----------|------|----------|
-| GET | /api/v1/admin/merchant/list | MerchantController@index | 商家列表列表 | merchant:list |
-| POST | /api/v1/admin/merchant/list | MerchantController@store | 新增商家列表 | merchant:create |
-| GET | /api/v1/admin/merchant/list/{id} | MerchantController@show | 商家列表详情 | merchant:view |
-| PUT | /api/v1/admin/merchant/list/{id} | MerchantController@update | 编辑商家列表 | merchant:edit |
-| DELETE | /api/v1/admin/merchant/list/{id} | MerchantController@destroy | 删除商家列表 | merchant:delete |
-
-### 请求参数
+## 3. 请求参数
+### 商家列表
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| page | int | 否 | 页码，默认1 |
-| limit | int | 否 | 每页数量，默认20 |
-| keyword | string | 否 | 搜索关键词 |
-| status | int | 否 | 状态筛选 |
-| start_date | date | 否 | 开始日期 |
-| end_date | date | 否 | 结束日期 |
+| page | int | 否 | 页码 |
+| limit | int | 否 | 每页数量 |
+| keyword | string | 否 | 按商家名/联系人搜索 |
+| status | int | 否 | 按状态筛选（0-3） |
+| category_id | int | 否 | 按分类筛选 |
 
-### 返回示例
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "total": 100,
-    "page": 1,
-    "limit": 20,
-    "list": [
-      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
-    ]
-  },
-  "timestamp": 1756700000
-}
-```
+### 编辑商家
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| name | string | 否 | 商家名称 |
+| logo | string | 否 | 商家Logo |
+| contact_name | string | 否 | 联系人 |
+| contact_mobile | string | 否 | 联系电话 |
+| category_id | int | 否 | 分类ID |
+| address | string | 否 | 地址 |
 
-### 错误码
-| 错误码 | 说明 |
-|--------|------|
-| 10001 | 无权限操作 |
-| 10002 | 数据不存在或已删除 |
-| 10003 | 参数校验失败 |
-| 10004 | 数据库操作失败 |
+## 4. 字段映射表（merchants表，39字段）
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 主键 |
+| user_id | bigint | 关联用户ID |
+| name | varchar(100) | 商家名称（唯一） |
+| logo | varchar(255) | 商家Logo |
+| banner | varchar(255) | 店铺Banner |
+| description | text | 店铺描述 |
+| category_id | bigint | 商家分类 |
+| contact_name | varchar(50) | 联系人 |
+| contact_mobile | varchar(20) | 联系电话 |
+| contact_email | varchar(100) | 联系邮箱 |
+| company_name | varchar(100) | 公司名称 |
+| business_license | varchar(255) | 营业执照 |
+| legal_person | varchar(50) | 法人 |
+| id_card | varchar(30) | 身份证号 |
+| province_id/city_id/district_id | bigint | 地区ID |
+| address | varchar(255) | 详细地址 |
+| balance | decimal(12,2) | 可用余额 |
+| frozen | decimal(12,2) | 冻结金额 |
+| total_income | decimal(12,2) | 累计收入 |
+| total_settlement | decimal(12,2) | 累计结算 |
+| product_count | int | 商品数量 |
+| order_count | int | 订单数量 |
+| rating | decimal(3,2) | 评分 |
+| level | tinyint | 商家等级 |
+| status | tinyint | 0待审核/1已通过/2已拒绝/3已禁用 |
+| reject_reason | varchar(255) | 拒绝原因 |
+| approved_at | timestamp | 审核通过时间 |
+| created_at | timestamp | 创建时间 |
+| deleted_at | timestamp | 软删除 |
 
----
-
-## 3. 字段映射表
-| 展示字段 | 数据来源 | 计算方式 | 更新频率 |
-|----------|----------|----------|----------|
-| ID | merchant.id | 直接读取 | 实时 |
-| 名称 | merchant.name | 直接读取 | 实时 |
-| 状态 | merchant.status | 0禁用1启用 | 实时 |
-| 创建时间 | merchant.created_at | 直接读取 | 实时 |
-| 更新时间 | merchant.updated_at | 直接读取 | 实时 |
-
----
-
-## 4. 操作流程
-### {title}业务流程图
+## 5. 操作流程
 ```mermaid
-{flowchart}
+flowchart TD
+    A[用户提交入驻申请] --> B[status=0 待审核]
+    B --> C{管理员审核}
+    C -->|通过| D[status=1 已通过]
+    C -->|拒绝| E[status=2 已拒绝]
+    D --> F[商家正常经营]
+    F --> G{违规?}
+    G -->|是| H[status=3 已禁用]
+    G -->|否| F
+    H --> I{申诉通过?}
+    I -->|是| D
 ```
 
-### 数据刷新机制
-1. 页面加载时自动请求最新数据
-2. 搜索筛选条件变化时立即刷新
-3. 增删改操作成功后自动刷新列表
-4. 统计数据缓存时间：5分钟
+## 6. 权限控制
+- 认证：Sanctum Token
+- 中间件：auth:sanctum
+- 当前无细粒度权限
 
----
+## 7. 关联模块
+- 依赖：用户管理（user_id）、商家分类（category_id）、商家等级（level）
+- 被依赖：商品管理（merchant_id）、订单管理（merchant_id）、财务管理（商家结算）、商家端（商家登录）
 
-## 5. 权限控制
-| 操作 | 权限标识 | 默认角色 |
-|------|----------|----------|
-| 查看列表 | merchant:list | 管理员/运营 |
-| 新增 | merchant:create | 管理员 |
-| 编辑 | merchant:edit | 管理员 |
-| 删除 | merchant:delete | 管理员 |
-| 状态管理 | merchant:status | 管理员 |
+## 8. 验收清单
+- [x] 商家列表正常加载，返回4项状态统计
+- [x] 商家详情返回完整信息
+- [x] 商家状态切换正常（启用/禁用）
+- [x] 编辑商家信息正常
+- [x] 删除商家（软删除）正常
+- [x] 按状态/关键词/分类筛选正常
+- [x] 分页功能正常
 
-### 权限说明
-- 权限通过Sanctum中间件校验，在路由组中统一配置
-- 超级管理员拥有所有权限，不受权限点限制
-- 无权限用户访问API返回403，前端隐藏对应操作按钮
-
----
-
-## 6. 关联模块
-### 依赖模块
-| 模块 | 依赖内容 | 具体关联字段 |
-|------|----------|-------------|
-| 用户管理 | 操作人信息 | admin_users.id |
-| 系统设置 | 配置参数 | system_configs |
-
-### 被依赖模块
-| 模块 | 使用方式 | 具体关联字段 |
-|------|----------|-------------|
-| 工作台 | 数据统计 | COUNT/SUM统计 |
-| 操作日志 | 记录操作 | operation_logs.module |
-
----
-
-## 7. 验收清单
-### 功能验收
-- [ ] 页面能正常加载，无白屏/500错误
-- [ ] 列表分页正常，显示总数和页码
-- [ ] 搜索功能正常，支持关键词模糊查询
-- [ ] 筛选功能正常，支持状态和时间范围
-- [ ] 新增功能完整，表单校验正确
-- [ ] 编辑能正确回显所有字段
-- [ ] 删除有确认弹窗，软删除不影响历史数据
-- [ ] 状态切换功能正常
-- [ ] 数据导出功能正常（如有）
-- [ ] 批量操作功能正常（如有）
-
-### 权限验收
-- [ ] 有权限的管理员可以正常操作
-- [ ] 无权限的管理员看到403或入口隐藏
-- [ ] 超级管理员不受权限限制
-
-### 性能验收
-- [ ] 页面加载时间 < 2秒
-- [ ] 数据查询耗时 < 500ms
-- [ ] 列表分页响应 < 1秒
-
----
-
-## 8. 常见问题
+## 9. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
-| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
-| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
-| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
-| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
-| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
-| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
-| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |
+| 商家名称重复 | name字段唯一约束 | 修改商家名称 |
+| 禁用后商家无法登录 | status=3时商家端拒绝登录 | 启用商家后恢复 |
+| 商家余额为0 | 无订单收入或已结算 | 查看账户日志确认资金流向 |
