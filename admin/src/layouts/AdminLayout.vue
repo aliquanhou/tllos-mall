@@ -12,17 +12,21 @@
               <template #title>
                 <el-icon><component :is="group.icon" /></el-icon>
                 <span>{{ group.title }}</span>
-              </template>
+                <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+</template>
               <el-menu-item v-for="item in group.children" :key="item.path" :index="item.path">
                 <el-icon><component :is="item.icon" /></el-icon>
-                <template #title>{{ item.title }}</template>
+                <template #title>{{ item.title }}  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+</template>
               </el-menu-item>
             </el-sub-menu>
             <el-menu-item v-else-if="group.children && group.children.length === 1" :index="group.children[0].path">
               <el-icon><component :is="group.icon" /></el-icon>
-              <template #title>{{ group.title }}</template>
+              <template #title>{{ group.title }}  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+</template>
             </el-menu-item>
-          </template>
+            <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+</template>
         </el-menu>
       </el-scrollbar>
     </el-aside>
@@ -38,19 +42,29 @@
         <div class="header-right">
           <el-dropdown @command="handleLocale">
             <el-button text>{{ appStore.locale === 'zh' ? '中文' : 'EN' }}</el-button>
-            <template #dropdown><el-dropdown-menu><el-dropdown-item command="zh">简体中文</el-dropdown-item><el-dropdown-item command="en">English</el-dropdown-item></el-dropdown-menu></template>
+            <template #dropdown><el-dropdown-menu><el-dropdown-item command="zh">简体中文</el-dropdown-item><el-dropdown-item command="en">English</el-dropdown-item></el-dropdown-menu>  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+</template>
           </el-dropdown>
           <el-dropdown @command="handleCommand">
             <div class="user-info"><el-avatar :size="32" icon="UserFilled" /><span class="username">{{ userStore.userInfo?.nickname || '管理员' }}</span></div>
-            <template #dropdown><el-dropdown-menu><el-dropdown-item command="profile">个人中心</el-dropdown-item><el-dropdown-item command="logout" divided>退出登录</el-dropdown-item></el-dropdown-menu></template>
+            <template #dropdown><el-dropdown-menu><el-dropdown-item command="profile">个人中心</el-dropdown-item><el-dropdown-item command="logout" divided>退出登录</el-dropdown-item></el-dropdown-menu>  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+</template>
           </el-dropdown>
         </div>
       </el-header>
       <el-main class="main-content"><router-view /></el-main>
     </el-container>
   </el-container>
+  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
 </template>
 <script setup>
+import DocDrawer from "@/components/DocDrawer.vue"
+import { ref } from "vue"
+const docVisible = ref(false)
+const docModule = ref("")
+const docPage = ref("_index")
+const docTitle = ref("技术文档")
+const openDoc = (m, p, t) => { docModule.value=m; docPage.value=p||"_index"; docTitle.value=t||"技术文档"; docVisible.value=true }
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
