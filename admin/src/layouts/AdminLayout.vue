@@ -72,105 +72,165 @@ const docPage = ref("_index")
 const docTitle = ref("技术文档")
 
 // 路由到文档的映射
-const routeDocMap = {
-  '/dashboard': { module: 'dashboard', page: '_index', title: '工作台 - 全局架构总纲' },
-  '/product': { module: 'product', page: '_index', title: '商品管理 - 模块总览' },
-  '/product/list': { module: 'product', page: 'list', title: '商品列表 - 技术文档' },
-  '/product/category': { module: 'product', page: 'category', title: '商品分类 - 技术文档' },
-  '/product/comment': { module: 'product', page: 'comment', title: '商品评价 - 技术文档' },
-  '/product/brand': { module: 'product', page: 'brand', title: '品牌管理 - 技术文档' },
-  '/order': { module: 'order', page: '_index', title: '订单管理 - 模块总览' },
-  '/order/list': { module: 'order', page: 'list', title: '订单列表 - 技术文档' },
-  '/order/after-sale': { module: 'order', page: 'after-sale', title: '售后管理 - 技术文档' },
-  '/order/refund': { module: 'order', page: 'refund', title: '退款管理 - 技术文档' },
-  '/merchant': { module: 'merchant', page: '_index', title: '商家管理 - 模块总览' },
-  '/merchant/list': { module: 'merchant', page: 'list', title: '商家列表 - 技术文档' },
-  '/merchant/audit': { module: 'merchant', page: 'audit', title: '入驻审核 - 技术文档' },
-  '/user': { module: 'user', page: '_index', title: '用户管理 - 模块总览' },
-  '/user/list': { module: 'user', page: 'list', title: '用户列表 - 技术文档' },
-  '/user/level': { module: 'user', page: 'level', title: '用户等级 - 技术文档' },
-  '/distribute': { module: 'distribute', page: '_index', title: '分销管理 - 模块总览' },
-  '/distribute/overview': { module: 'distribute', page: 'overview', title: '分销概览 - 技术文档' },
-  '/distribute/agents': { module: 'distribute', page: 'agents', title: '分销商 - 技术文档' },
-  '/distribute/orders': { module: 'distribute', page: 'orders', title: '分销订单 - 技术文档' },
-  '/distribute/levels': { module: 'distribute', page: 'levels', title: '分销等级 - 技术文档' },
-  '/distribute/settings': { module: 'distribute', page: 'settings', title: '分销设置 - 技术文档' },
-  '/marketing': { module: 'marketing', page: '_index', title: '营销管理 - 模块总览' },
-  '/marketing/coupon': { module: 'marketing', page: 'coupon', title: '优惠券 - 技术文档' },
-  '/marketing/discount': { module: 'marketing', page: 'discount', title: '会员折扣 - 技术文档' },
-  '/marketing/seckill': { module: 'marketing', page: 'seckill', title: '限时秒杀 - 技术文档' },
-  '/marketing/group': { module: 'marketing', page: 'group', title: '拼团活动 - 技术文档' },
-  '/application': { module: 'application', page: '_index', title: '应用管理 - 模块总览' },
-  '/application/deposit': { module: 'application', page: 'deposit', title: '充值管理 - 技术文档' },
-  '/application/material': { module: 'application', page: 'material', title: '素材管理 - 技术文档' },
-  '/application/article': { module: 'application', page: 'article', title: '文章资讯 - 技术文档' },
-  '/application/notice': { module: 'application', page: 'notice', title: '消息管理 - 技术文档' },
-  '/application/kefu': { module: 'application', page: 'kefu', title: '客服设置 - 技术文档' },
-  '/decoration': { module: 'decorate', page: '_index', title: '装修管理 - 模块总览' },
-  '/decoration/pages': { module: 'decorate', page: 'pages', title: '页面装修 - 技术文档' },
-  '/decoration/template': { module: 'decorate', page: 'templates', title: '模板管理 - 技术文档' },
-  '/decoration/banner': { module: 'decorate', page: 'banners', title: '轮播图 - 技术文档' },
-  '/decoration/navigation': { module: 'decorate', page: 'navigations', title: '导航图标 - 技术文档' },
-  '/finance': { module: 'finance', page: '_index', title: '财务管理 - 模块总览' },
-  '/finance/income': { module: 'finance', page: 'income', title: '订单收款 - 技术文档' },
-  '/finance/refund': { module: 'finance', page: 'refund', title: '退款记录 - 技术文档' },
-  '/finance/withdraw': { module: 'finance', page: 'withdraw', title: '提现管理 - 技术文档' },
-  '/finance/settlement': { module: 'finance', page: 'settlement', title: '商家结算 - 技术文档' },
-  '/permission': { module: 'permission', page: '_index', title: '权限管理 - 模块总览' },
-  '/permission/role': { module: 'permission', page: 'role', title: '角色管理 - 技术文档' },
-  '/permission/menu': { module: 'permission', page: 'menu', title: '菜单管理 - 技术文档' },
-  '/permission/dept': { module: 'permission', page: 'dept', title: '部门管理 - 技术文档' },
-  '/permission/admin': { module: 'permission', page: 'admin', title: '管理员管理 - 技术文档' },
-  '/system': { module: 'system', page: '_index', title: '系统设置 - 模块总览' },
-  '/system/basic': { module: 'system', page: 'basic', title: '基础配置 - 技术文档' },
-  '/system/pay': { module: 'system', page: 'pay', title: '支付配置 - 技术文档' },
-  '/system/logistics': { module: 'system', page: 'logistics', title: '物流配置 - 技术文档' },
-  '/system/order': { module: 'system', page: 'order', title: '订单设置 - 技术文档' },
-  '/system/dict': { module: 'system', page: 'dict', title: '数据字典 - 技术文档' },
-  '/system/log': { module: 'system', page: 'log', title: '操作日志 - 技术文档' },
-  '/organization': { module: 'organization', page: '_index', title: '组织管理 - 模块总览' },
-  '/organization/dept': { module: 'organization', page: 'dept', title: '部门管理 - 技术文档' },
-  '/organization/job': { module: 'organization', page: 'job', title: '岗位管理 - 技术文档' },
-  '/channel': { module: 'channel', page: '_index', title: '渠道设置 - 模块总览' },
-  '/channel/config': { module: 'channel', page: 'config', title: '渠道配置 - 技术文档' },
-  '/channel/menu': { module: 'channel', page: 'menu', title: '公众号菜单 - 技术文档' },
-  '/channel/reply': { module: 'channel', page: 'reply', title: '自动回复 - 技术文档' },
-  '/tools': { module: 'tools', page: '_index', title: '开发工具 - 模块总览' },
-  '/tools/generator': { module: 'tools', page: 'generator', title: '代码生成器 - 技术文档' },
-  '/tools/export': { module: 'tools', page: 'export', title: '数据导出 - 技术文档' },
+// 路由路径到文档模块的映射（处理特殊路径名）
+const pathToModule = {
+  'dashboard': 'dashboard',
+  'product': 'product',
+  'goods': 'product',
+  'order': 'order',
+  'merchant': 'merchant',
+  'shop': 'merchant',
+  'user': 'user',
+  'user-center': 'user',
+  'distribute': 'distribute',
+  'distribution': 'distribute',
+  'marketing': 'marketing',
+  'application': 'application',
+  'app': 'application',
+  'decoration': 'decorate',
+  'decorate': 'decorate',
+  'finance': 'finance',
+  'channel': 'channel',
+  'org': 'organization',
+  'organization': 'organization',
+  'permission': 'permission',
+  'system': 'system',
+  'tools': 'tools',
+  'tool': 'tools',
+}
+
+// 路径名到文档页面名的映射
+const pathToPage = {
+  'list': 'list',
+  'index': '_index',
+  'category': 'category',
+  'categories': 'category',
+  'comment': 'comment',
+  'comments': 'comment',
+  'review': 'comment',
+  'brand': 'brand',
+  'brands': 'brand',
+  'sku': 'list',
+  'type': 'list',
+  'stock-warning': 'list',
+  'after-sale': 'after-sale',
+  'refund': 'refund',
+  'log': 'list',
+  'audit': 'audit',
+  'account-log': 'list',
+  'menu': 'menu',
+  'permission': 'list',
+  'level': 'level',
+  'levels': 'level',
+  'recharge': 'list',
+  'withdraw': 'withdraw',
+  'address': 'list',
+  'auth': 'list',
+  'point': 'list',
+  'points': 'list',
+  'favorite': 'list',
+  'favorites': 'list',
+  'overview': 'overview',
+  'goods': 'list',
+  'order': 'orders',
+  'orders': 'orders',
+  'agent': 'agents',
+  'agents': 'agents',
+  'apply': 'agents',
+  'setting': 'settings',
+  'settings': 'settings',
+  'coupon': 'coupon',
+  'coupons': 'coupon',
+  'member-discount': 'discount',
+  'discount': 'discount',
+  'seckill': 'seckill',
+  'seckills': 'seckill',
+  'group': 'group',
+  'groups': 'group',
+  'pt-open': 'group',
+  'deposit': 'deposit',
+  'material': 'material',
+  'article': 'article',
+  'articles': 'article',
+  'notice': 'notice',
+  'announcement': 'notice',
+  'collect': 'list',
+  'kefu': 'kefu',
+  'page': 'pages',
+  'pages': 'pages',
+  'tabbar': 'navigations',
+  'template': 'templates',
+  'templates': 'templates',
+  'banner': 'banners',
+  'banners': 'banners',
+  'navigation': 'navigations',
+  'navigations': 'navigations',
+  'income': 'income',
+  'settlement': 'settlement',
+  'settlement-record': 'settlement',
+  'setting': 'config',
+  'config': 'basic',
+  'payment': 'pay',
+  'pay': 'pay',
+  'express': 'logistics',
+  'logistics': 'logistics',
+  'delivery-type': 'logistics',
+  'order-setting': 'order',
+  'transaction-setting': 'order',
+  'user-setting': 'order',
+  'web-setting': 'basic',
+  'notice-setting': 'order',
+  'sms-config': 'basic',
+  'storage': 'basic',
+  'pay-scene': 'pay',
+  'dict': 'dict',
+  'hot-search': 'dict',
+  'crontab': 'dict',
+  'area': 'logistics',
+  'express-template': 'logistics',
+  'file': 'log',
+  'cache': 'log',
+  'info': 'basic',
+  'upgrade': 'basic',
+  'dept': 'dept',
+  'role': 'role',
+  'admin': 'admin',
+  'job': 'job',
+  'generator': 'generator',
+  'export': 'export',
+  'oa-menu': 'menu',
+  'oa-reply': 'reply',
 }
 
 const openDoc = () => {
   const path = route.path
-  // 精确匹配
-  if (routeDocMap[path]) {
-    const doc = routeDocMap[path]
-    docModule.value = doc.module
-    docPage.value = doc.page
-    docTitle.value = doc.title
+  const parts = path.split('/').filter(Boolean)
+  
+  let module = ''
+  let page = '_index'
+  let title = '技术文档'
+  
+  if (parts.length === 0) {
+    // 根路径，显示工作台
+    module = 'dashboard'
+    title = '工作台 - 全局架构总纲'
+  } else if (parts.length === 1) {
+    // 只有模块名，如 /product, /order
+    const rawModule = parts[0]
+    module = pathToModule[rawModule] || rawModule
+    title = module.charAt(0).toUpperCase() + module.slice(1) + ' - 模块总览'
   } else {
-    // 尝试匹配父级路径
-    const parts = path.split('/').filter(Boolean)
-    // /admin/xxx/yyy -> 尝试 /admin/xxx
-    if (parts.length >= 2) {
-      const parentPath = '/' + parts.slice(0, 2).join('/')
-      if (routeDocMap[parentPath]) {
-        const doc = routeDocMap[parentPath]
-        docModule.value = doc.module
-        docPage.value = doc.page
-        docTitle.value = doc.title + '（父级文档）'
-      } else {
-        // 默认显示全局架构总纲
-        docModule.value = 'dashboard'
-        docPage.value = '_index'
-        docTitle.value = '全局架构总纲'
-      }
-    } else {
-      docModule.value = 'dashboard'
-      docPage.value = '_index'
-      docTitle.value = '全局架构总纲'
-    }
+    // 模块+页面，如 /product/list
+    const rawModule = parts[0]
+    const rawPage = parts[1]
+    module = pathToModule[rawModule] || rawModule
+    page = pathToPage[rawPage] || rawPage
+    title = rawPage.charAt(0).toUpperCase() + rawPage.slice(1).replace(/-/g, ' ') + ' - 技术文档'
   }
+  
+  docModule.value = module
+  docPage.value = page
+  docTitle.value = title
   docVisible.value = true
 }
 
