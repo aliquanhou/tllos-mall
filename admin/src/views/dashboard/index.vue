@@ -108,14 +108,14 @@ const pendingItems = computed(() => [
 const goTo = (path) => router.push(path)
 
 const loadStats = async () => {
-  const res = await request({ url: '/dashboard/stats' })
+  const res = await request({ url: '/admin/dashboard/stats' })
   stats.value = res.data || {}
 }
 
 const loadRecentOrders = async () => {
   loading.value = true
   try {
-    const res = await request({ url: '/dashboard/recent-orders' })
+    const res = await request({ url: '/admin/dashboard/recent-orders' })
     recentOrders.value = res.data?.list || []
   } finally {
     loading.value = false
