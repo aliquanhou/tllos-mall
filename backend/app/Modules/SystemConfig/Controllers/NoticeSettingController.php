@@ -4,8 +4,17 @@ use App\Core\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class NoticeSettingController extends BaseController
-{
-    public function index() { $list = DB::table('notice_settings')->orderBy('id','asc')->get(); return $this->success(['list'=>$list,'total'=>count($list)]); }
-    public function update(Request $request,$id) { $v=$request->validate(['sms_enabled'=>'sometimes|integer','mp_enabled'=>'sometimes|integer','app_enabled'=>'sometimes|integer','content'=>'sometimes|nullable|string']); $v['updated_at']=now(); DB::table('notice_settings')->where('id',$id)->update($v); return $this->success(null,'更新成功'); }
+class NoticeSettingController extends BaseController {
+    public function index(Request $request) {
+        $settings = DB::table('notice_settings')->pluck('value','key')->toArray();
+        return $this->success($settings);
+    }
+    public function save(Request $request) {
+        foreach($request->all() as $k=>$v){
+            if(is_string($k)&&!empty($k)) {
+                DB::table('notice_settings')->updateOrInsert(['key'=>$k],['value'=>$v,'updated_at'=>now()]);
+            }
+        }
+        return $this->success(null,'保存成功');
+    }
 }
