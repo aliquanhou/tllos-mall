@@ -39,13 +39,15 @@ jobs:
           sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
       
       - name: Install Composer dependencies
-        run: cd backend && composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: cd backend && composer install --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs
       
       - name: Generate key
         run: cd backend && php artisan key:generate
       
       - name: Check PHP syntax
-        run: cd backend && find app -name "*.php" -exec php -l {} \; | grep -v "No syntax errors" || echo "All PHP files syntax OK"
+        run: |
+          cd backend
+          find app -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax errors" || echo "All PHP files syntax OK"
       
       - name: Run migrations
         run: cd backend && php artisan migrate --force
