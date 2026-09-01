@@ -184,7 +184,7 @@ const componentTypes = [
 const defaultImages = ['https://picsum.photos/seed/d1/750/300.jpg','https://picsum.photos/seed/d2/750/300.jpg']
 
 const loadPage = async () => {
-  const res = await request({ url: `/decorate/pages/${route.params.id}` })
+  const res = await request({ url: `/admin/decorate/pages/${route.params.id}` })
   page.value = res.data?.page
   const comps = res.data?.components || []
   components.value = comps.map(c => ({
@@ -248,7 +248,7 @@ const save = async () => {
   saving.value = true
   try {
     await request({
-      url: `/decorate/pages/${route.params.id}/components`,
+      url: `/admin/decorate/pages/${route.params.id}/components`,
       method: 'post',
       data: { components: components.value }
     })

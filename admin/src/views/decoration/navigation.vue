@@ -73,7 +73,7 @@ const edit = (row) => { Object.assign(form, row); showDialog.value = true }
 
 const save = async () => {
   if (form.id) {
-    await request({ url: `/decorate/navigations/${form.id}`, method: 'put', data: form })
+    await request({ url: `/admin/decorate/navigations/${form.id}`, method: 'put', data: form })
   } else {
     await request({ url: '/admin/decorate/navigations', method: 'post', data: form })
   }
@@ -84,7 +84,7 @@ const save = async () => {
 
 const remove = async (row) => {
   await ElMessageBox.confirm('确定删除？', '提示', { type: 'warning' })
-  await request({ url: `/decorate/navigations/${row.id}`, method: 'delete' })
+  await request({ url: `/admin/decorate/navigations/${row.id}`, method: 'delete' })
   ElMessage.success('删除成功')
   loadList()
 }

@@ -71,7 +71,7 @@ const edit = (row) => {
 
 const save = async () => {
   if (form.id) {
-    await request({ url: `/decorate/templates/${form.id}`, method: 'put', data: form })
+    await request({ url: `/admin/decorate/templates/${form.id}`, method: 'put', data: form })
   } else {
     await request({ url: '/admin/decorate/templates', method: 'post', data: form })
   }
@@ -88,7 +88,7 @@ const apply = async (row) => {
 
 const remove = async (row) => {
   await ElMessageBox.confirm('确定删除该模板？', '提示', { type: 'warning' })
-  await request({ url: `/decorate/templates/${row.id}`, method: 'delete' })
+  await request({ url: `/admin/decorate/templates/${row.id}`, method: 'delete' })
   ElMessage.success('删除成功')
   loadList()
 }

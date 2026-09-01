@@ -95,7 +95,7 @@ const confirmApplyTemplate = async () => {
     return
   }
   await request({
-    url: `/decorate/pages/${currentPage.value.id}/apply-template`,
+    url: `/admin/decorate/pages/${currentPage.value.id}/apply-template`,
     method: 'post',
     data: { template_id: selectedTemplate.value }
   })
