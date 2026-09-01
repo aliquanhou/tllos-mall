@@ -430,15 +430,15 @@ Route::prefix('admin/merchants')->middleware('auth:sanctum')->group(function () 
 
     Route::get('/', [App\Modules\Merchant\Controllers\MerchantController::class, 'index']);
     Route::post('/', [App\Modules\Merchant\Controllers\MerchantController::class, 'store']);
-
+    Route::post('/draft', [App\Modules\Merchant\Controllers\MerchantController::class, 'draft']);
+    Route::get('/reject-templates', [App\Modules\Merchant\Controllers\MerchantController::class, 'rejectTemplates']);
+    Route::get('/audit-stats', [App\Modules\Merchant\Controllers\MerchantController::class, 'auditStats']);
     Route::get('/{id}', [App\Modules\Merchant\Controllers\MerchantController::class, 'show']);
-
     Route::post('/{id}/audit', [App\Modules\Merchant\Controllers\MerchantController::class, 'audit']);
-
+    Route::post('/{id}/resubmit', [App\Modules\Merchant\Controllers\MerchantController::class, 'resubmit']);
+    Route::post('/{id}/blacklist', [App\Modules\Merchant\Controllers\MerchantController::class, 'blacklist']);
     Route::post('/{id}/toggle-status', [App\Modules\Merchant\Controllers\MerchantController::class, 'toggleStatus']);
-
     Route::put('/{id}', [App\Modules\Merchant\Controllers\MerchantController::class, 'update']);
-
     Route::delete('/{id}', [App\Modules\Merchant\Controllers\MerchantController::class, 'destroy']);
 
 });
