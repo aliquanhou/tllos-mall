@@ -211,16 +211,13 @@ const openDoc = () => {
   let title = '技术文档'
   
   if (parts.length === 0) {
-    // 根路径，显示工作台
     module = 'dashboard'
     title = '工作台 - 全局架构总纲'
   } else if (parts.length === 1) {
-    // 只有模块名，如 /product, /order
     const rawModule = parts[0]
     module = pathToModule[rawModule] || rawModule
     title = module.charAt(0).toUpperCase() + module.slice(1) + ' - 模块总览'
   } else {
-    // 模块+页面，如 /product/list
     const rawModule = parts[0]
     const rawPage = parts[1]
     module = pathToModule[rawModule] || rawModule
