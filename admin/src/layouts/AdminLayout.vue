@@ -12,20 +12,20 @@
               <template #title>
                 <el-icon><component :is="group.icon" /></el-icon>
                 <span>{{ group.title }}</span>
-                <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+
+  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
 </template>
               <el-menu-item v-for="item in group.children" :key="item.path" :index="item.path">
                 <el-icon><component :is="item.icon" /></el-icon>
-                <template #title>{{ item.title }}  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+                <template #title>{{ item.title }}
 </template>
               </el-menu-item>
             </el-sub-menu>
             <el-menu-item v-else-if="group.children && group.children.length === 1" :index="group.children[0].path">
               <el-icon><component :is="group.icon" /></el-icon>
-              <template #title>{{ group.title }}  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+              <template #title>{{ group.title }}
 </template>
             </el-menu-item>
-            <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
 </template>
         </el-menu>
       </el-scrollbar>
@@ -40,14 +40,18 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-dropdown @command="handleLocale">
+          
+            <el-button type="primary" plain size="small" @click="openDoc" style="margin-right: 12px">
+              📘 技术文档
+            </el-button>
+<el-dropdown @command="handleLocale">
             <el-button text>{{ appStore.locale === 'zh' ? '中文' : 'EN' }}</el-button>
-            <template #dropdown><el-dropdown-menu><el-dropdown-item command="zh">简体中文</el-dropdown-item><el-dropdown-item command="en">English</el-dropdown-item></el-dropdown-menu>  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+            <template #dropdown><el-dropdown-menu><el-dropdown-item command="zh">简体中文</el-dropdown-item><el-dropdown-item command="en">English</el-dropdown-item></el-dropdown-menu>
 </template>
           </el-dropdown>
           <el-dropdown @command="handleCommand">
             <div class="user-info"><el-avatar :size="32" icon="UserFilled" /><span class="username">{{ userStore.userInfo?.nickname || '管理员' }}</span></div>
-            <template #dropdown><el-dropdown-menu><el-dropdown-item command="profile">个人中心</el-dropdown-item><el-dropdown-item command="logout" divided>退出登录</el-dropdown-item></el-dropdown-menu>  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+            <template #dropdown><el-dropdown-menu><el-dropdown-item command="profile">个人中心</el-dropdown-item><el-dropdown-item command="logout" divided>退出登录</el-dropdown-item></el-dropdown-menu>
 </template>
           </el-dropdown>
         </div>
@@ -55,16 +59,121 @@
       <el-main class="main-content"><router-view /></el-main>
     </el-container>
   </el-container>
-  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
 </template>
 <script setup>
 import DocDrawer from "@/components/DocDrawer.vue"
-import { ref } from "vue"
+import { ref, computed } from "vue"
+import { useRoute } from "vue-router"
+
+const route = useRoute()
 const docVisible = ref(false)
 const docModule = ref("")
 const docPage = ref("_index")
 const docTitle = ref("技术文档")
-const openDoc = (m, p, t) => { docModule.value=m; docPage.value=p||"_index"; docTitle.value=t||"技术文档"; docVisible.value=true }
+
+// 路由到文档的映射
+const routeDocMap = {
+  '/admin/dashboard': { module: 'dashboard', page: '_index', title: '工作台 - 全局架构总纲' },
+  '/admin/product': { module: 'product', page: '_index', title: '商品管理 - 模块总览' },
+  '/admin/product/list': { module: 'product', page: 'list', title: '商品列表 - 技术文档' },
+  '/admin/product/category': { module: 'product', page: 'category', title: '商品分类 - 技术文档' },
+  '/admin/product/comment': { module: 'product', page: 'comment', title: '商品评价 - 技术文档' },
+  '/admin/product/brand': { module: 'product', page: 'brand', title: '品牌管理 - 技术文档' },
+  '/admin/order': { module: 'order', page: '_index', title: '订单管理 - 模块总览' },
+  '/admin/order/list': { module: 'order', page: 'list', title: '订单列表 - 技术文档' },
+  '/admin/order/after-sale': { module: 'order', page: 'after-sale', title: '售后管理 - 技术文档' },
+  '/admin/order/refund': { module: 'order', page: 'refund', title: '退款管理 - 技术文档' },
+  '/admin/merchant': { module: 'merchant', page: '_index', title: '商家管理 - 模块总览' },
+  '/admin/merchant/list': { module: 'merchant', page: 'list', title: '商家列表 - 技术文档' },
+  '/admin/merchant/audit': { module: 'merchant', page: 'audit', title: '入驻审核 - 技术文档' },
+  '/admin/user': { module: 'user', page: '_index', title: '用户管理 - 模块总览' },
+  '/admin/user/list': { module: 'user', page: 'list', title: '用户列表 - 技术文档' },
+  '/admin/user/level': { module: 'user', page: 'level', title: '用户等级 - 技术文档' },
+  '/admin/distribute': { module: 'distribute', page: '_index', title: '分销管理 - 模块总览' },
+  '/admin/distribute/overview': { module: 'distribute', page: 'overview', title: '分销概览 - 技术文档' },
+  '/admin/distribute/agents': { module: 'distribute', page: 'agents', title: '分销商 - 技术文档' },
+  '/admin/distribute/orders': { module: 'distribute', page: 'orders', title: '分销订单 - 技术文档' },
+  '/admin/distribute/levels': { module: 'distribute', page: 'levels', title: '分销等级 - 技术文档' },
+  '/admin/distribute/settings': { module: 'distribute', page: 'settings', title: '分销设置 - 技术文档' },
+  '/admin/marketing': { module: 'marketing', page: '_index', title: '营销管理 - 模块总览' },
+  '/admin/marketing/coupon': { module: 'marketing', page: 'coupon', title: '优惠券 - 技术文档' },
+  '/admin/marketing/discount': { module: 'marketing', page: 'discount', title: '会员折扣 - 技术文档' },
+  '/admin/marketing/seckill': { module: 'marketing', page: 'seckill', title: '限时秒杀 - 技术文档' },
+  '/admin/marketing/group': { module: 'marketing', page: 'group', title: '拼团活动 - 技术文档' },
+  '/admin/application': { module: 'application', page: '_index', title: '应用管理 - 模块总览' },
+  '/admin/application/deposit': { module: 'application', page: 'deposit', title: '充值管理 - 技术文档' },
+  '/admin/application/material': { module: 'application', page: 'material', title: '素材管理 - 技术文档' },
+  '/admin/application/article': { module: 'application', page: 'article', title: '文章资讯 - 技术文档' },
+  '/admin/application/notice': { module: 'application', page: 'notice', title: '消息管理 - 技术文档' },
+  '/admin/application/kefu': { module: 'application', page: 'kefu', title: '客服设置 - 技术文档' },
+  '/admin/decoration': { module: 'decorate', page: '_index', title: '装修管理 - 模块总览' },
+  '/admin/decoration/pages': { module: 'decorate', page: 'pages', title: '页面装修 - 技术文档' },
+  '/admin/decoration/template': { module: 'decorate', page: 'templates', title: '模板管理 - 技术文档' },
+  '/admin/decoration/banner': { module: 'decorate', page: 'banners', title: '轮播图 - 技术文档' },
+  '/admin/decoration/navigation': { module: 'decorate', page: 'navigations', title: '导航图标 - 技术文档' },
+  '/admin/finance': { module: 'finance', page: '_index', title: '财务管理 - 模块总览' },
+  '/admin/finance/income': { module: 'finance', page: 'income', title: '订单收款 - 技术文档' },
+  '/admin/finance/refund': { module: 'finance', page: 'refund', title: '退款记录 - 技术文档' },
+  '/admin/finance/withdraw': { module: 'finance', page: 'withdraw', title: '提现管理 - 技术文档' },
+  '/admin/finance/settlement': { module: 'finance', page: 'settlement', title: '商家结算 - 技术文档' },
+  '/admin/permission': { module: 'permission', page: '_index', title: '权限管理 - 模块总览' },
+  '/admin/permission/role': { module: 'permission', page: 'role', title: '角色管理 - 技术文档' },
+  '/admin/permission/menu': { module: 'permission', page: 'menu', title: '菜单管理 - 技术文档' },
+  '/admin/permission/dept': { module: 'permission', page: 'dept', title: '部门管理 - 技术文档' },
+  '/admin/permission/admin': { module: 'permission', page: 'admin', title: '管理员管理 - 技术文档' },
+  '/admin/system': { module: 'system', page: '_index', title: '系统设置 - 模块总览' },
+  '/admin/system/basic': { module: 'system', page: 'basic', title: '基础配置 - 技术文档' },
+  '/admin/system/pay': { module: 'system', page: 'pay', title: '支付配置 - 技术文档' },
+  '/admin/system/logistics': { module: 'system', page: 'logistics', title: '物流配置 - 技术文档' },
+  '/admin/system/order': { module: 'system', page: 'order', title: '订单设置 - 技术文档' },
+  '/admin/system/dict': { module: 'system', page: 'dict', title: '数据字典 - 技术文档' },
+  '/admin/system/log': { module: 'system', page: 'log', title: '操作日志 - 技术文档' },
+  '/admin/organization': { module: 'organization', page: '_index', title: '组织管理 - 模块总览' },
+  '/admin/organization/dept': { module: 'organization', page: 'dept', title: '部门管理 - 技术文档' },
+  '/admin/organization/job': { module: 'organization', page: 'job', title: '岗位管理 - 技术文档' },
+  '/admin/channel': { module: 'channel', page: '_index', title: '渠道设置 - 模块总览' },
+  '/admin/channel/config': { module: 'channel', page: 'config', title: '渠道配置 - 技术文档' },
+  '/admin/channel/menu': { module: 'channel', page: 'menu', title: '公众号菜单 - 技术文档' },
+  '/admin/channel/reply': { module: 'channel', page: 'reply', title: '自动回复 - 技术文档' },
+  '/admin/tools': { module: 'tools', page: '_index', title: '开发工具 - 模块总览' },
+  '/admin/tools/generator': { module: 'tools', page: 'generator', title: '代码生成器 - 技术文档' },
+  '/admin/tools/export': { module: 'tools', page: 'export', title: '数据导出 - 技术文档' },
+}
+
+const openDoc = () => {
+  const path = route.path
+  // 精确匹配
+  if (routeDocMap[path]) {
+    const doc = routeDocMap[path]
+    docModule.value = doc.module
+    docPage.value = doc.page
+    docTitle.value = doc.title
+  } else {
+    // 尝试匹配父级路径
+    const parts = path.split('/').filter(Boolean)
+    // /admin/xxx/yyy -> 尝试 /admin/xxx
+    if (parts.length >= 2) {
+      const parentPath = '/' + parts.slice(0, 2).join('/')
+      if (routeDocMap[parentPath]) {
+        const doc = routeDocMap[parentPath]
+        docModule.value = doc.module
+        docPage.value = doc.page
+        docTitle.value = doc.title + '（父级文档）'
+      } else {
+        // 默认显示全局架构总纲
+        docModule.value = 'dashboard'
+        docPage.value = '_index'
+        docTitle.value = '全局架构总纲'
+      }
+    } else {
+      docModule.value = 'dashboard'
+      docPage.value = '_index'
+      docTitle.value = '全局架构总纲'
+    }
+  }
+  docVisible.value = true
+}
+
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
