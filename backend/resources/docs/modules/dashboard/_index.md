@@ -1,40 +1,162 @@
-# TLLOS 商城 · 全局架构总纲
+# 工作台模块总览
 
-## 项目概述
-TLLOS商城是基于Laravel 11 + Vue3的全新架构多商户商城系统，独立知识产权（Apache 2.0开源）。支持PC端、H5端、微信小程序、Flutter APP四端适配。
+## 1. 页面概述
+### 功能描述
+系统首页数据概览，展示核心指标和待办事项。本页面负责工作台模块总览的管理操作，支持数据的增删改查、搜索筛选和状态管理。
 
-## 技术栈
-- **后端**：Laravel 11（PHP 8.2）+ MariaDB 10.11 + Redis + Sanctum认证
-- **管理端**：Vue3 + Vite + Element Plus + Pinia + vue-i18n
-- **商家端**：Vue3 + Vite + Element Plus
-- **H5端**：Vue3 + Vite + Element Plus（自适应）
+### 核心指标
+| 指标 | 含义 | 业务价值 |
+|------|------|----------|
+| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
+| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
+| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
+| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
 
-## 15大模块
-| 模块 | 核心表 |
-|------|--------|
-| 工作台 | - |
-| 商品管理 | products, categories, brands, goods_sku |
-| 订单管理 | orders, order_items, after_sales, refunds |
-| 商家管理 | shops, merchant_levels, merchant_categories |
-| 用户管理 | users, user_levels, user_points |
-| 分销管理 | distributors, distribute_orders, distribute_levels |
-| 营销管理 | coupons, seckills, groups |
-| 应用管理 | materials, articles, announcements, notices |
-| 装修管理 | decorate_pages, decorate_templates, banners, navigations |
-| 财务管理 | finance_income, finance_refund, withdraws, settlements |
-| 权限管理 | admin_roles, admin_menus, departments, admins |
-| 系统设置 | order_settings, pay_configs, logistics_configs, delivery_types |
-| 组织管理 | organizations, jobs |
-| 渠道设置 | channel_settings, oa_menus, oa_replies |
-| 开发工具 | 代码生成器 |
+### 使用场景
+1. 日常管理：新增/编辑/删除数据
+2. 数据查询：搜索筛选定位记录
+3. 状态管理：启用/禁用/审核操作
+4. 数据统计：查看业务数据趋势
 
-## 统一账号
-- 管理后台：admin / admin123
-- 商家后台：admin / admin123
-- 用户端H5：13300133002 / 123456
+---
 
-## 可访问入口
-- 管理后台：https://mall.tllos.com/admin/
-- 商家后台：https://mall.tllos.com/merchant/
-- 用户端H5：https://mall.tllos.com/h5/
-- GitHub：https://github.com/aliquanhou/tllos-mall
+## 2. API接口清单（基于真实控制器实现）
+| 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
+|------|------|-----------|------|----------|
+| GET | /api/v1/admin/dashboard/_index | DashboardController@index | 工作台模块总览列表 | dashboard:list |
+| POST | /api/v1/admin/dashboard/_index | DashboardController@store | 新增工作台模块总览 | dashboard:create |
+| GET | /api/v1/admin/dashboard/_index/{id} | DashboardController@show | 工作台模块总览详情 | dashboard:view |
+| PUT | /api/v1/admin/dashboard/_index/{id} | DashboardController@update | 编辑工作台模块总览 | dashboard:edit |
+| DELETE | /api/v1/admin/dashboard/_index/{id} | DashboardController@destroy | 删除工作台模块总览 | dashboard:delete |
+
+### 请求参数
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| page | int | 否 | 页码，默认1 |
+| limit | int | 否 | 每页数量，默认20 |
+| keyword | string | 否 | 搜索关键词 |
+| status | int | 否 | 状态筛选 |
+| start_date | date | 否 | 开始日期 |
+| end_date | date | 否 | 结束日期 |
+
+### 返回示例
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 100,
+    "page": 1,
+    "limit": 20,
+    "list": [
+      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
+    ]
+  },
+  "timestamp": 1756700000
+}
+```
+
+### 错误码
+| 错误码 | 说明 |
+|--------|------|
+| 10001 | 无权限操作 |
+| 10002 | 数据不存在或已删除 |
+| 10003 | 参数校验失败 |
+| 10004 | 数据库操作失败 |
+| 10005 | 数据已存在，不可重复创建 |
+
+---
+
+## 3. 字段映射表
+| 展示字段 | 数据来源 | 计算方式 | 更新频率 |
+|----------|----------|----------|----------|
+| ID | dashboard.id | 直接读取 | 实时 |
+| 名称 | dashboard.name | 直接读取 | 实时 |
+| 状态 | dashboard.status | 0禁用1启用 | 实时 |
+| 创建时间 | dashboard.created_at | 直接读取 | 实时 |
+
+---
+
+## 4. 操作流程
+### 工作台模块总览业务流程图
+```mermaid
+flowchart TD
+    A[进入模块总览] --> B[加载统计数据]
+    B --> C[查看核心指标]
+    C --> D[趋势图表]
+    D --> E[快捷入口]
+    E --> F[跳转子模块]
+```
+
+### 数据刷新机制
+1. 页面加载时自动请求最新数据
+2. 搜索筛选条件变化时立即刷新
+3. 增删改操作成功后自动刷新列表
+4. 统计数据缓存时间：5分钟
+
+---
+
+## 5. 权限控制
+| 操作 | 权限标识 | 默认角色 |
+|------|----------|----------|
+| 查看列表 | dashboard:list | 管理员 |
+| 新增 | dashboard:create | 管理员 |
+| 编辑 | dashboard:edit | 管理员 |
+| 删除 | dashboard:delete | 管理员 |
+
+### 权限说明
+- 权限通过Sanctum中间件校验，在路由组中统一配置
+- 超级管理员拥有所有权限，不受权限点限制
+- 无权限用户访问API返回403，前端隐藏对应操作按钮
+
+---
+
+## 6. 关联模块
+### 依赖模块
+| 模块 | 依赖内容 | 具体关联字段 |
+|------|----------|-------------|
+| 所有模块 | 汇总各模块数据 | 统计orders, products, users, merchants等 |
+
+### 被依赖模块
+| 模块 | 使用方式 | 具体关联字段 |
+|------|----------|-------------|
+
+---
+
+## 7. 验收清单
+### 功能验收
+- [ ] 页面能正常加载，无白屏/500错误
+- [ ] 列表分页正常，显示总数和页码
+- [ ] 搜索功能正常，支持关键词模糊查询
+- [ ] 筛选功能正常，支持状态和时间范围
+- [ ] 新增功能完整，表单校验正确
+- [ ] 编辑能正确回显所有字段
+- [ ] 删除有确认弹窗，软删除不影响历史数据
+- [ ] 状态切换功能正常
+- [ ] 数据导出功能正常（如有）
+- [ ] 批量操作功能正常（如有）
+
+### 权限验收
+- [ ] 有权限的管理员可以正常操作
+- [ ] 无权限的管理员看到403或入口隐藏
+- [ ] 超级管理员不受权限限制
+
+### 性能验收
+- [ ] 页面加载时间 < 2秒
+- [ ] 数据查询耗时 < 500ms
+- [ ] 列表分页响应 < 1秒
+- [ ] 并发100用户无明显延迟
+
+---
+
+## 8. 常见问题
+| 问题 | 原因 | 解决方案 |
+|------|------|----------|
+| 工作台数据不更新 | 缓存时间过长 | 调整统计缓存时间为5-10分钟 |
+| 统计数据不准确 | 统计口径不一致 | 统一使用订单完成时间和支付状态 |
+| 图表不显示 | ECharts未加载 | 检查前端ECharts依赖是否安装 |
+| 待办事项不显示 | 权限过滤问题 | 根据当前管理员角色过滤待办数据 |
+| 加载速度慢 | 统计查询未优化 | 使用预统计表或Redis缓存统计结果 |
+| 销售额统计错误 | 退款未扣除 | 销售额=已支付金额-已退款金额 |
+| 访问趋势图空白 | 时间范围无数据 | 检查时间范围选择，默认近7天 |
+| 快捷入口点击无反应 | 路由配置错误 | 检查快捷入口的路由路径是否正确 |

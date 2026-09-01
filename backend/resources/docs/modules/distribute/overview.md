@@ -1,55 +1,58 @@
-# 分销概览
+# 概览
 
 ## 1. 页面概述
 ### 功能描述
-分销概览是分销体系的数据总看板，帮助管理员快速了解整个分销网络的运营状况，包括分销商数量、分销订单、佣金统计、趋势图表等核心指标。
+分销体系核心，管理分销商、等级、订单、佣金、设置等。本页面负责概览的管理操作，支持数据的增删改查、搜索筛选和状态管理。
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
 |------|------|----------|
-| 分销商总数 | 已审核通过的分销商数量 | 衡量分销网络规模 |
-| 今日新增 | 今日新注册分销商数 | 衡量增长趋势 |
-| 分销订单数 | 通过分销链接产生的订单总数 | 衡量分销转化效果 |
-| 佣金总额 | 已产生的佣金总和 | 衡量分销成本 |
-| 已结算佣金 | 已完成结算的佣金 | 衡量实际支出 |
-| 待结算佣金 | 已产生未结算的佣金 | 衡量待支付负债 |
+| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
+| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
+| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
+| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
 
 ### 使用场景
-1. 日常监控：管理员每天查看分销数据发现异常
-2. 运营决策：根据分销商增长和订单数据调整分销政策
-3. 财务对账：核对佣金结算数据
-4. 趋势分析：查看近7日/30日分销数据趋势
+1. 日常管理：新增/编辑/删除数据
+2. 数据查询：搜索筛选定位记录
+3. 状态管理：启用/禁用/审核操作
+4. 数据统计：查看业务数据趋势
 
 ---
 
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/distribute/overview | DistributeController@overview | 获取分销概览数据 | distribute:overview |
-| GET | /api/v1/admin/distribute/agents | DistributeController@agents | 分销商列表 | distribute:agent:list |
-| GET | /api/v1/admin/distribute/orders | DistributeController@orders | 分销订单列表 | distribute:order:list |
-| GET | /api/v1/admin/distribute/levels | DistributeController@levels | 分销等级列表 | distribute:level:list |
-| GET | /api/v1/admin/distribute/settings | DistributeController@getSettings | 分销设置 | distribute:setting:view |
+| GET | /api/v1/admin/distribute/overview | DistributeController@index | 概览列表 | distribute:list |
+| POST | /api/v1/admin/distribute/overview | DistributeController@store | 新增概览 | distribute:create |
+| GET | /api/v1/admin/distribute/overview/{id} | DistributeController@show | 概览详情 | distribute:view |
+| PUT | /api/v1/admin/distribute/overview/{id} | DistributeController@update | 编辑概览 | distribute:edit |
+| DELETE | /api/v1/admin/distribute/overview/{id} | DistributeController@destroy | 删除概览 | distribute:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| date_range | string | 否 | 日期范围筛选 |
+| page | int | 否 | 页码，默认1 |
+| limit | int | 否 | 每页数量，默认20 |
+| keyword | string | 否 | 搜索关键词 |
+| status | int | 否 | 状态筛选 |
+| start_date | date | 否 | 开始日期 |
+| end_date | date | 否 | 结束日期 |
 
 ### 返回示例
 ```json
 {
-  "code":0,
-  "data":{
-    "total_agents":156,
-    "today_new_agents":3,
-    "total_orders":1234,
-    "week_orders":89,
-    "total_commission":45678.50,
-    "settled_commission":32000.00,
-    "pending_commission":13678.50,
-    "trend":{"labels":["周一","周二","周三","周四","周五","周六","周日"],"orders":[12,15,18,22,20,25,30],"agents":[1,0,2,3,1,2,3]}
-  }
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 100,
+    "page": 1,
+    "limit": 20,
+    "list": [
+      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
+    ]
+  },
+  "timestamp": 1756700000
 }
 ```
 
@@ -60,104 +63,113 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据查询失败 |
+| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
-## 3. 字段映射表（基于真实数据表）
+## 3. 字段映射表
 | 展示字段 | 数据来源 | 计算方式 | 更新频率 |
 |----------|----------|----------|----------|
-| 分销商总数 | distributors COUNT | 直接统计 | 实时 |
-| 今日新增 | distributors WHERE DATE(created_at)=CURDATE() | 按日筛选 | 实时 |
-| 分销订单数 | orders WHERE is_distribute=1 | 订单标记 | 实时 |
-| 近7日订单 | orders WHERE is_distribute=1 AND created_at>=DATE_SUB(NOW(),INTERVAL 7 DAY) | 按日筛选 | 实时 |
-| 佣金总额 | distribute_orders SUM(commission) | 汇总计算 | 实时 |
-| 已结算佣金 | distribute_orders WHERE status=settled SUM(commission) | 状态筛选+汇总 | 实时 |
-| 待结算佣金 | distribute_orders WHERE status=pending SUM(commission) | 状态筛选+汇总 | 实时 |
+| ID | distribute.id | 直接读取 | 实时 |
+| 名称 | distribute.name | 直接读取 | 实时 |
+| 状态 | distribute.status | 0禁用1启用 | 实时 |
+| 创建时间 | distribute.created_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-```
-用户注册 → 申请成为分销商 → 管理员审核 → 审核通过
-├── 分享商品链接 → 新用户点击购买 → 订单完成支付
-│   └── 佣金计算（按比例）→ 佣金入账（待结算）→ 分销商申请提现 → 管理员审核 → 佣金结算完成
-└── 分销概览数据实时更新
+### 概览业务流程图
+```mermaid
+flowchart TD
+    A[进入列表页] --> B[加载数据]
+    B --> C[搜索/筛选]
+    C --> D[查看列表]
+    D --> E{操作选择}
+    E -->|新增| F[填写表单]
+    F --> G[提交保存]
+    E -->|编辑| H[回显数据]
+    H --> I[修改并保存]
+    E -->|删除| J[确认弹窗]
+    J --> K[执行删除]
+    E -->|查看| L[详情页]
+    G --> M[刷新列表]
+    I --> M
+    K --> M
 ```
 
 ### 数据刷新机制
-1. 页面加载自动请求最新数据
-2. 数据缓存时间5分钟
-3. 关键操作（新增分销商/订单完成）后自动刷新
+1. 页面加载时自动请求最新数据
+2. 搜索筛选条件变化时立即刷新
+3. 增删改操作成功后自动刷新列表
+4. 统计数据缓存时间：5分钟
 
 ---
 
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看分销概览 | distribute:overview | 管理员 |
-| 查看分销商列表 | distribute:agent:list | 管理员 |
-| 审核分销商申请 | distribute:agent:audit | 管理员 |
-| 查看分销订单 | distribute:order:list | 管理员 |
-| 管理分销等级 | distribute:level:manage | 管理员 |
-| 修改分销设置 | distribute:setting:manage | 超级管理员 |
+| 查看列表 | distribute:list | 管理员 |
+| 新增 | distribute:create | 管理员 |
+| 编辑 | distribute:edit | 管理员 |
+| 删除 | distribute:delete | 管理员 |
+
+### 权限说明
+- 权限通过Sanctum中间件校验，在路由组中统一配置
+- 超级管理员拥有所有权限，不受权限点限制
+- 无权限用户访问API返回403，前端隐藏对应操作按钮
 
 ---
 
 ## 6. 关联模块
 ### 依赖模块
-| 模块 | 依赖内容 |
-|------|----------|
-| 用户管理 | 用户注册数据→分销商来源 |
-| 订单管理 | 订单数据→分销订单统计 |
-| 财务管理 | 佣金结算数据→已结算/待结算 |
+| 模块 | 依赖内容 | 具体关联字段 |
+|------|----------|-------------|
+| 用户管理 | 分销商用户 | distributors.user_id → users.id |
+| 商品管理 | 分销商品 | distribute_goods.product_id → products.id |
+| 订单管理 | 分销订单 | distribute_orders.order_id → orders.id |
 
 ### 被依赖模块
-| 模块 | 使用方式 |
-|------|----------|
-| 工作台 | 汇总展示分销核心指标 |
-| 报表系统 | 导出分销数据报表 |
+| 模块 | 使用方式 | 具体关联字段 |
+|------|----------|-------------|
+| 财务管理 | 佣金结算 | distribute_orders.commission → finance_withdraw |
+| 用户端H5 | 分销中心 | 用户端展示分销商品和佣金 |
 
 ---
 
 ## 7. 验收清单
 ### 功能验收
-- [ ] 页面能正常加载无白屏/500错误
-- [ ] 列表分页正常显示总数和页码
-- [ ] 搜索功能正常
-- [ ] 筛选功能正常
-- [ ] 新增功能完整
+- [ ] 页面能正常加载，无白屏/500错误
+- [ ] 列表分页正常，显示总数和页码
+- [ ] 搜索功能正常，支持关键词模糊查询
+- [ ] 筛选功能正常，支持状态和时间范围
+- [ ] 新增功能完整，表单校验正确
 - [ ] 编辑能正确回显所有字段
-- [ ] 删除有确认弹窗
+- [ ] 删除有确认弹窗，软删除不影响历史数据
 - [ ] 状态切换功能正常
-- [ ] 分销商总数显示正确
-- [ ] 今日新增分销商显示正确
-- [ ] 分销订单总数显示正确
-- [ ] 近7日订单显示正确
-- [ ] 佣金总额显示正确
-- [ ] 已结算佣金显示正确
-- [ ] 待结算佣金显示正确
-- [ ] 趋势图正常显示（近7日订单/分销商趋势）
-- [ ] 数据自动刷新（5分钟内）
+- [ ] 数据导出功能正常（如有）
+- [ ] 批量操作功能正常（如有）
 
 ### 权限验收
 - [ ] 有权限的管理员可以正常操作
 - [ ] 无权限的管理员看到403或入口隐藏
+- [ ] 超级管理员不受权限限制
 
 ### 性能验收
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
+- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 列表数据为空 | 数据库无数据或筛选条件不对 | 检查筛选条件确认有测试数据 |
-| 新增保存失败 | 必填字段未填或格式错误 | 检查表单校验查看错误提示 |
-| 编辑回显不全 | 接口返回字段缺失 | 检查控制器返回字段 |
-| 删除后仍显示 | 缓存未清除 | 清除缓存 |
-| 概览数据为0 | 分销商/订单数据为空 | 正常情况引入测试数据 |
-| 佣金金额异常 | 佣金比例配置错误 | 检查分销设置中的佣金比例 |
-| 数据不更新 | 缓存未清除 | 清除Redis缓存或等待5分钟 |
+| 分销商审核不通过 | 申请信息不全或不符合条件 | 检查distributors.apply_info和审核标准 |
+| 分销订单不记录 | 分销关系未建立或订单未标记 | 检查orders.is_distribute=1和distributor_id |
+| 佣金计算错误 | 佣金比例配置或层级关系错误 | 检查distribute_levels.commission_rate和上下级关系 |
+| 分销商等级不升级 | 升级条件未达到 | 检查distribute_levels升级条件（销售额/人数） |
+| 分销商品不显示 | 商品未设置分销或已下架 | 检查distribute_goods.is_open和products.status |
+| 佣金无法提现 | 佣金未结算或余额不足 | 检查distribute_orders.status=settled和distributors.commission |
+| 分销关系错乱 | 上级分销商变更或绑定错误 | 检查distributors.parent_id和绑定时间逻辑 |
+| 分销设置不生效 | 缓存未清除 | 修改distribute_settings后清除Redis缓存 |

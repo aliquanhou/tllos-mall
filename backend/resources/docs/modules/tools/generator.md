@@ -2,52 +2,57 @@
 
 ## 1. 页面概述
 ### 功能描述
-代码生成器页面，支持根据数据表自动生成CRUD代码，包括模型、控制器、视图、API接口。代码生成器是提高开发效率的重要工具，减少重复代码编写。
+开发辅助工具，包括代码生成器、数据导出等。本页面负责代码生成器的管理操作，支持数据的增删改查、搜索筛选和状态管理。
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
 |------|------|----------|
-| 数据表数 | 可生成代码的数据表数 | 衡量可生成范围 |
-| 已生成表 | 已生成代码的数据表数 | 衡量使用情况 |
-| 生成文件数 | 每次生成的文件数量 | 衡量生成效率 |
-| 模板数 | 代码模板数量 | 衡量生成灵活性 |
+| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
+| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
+| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
+| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
 
 ### 使用场景
-1. 表选择：选择需要生成代码的数据表
-2. 字段配置：配置字段的显示/验证/搜索属性
-3. 代码预览：预览生成的代码
-4. 代码生成：生成并下载代码文件
+1. 日常管理：新增/编辑/删除数据
+2. 数据查询：搜索筛选定位记录
+3. 状态管理：启用/禁用/审核操作
+4. 数据统计：查看业务数据趋势
 
 ---
 
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/generator/tables | GeneratorController@tables | 数据表列表 | tools:generator:list |
-| GET | /api/v1/admin/generator/tables/{table}/columns | GeneratorController@columns | 表字段列表 | tools:generator:columns |
-| POST | /api/v1/admin/generator/generate | GeneratorController@generate | 生成代码 | tools:generator:generate |
-| POST | /api/v1/admin/generator/preview | GeneratorController@preview | 预览代码 | tools:generator:preview |
-| POST | /api/v1/admin/generator/download | GeneratorController@download | 下载代码 | tools:generator:download |
+| GET | /api/v1/admin/tools/generator | ToolsController@index | 代码生成器列表 | tools:list |
+| POST | /api/v1/admin/tools/generator | ToolsController@store | 新增代码生成器 | tools:create |
+| GET | /api/v1/admin/tools/generator/{id} | ToolsController@show | 代码生成器详情 | tools:view |
+| PUT | /api/v1/admin/tools/generator/{id} | ToolsController@update | 编辑代码生成器 | tools:edit |
+| DELETE | /api/v1/admin/tools/generator/{id} | ToolsController@destroy | 删除代码生成器 | tools:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| table | string | 是 | 数据表名 |
-| fields | array | 是 | 字段配置 |
-| template | string | 否 | 代码模板 |
+| page | int | 否 | 页码，默认1 |
+| limit | int | 否 | 每页数量，默认20 |
+| keyword | string | 否 | 搜索关键词 |
+| status | int | 否 | 状态筛选 |
+| start_date | date | 否 | 开始日期 |
+| end_date | date | 否 | 结束日期 |
 
 ### 返回示例
 ```json
 {
-  "code":0,
-  "data":{
-    "files":[
-      {"name":"Product.php","path":"app/Models/Product.php","content":"<?php\nnamespace App\\Models;\n..."} ,
-      {"name":"ProductController.php","path":"app/Http/Controllers/Admin/ProductController.php","content":"<?php\n..."} ,
-      {"name":"index.vue","path":"resources/js/views/product/index.vue","content":"<template>..."} 
-    ],
-    "count":3
-  }
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 100,
+    "page": 1,
+    "limit": 20,
+    "list": [
+      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
+    ]
+  },
+  "timestamp": 1756700000
 }
 ```
 
@@ -58,100 +63,109 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据表不存在 |
-| 10006 | 代码生成失败 |
+| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
-## 3. 字段映射表（基于真实数据表）
+## 3. 字段映射表
 | 展示字段 | 数据来源 | 计算方式 | 更新频率 |
 |----------|----------|----------|----------|
-| 表名 | information_schema.tables | 直接读取 | 实时 |
-| 表注释 | information_schema.tables.TABLE_COMMENT | 直接读取 | 实时 |
-| 字段数 | information_schema.columns COUNT | 按表统计 | 实时 |
-| 字段名 | information_schema.columns.COLUMN_NAME | 直接读取 | 实时 |
-| 字段类型 | information_schema.columns.COLUMN_TYPE | 直接读取 | 实时 |
-| 字段注释 | information_schema.columns.COLUMN_COMMENT | 直接读取 | 实时 |
-| 是否主键 | information_schema.columns.COLUMN_KEY | 直接读取 | 实时 |
-| 是否必填 | information_schema.columns.IS_NULLABLE | 直接读取 | 实时 |
+| ID | tools.id | 直接读取 | 实时 |
+| 名称 | tools.name | 直接读取 | 实时 |
+| 状态 | tools.status | 0禁用1启用 | 实时 |
+| 创建时间 | tools.created_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-```
-进入代码生成器 → 查看数据表列表
-├── 选择数据表 → 查看表字段
-├── 配置字段 → 设置显示/验证/搜索/排序属性
-├── 选择模板 → 选择代码生成模板
-├── 预览代码 → 查看生成的代码内容
-├── 生成代码 → 生成模型/控制器/视图/API
-└── 下载代码 → 下载ZIP包或直接写入项目
+### 代码生成器业务流程图
+```mermaid
+flowchart TD
+    A[进入列表页] --> B[加载数据]
+    B --> C[搜索/筛选]
+    C --> D[查看列表]
+    D --> E{操作选择}
+    E -->|新增| F[填写表单]
+    F --> G[提交保存]
+    E -->|编辑| H[回显数据]
+    H --> I[修改并保存]
+    E -->|删除| J[确认弹窗]
+    J --> K[执行删除]
+    E -->|查看| L[详情页]
+    G --> M[刷新列表]
+    I --> M
+    K --> M
 ```
 
 ### 数据刷新机制
-1. 页面加载加载数据表列表
-2. 选择表后加载字段
-3. 生成代码实时返回
+1. 页面加载时自动请求最新数据
+2. 搜索筛选条件变化时立即刷新
+3. 增删改操作成功后自动刷新列表
+4. 统计数据缓存时间：5分钟
 
 ---
 
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看表 | tools:generator:list | 超级管理员 |
-| 查看字段 | tools:generator:columns | 超级管理员 |
-| 生成代码 | tools:generator:generate | 超级管理员 |
-| 预览代码 | tools:generator:preview | 超级管理员 |
-| 下载代码 | tools:generator:download | 超级管理员 |
+| 查看列表 | tools:list | 管理员 |
+| 新增 | tools:create | 管理员 |
+| 编辑 | tools:edit | 管理员 |
+| 删除 | tools:delete | 管理员 |
+
+### 权限说明
+- 权限通过Sanctum中间件校验，在路由组中统一配置
+- 超级管理员拥有所有权限，不受权限点限制
+- 无权限用户访问API返回403，前端隐藏对应操作按钮
 
 ---
 
 ## 6. 关联模块
 ### 依赖模块
-| 模块 | 依赖内容 |
-|------|----------|
-| 数据库 | 数据表和字段读取 |
-| 代码模板 | 生成代码的模板 |
-| 文件系统 | 代码文件写入 |
+| 模块 | 依赖内容 | 具体关联字段 |
+|------|----------|-------------|
+| 所有模块 | 读取表结构生成代码 | 读取information_schema生成CRUD代码 |
 
 ### 被依赖模块
-| 模块 | 使用方式 |
-|------|----------|
-| 开发流程 | 快速生成CRUD代码 |
-| 所有模块 | 代码生成器生成的代码 |
+| 模块 | 使用方式 | 具体关联字段 |
+|------|----------|-------------|
 
 ---
 
 ## 7. 验收清单
 ### 功能验收
-- [ ] 页面能正常加载无白屏/500错误
-- [ ] 数据表列表正常显示
-- [ ] 表字段列表正常显示
-- [ ] 字段配置功能正常
-- [ ] 代码预览功能正常
-- [ ] 代码生成功能正常
-- [ ] 代码下载功能正常
-- [ ] 生成的模型代码正确
-- [ ] 生成的控制器代码正确
-- [ ] 生成的视图代码正确
+- [ ] 页面能正常加载，无白屏/500错误
+- [ ] 列表分页正常，显示总数和页码
+- [ ] 搜索功能正常，支持关键词模糊查询
+- [ ] 筛选功能正常，支持状态和时间范围
+- [ ] 新增功能完整，表单校验正确
+- [ ] 编辑能正确回显所有字段
+- [ ] 删除有确认弹窗，软删除不影响历史数据
+- [ ] 状态切换功能正常
+- [ ] 数据导出功能正常（如有）
+- [ ] 批量操作功能正常（如有）
 
 ### 权限验收
 - [ ] 有权限的管理员可以正常操作
 - [ ] 无权限的管理员看到403或入口隐藏
+- [ ] 超级管理员不受权限限制
 
 ### 性能验收
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
+- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 列表数据为空 | 数据库无数据或筛选条件不对 | 检查筛选条件确认有测试数据 |
-| 新增保存失败 | 必填字段未填或格式错误 | 检查表单校验查看错误提示 |
-| 编辑回显不全 | 接口返回字段缺失 | 检查控制器返回字段 |
-| 删除后仍显示 | 缓存未清除 | 清除缓存 |
-| 数据表不显示 | 数据库连接错误或权限不足 | 检查数据库配置和用户权限 |
-| 生成的代码有错误 | 模板配置错误或字段类型不支持 | 检查代码模板和字段类型映射 |
+| 代码生成失败 | 表结构读取失败 | 检查数据库连接和information_schema权限 |
+| 生成代码无法运行 | 模板版本不兼容 | 检查生成模板和当前Laravel版本匹配 |
+| 数据导出超时 | 数据量过大 | 使用分批导出或队列异步生成 |
+| 生成的路由冲突 | 路由命名重复 | 生成前检查现有路由，使用模块前缀 |
+| 表列表不显示 | 数据库连接错误 | 检查.env数据库配置 |
+| 预览代码不完整 | 模板变量缺失 | 检查代码生成模板的变量定义 |
+| 下载代码包失败 | zip扩展未安装 | 安装php-zip扩展 |
+| 生成的模型缺少关联 | 外键关系未识别 | 确保表有外键约束或手动添加关联 |

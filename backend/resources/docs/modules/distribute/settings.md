@@ -1,51 +1,58 @@
-# 分销设置
+# 设置
 
 ## 1. 页面概述
 ### 功能描述
-分销设置页面，支持配置分销体系的全局参数，包括是否开启分销、分销模式、佣金结算周期、提现规则、分销协议等。分销设置是整个分销体系的控制中心。
+分销体系核心，管理分销商、等级、订单、佣金、设置等。本页面负责设置的管理操作，支持数据的增删改查、搜索筛选和状态管理。
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
 |------|------|----------|
-| 分销状态 | 分销功能是否开启 | 控制分销开关 |
-| 结算周期 | 佣金结算周期天数 | 控制资金周转 |
-| 提现门槛 | 最低提现金额 | 控制提现频率 |
-| 手续费率 | 提现手续费比例 | 控制提现成本 |
+| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
+| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
+| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
+| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
 
 ### 使用场景
-1. 分销开关：开启或关闭整个分销功能
-2. 结算配置：配置佣金结算周期和规则
-3. 提现配置：配置提现门槛和手续费
-4. 协议配置：配置分销商入驻协议
+1. 日常管理：新增/编辑/删除数据
+2. 数据查询：搜索筛选定位记录
+3. 状态管理：启用/禁用/审核操作
+4. 数据统计：查看业务数据趋势
 
 ---
 
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/distribute/settings | DistributeController@getSettings | 获取分销设置 | distribute:setting:view |
-| POST | /api/v1/admin/distribute/settings | DistributeController@saveSettings | 保存分销设置 | distribute:setting:manage |
+| GET | /api/v1/admin/distribute/settings | DistributeController@index | 设置列表 | distribute:list |
+| POST | /api/v1/admin/distribute/settings | DistributeController@store | 新增设置 | distribute:create |
+| GET | /api/v1/admin/distribute/settings/{id} | DistributeController@show | 设置详情 | distribute:view |
+| PUT | /api/v1/admin/distribute/settings/{id} | DistributeController@update | 编辑设置 | distribute:edit |
+| DELETE | /api/v1/admin/distribute/settings/{id} | DistributeController@destroy | 删除设置 | distribute:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
+| page | int | 否 | 页码，默认1 |
+| limit | int | 否 | 每页数量，默认20 |
+| keyword | string | 否 | 搜索关键词 |
+| status | int | 否 | 状态筛选 |
+| start_date | date | 否 | 开始日期 |
+| end_date | date | 否 | 结束日期 |
 
 ### 返回示例
 ```json
 {
-  "code":0,
-  "data":{
-    "is_open":1,
-    "mode":1,
-    "settle_days":7,
-    "min_withdraw":"100.00",
-    "withdraw_fee":"1.00",
-    "max_withdraw":"10000.00",
-    "auto_upgrade":1,
-    "apply_audit":1,
-    "agreement":"分销商入驻协议内容...",
-    "description":"分销说明文字..."
-  }
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 100,
+    "page": 1,
+    "limit": 20,
+    "list": [
+      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
+    ]
+  },
+  "timestamp": 1756700000
 }
 ```
 
@@ -56,97 +63,113 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 设置保存失败 |
+| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
-## 3. 字段映射表（基于真实数据表）
+## 3. 字段映射表
 | 展示字段 | 数据来源 | 计算方式 | 更新频率 |
 |----------|----------|----------|----------|
-| 分销开关 | distribute_settings.is_open | 0关闭1开启 | 实时 |
-| 分销模式 | distribute_settings.mode | 1普通2多级 | 实时 |
-| 结算周期 | distribute_settings.settle_days | 订单完成后N天可结算 | 实时 |
-| 最低提现 | distribute_settings.min_withdraw | 最低提现金额 | 实时 |
-| 手续费率 | distribute_settings.withdraw_fee | 提现手续费百分比 | 实时 |
-| 最高提现 | distribute_settings.max_withdraw | 单次最高提现金额 | 实时 |
-| 自动升级 | distribute_settings.auto_upgrade | 0手动1自动 | 实时 |
-| 申请审核 | distribute_settings.apply_audit | 0免审1需审 | 实时 |
-| 分销协议 | distribute_settings.agreement | 富文本内容 | 实时 |
+| ID | distribute.id | 直接读取 | 实时 |
+| 名称 | distribute.name | 直接读取 | 实时 |
+| 状态 | distribute.status | 0禁用1启用 | 实时 |
+| 创建时间 | distribute.created_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-```
-进入分销设置 → 查看当前配置
-├── 修改分销开关 → 开启/关闭分销功能
-├── 修改结算周期 → 影响佣金可结算时间
-├── 修改提现规则 → 影响分销商提现
-├── 修改升级规则 → 影响分销商等级升级
-└── 保存设置 → 立即生效（清除缓存）
+### 设置业务流程图
+```mermaid
+flowchart TD
+    A[进入列表页] --> B[加载数据]
+    B --> C[搜索/筛选]
+    C --> D[查看列表]
+    D --> E{操作选择}
+    E -->|新增| F[填写表单]
+    F --> G[提交保存]
+    E -->|编辑| H[回显数据]
+    H --> I[修改并保存]
+    E -->|删除| J[确认弹窗]
+    J --> K[执行删除]
+    E -->|查看| L[详情页]
+    G --> M[刷新列表]
+    I --> M
+    K --> M
 ```
 
 ### 数据刷新机制
-1. 页面加载加载当前设置
-2. 保存后立即生效
-3. 设置变化影响所有分销相关逻辑
+1. 页面加载时自动请求最新数据
+2. 搜索筛选条件变化时立即刷新
+3. 增删改操作成功后自动刷新列表
+4. 统计数据缓存时间：5分钟
 
 ---
 
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看设置 | distribute:setting:view | 管理员 |
-| 修改设置 | distribute:setting:manage | 超级管理员 |
+| 查看列表 | distribute:list | 管理员 |
+| 新增 | distribute:create | 管理员 |
+| 编辑 | distribute:edit | 管理员 |
+| 删除 | distribute:delete | 管理员 |
+
+### 权限说明
+- 权限通过Sanctum中间件校验，在路由组中统一配置
+- 超级管理员拥有所有权限，不受权限点限制
+- 无权限用户访问API返回403，前端隐藏对应操作按钮
 
 ---
 
 ## 6. 关联模块
 ### 依赖模块
-| 模块 | 依赖内容 |
-|------|----------|
-| 分销商管理 | 分销商申请审核规则 |
-| 分销订单 | 佣金结算周期 |
-| 财务管理 | 提现规则和手续费 |
+| 模块 | 依赖内容 | 具体关联字段 |
+|------|----------|-------------|
+| 用户管理 | 分销商用户 | distributors.user_id → users.id |
+| 商品管理 | 分销商品 | distribute_goods.product_id → products.id |
+| 订单管理 | 分销订单 | distribute_orders.order_id → orders.id |
 
 ### 被依赖模块
-| 模块 | 使用方式 |
-|------|----------|
-| 分销概览 | 分销状态显示 |
-| 用户端H5 | 用户申请分销商和分销中心 |
+| 模块 | 使用方式 | 具体关联字段 |
+|------|----------|-------------|
+| 财务管理 | 佣金结算 | distribute_orders.commission → finance_withdraw |
+| 用户端H5 | 分销中心 | 用户端展示分销商品和佣金 |
 
 ---
 
 ## 7. 验收清单
 ### 功能验收
-- [ ] 页面能正常加载无白屏/500错误
-- [ ] 当前设置能正确回显
-- [ ] 分销开关功能正常
-- [ ] 结算周期配置正常
-- [ ] 提现门槛配置正常
-- [ ] 手续费率配置正常
-- [ ] 自动升级开关正常
-- [ ] 申请审核开关正常
-- [ ] 分销协议编辑正常
-- [ ] 保存设置后立即生效
-- [ ] 保存后清除缓存
+- [ ] 页面能正常加载，无白屏/500错误
+- [ ] 列表分页正常，显示总数和页码
+- [ ] 搜索功能正常，支持关键词模糊查询
+- [ ] 筛选功能正常，支持状态和时间范围
+- [ ] 新增功能完整，表单校验正确
+- [ ] 编辑能正确回显所有字段
+- [ ] 删除有确认弹窗，软删除不影响历史数据
+- [ ] 状态切换功能正常
+- [ ] 数据导出功能正常（如有）
+- [ ] 批量操作功能正常（如有）
 
 ### 权限验收
 - [ ] 有权限的管理员可以正常操作
 - [ ] 无权限的管理员看到403或入口隐藏
+- [ ] 超级管理员不受权限限制
 
 ### 性能验收
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
+- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 列表数据为空 | 数据库无数据或筛选条件不对 | 检查筛选条件确认有测试数据 |
-| 新增保存失败 | 必填字段未填或格式错误 | 检查表单校验查看错误提示 |
-| 编辑回显不全 | 接口返回字段缺失 | 检查控制器返回字段 |
-| 删除后仍显示 | 缓存未清除 | 清除缓存 |
-| 设置不生效 | 缓存未清除 | 保存后自动清除缓存或手动清除 |
-| 关闭分销后用户仍可分享 | 前端缓存未更新 | 清除前端缓存或等待缓存过期 |
+| 分销商审核不通过 | 申请信息不全或不符合条件 | 检查distributors.apply_info和审核标准 |
+| 分销订单不记录 | 分销关系未建立或订单未标记 | 检查orders.is_distribute=1和distributor_id |
+| 佣金计算错误 | 佣金比例配置或层级关系错误 | 检查distribute_levels.commission_rate和上下级关系 |
+| 分销商等级不升级 | 升级条件未达到 | 检查distribute_levels升级条件（销售额/人数） |
+| 分销商品不显示 | 商品未设置分销或已下架 | 检查distribute_goods.is_open和products.status |
+| 佣金无法提现 | 佣金未结算或余额不足 | 检查distribute_orders.status=settled和distributors.commission |
+| 分销关系错乱 | 上级分销商变更或绑定错误 | 检查distributors.parent_id和绑定时间逻辑 |
+| 分销设置不生效 | 缓存未清除 | 修改distribute_settings后清除Redis缓存 |

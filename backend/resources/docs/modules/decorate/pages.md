@@ -2,53 +2,57 @@
 
 ## 1. 页面概述
 ### 功能描述
-页面装修管理页面，支持可视化装修商城首页、分类页、会员中心等页面，包括组件拖拽、组件配置、页面预览、发布。装修管理是商城个性化展示的核心工具，无需代码即可搭建精美页面。
+可视化页面装修，包括页面装修、模板管理、轮播图、导航图标等。本页面负责页面装修的管理操作，支持数据的增删改查、搜索筛选和状态管理。
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
 |------|------|----------|
-| 页面总数 | 所有装修页面数 | 衡量页面规模 |
-| 已发布 | 已发布的页面数 | 衡量上线页面 |
-| 默认首页 | 当前使用的首页模板 | 衡量首页效果 |
-| 组件总数 | 所有页面组件数 | 衡量组件丰富度 |
+| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
+| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
+| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
+| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
 
 ### 使用场景
-1. 首页装修：搭建商城首页（轮播图/导航/商品推荐）
-2. 分类页装修：搭建分类页（分类导航/商品展示）
-3. 会员中心装修：搭建个人中心（个人信息/会员权益）
-4. 页面管理：创建/编辑/预览/发布装修页面
+1. 日常管理：新增/编辑/删除数据
+2. 数据查询：搜索筛选定位记录
+3. 状态管理：启用/禁用/审核操作
+4. 数据统计：查看业务数据趋势
 
 ---
 
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/decorate/pages | DecorateController@pages | 页面列表 | decorate:page:list |
-| GET | /api/v1/admin/decorate/pages/{id} | PageController@show | 页面详情（含组件） | decorate:page:view |
-| POST | /api/v1/admin/decorate/pages/{id} | DecorateController@pageSave | 保存页面装修 | decorate:page:edit |
-| POST | /api/v1/admin/decorate/pages/{id}/publish | PageController@publish | 发布页面 | decorate:page:publish |
-| GET | /api/v1/admin/decorate/templates | TemplateController@index | 模板列表 | decorate:template:list |
-| POST | /api/v1/admin/decorate/templates/{id}/apply | TemplateController@apply | 应用模板 | decorate:template:apply |
+| GET | /api/v1/admin/decorate/pages | DecorateController@index | 页面装修列表 | decorate:list |
+| POST | /api/v1/admin/decorate/pages | DecorateController@store | 新增页面装修 | decorate:create |
+| GET | /api/v1/admin/decorate/pages/{id} | DecorateController@show | 页面装修详情 | decorate:view |
+| PUT | /api/v1/admin/decorate/pages/{id} | DecorateController@update | 编辑页面装修 | decorate:edit |
+| DELETE | /api/v1/admin/decorate/pages/{id} | DecorateController@destroy | 删除页面装修 | decorate:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| page | int | 否 | 页码默认1 |
-| limit | int | 否 | 每页数量默认20 |
+| page | int | 否 | 页码，默认1 |
+| limit | int | 否 | 每页数量，默认20 |
 | keyword | string | 否 | 搜索关键词 |
-| page_type | string | 否 | 页面类型 |
-| status | int | 否 | 状态 |
+| status | int | 否 | 状态筛选 |
+| start_date | date | 否 | 开始日期 |
+| end_date | date | 否 | 结束日期 |
 
 ### 返回示例
 ```json
 {
-  "code":0,
-  "data":{"total":5,"list":[
-    {"id":1,"name":"经典电商首页","page_type":"home","is_default":1,"status":1,"component_count":12,"preview":"https://.../preview.jpg","published_at":"2026-09-01 10:00:00","updated_at":"2026-09-01 12:00:00","components":[
-      {"id":1,"component_type":"banner","name":"轮播图","sort":1,"config":{"images":["https://.../1.jpg","https://.../2.jpg"],"autoplay":true,"interval":3000}},
-      {"id":2,"component_type":"navgrid","name":"分类导航","sort":2,"config":{"items":[{"name":"数码","icon":"https://.../1.png","link":"/category/1"}]}}
-    ]}
-  ]}
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 100,
+    "page": 1,
+    "limit": 20,
+    "list": [
+      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
+    ]
+  },
+  "timestamp": 1756700000
 }
 ```
 
@@ -59,114 +63,112 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 页面已发布不能删除 |
-| 10006 | 组件配置格式错误 |
+| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
-## 3. 字段映射表（基于真实数据表）
+## 3. 字段映射表
 | 展示字段 | 数据来源 | 计算方式 | 更新频率 |
 |----------|----------|----------|----------|
-| 页面ID | decorate_pages.id | 直接读取 | 实时 |
-| 页面名称 | decorate_pages.name | 直接读取 | 实时 |
-| 页面类型 | decorate_pages.page_type | home/category/member | 实时 |
-| 是否默认 | decorate_pages.is_default | 0否1是 | 实时 |
-| 状态 | decorate_pages.status | 0草稿1已发布 | 实时 |
-| 组件数 | decorate_components COUNT | 按页面统计 | 实时 |
-| 预览图 | decorate_pages.preview | 直接读取 | 实时 |
-| 发布时间 | decorate_pages.published_at | 直接读取 | 实时 |
-| 更新时间 | decorate_pages.updated_at | 直接读取 | 实时 |
+| ID | decorate.id | 直接读取 | 实时 |
+| 名称 | decorate.name | 直接读取 | 实时 |
+| 状态 | decorate.status | 0禁用1启用 | 实时 |
+| 创建时间 | decorate.created_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-```
-进入页面装修 → 选择页面或新建页面
-├── 可视化编辑器 → 拖拽组件到页面
-│   ├── 配置组件 → 设置组件参数（图片/链接/样式）
-│   ├── 预览页面 → 查看装修效果
-│   └── 保存草稿 → 状态为草稿
-├── 应用模板 → 选择预设模板 → 一键应用
-├── 发布页面 → 状态为已发布 → 用户端生效
-├── 设为默认 → 该页面作为默认首页
-└── 删除页面 → 非默认页面可删除
+### 页面装修业务流程图
+```mermaid
+flowchart TD
+    A[进入列表页] --> B[加载数据]
+    B --> C[搜索/筛选]
+    C --> D[查看列表]
+    D --> E{操作选择}
+    E -->|新增| F[填写表单]
+    F --> G[提交保存]
+    E -->|编辑| H[回显数据]
+    H --> I[修改并保存]
+    E -->|删除| J[确认弹窗]
+    J --> K[执行删除]
+    E -->|查看| L[详情页]
+    G --> M[刷新列表]
+    I --> M
+    K --> M
 ```
 
 ### 数据刷新机制
-1. 页面加载加载页面列表
-2. 保存/发布后刷新
-3. 组件配置实时保存
+1. 页面加载时自动请求最新数据
+2. 搜索筛选条件变化时立即刷新
+3. 增删改操作成功后自动刷新列表
+4. 统计数据缓存时间：5分钟
 
 ---
 
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看页面 | decorate:page:list | 管理员/运营 |
-| 编辑页面 | decorate:page:edit | 管理员/运营 |
-| 发布页面 | decorate:page:publish | 管理员 |
-| 管理模板 | decorate:template:manage | 管理员 |
-| 应用模板 | decorate:template:apply | 管理员/运营 |
+| 查看列表 | decorate:list | 管理员 |
+| 新增 | decorate:create | 管理员 |
+| 编辑 | decorate:edit | 管理员 |
+| 删除 | decorate:delete | 管理员 |
+
+### 权限说明
+- 权限通过Sanctum中间件校验，在路由组中统一配置
+- 超级管理员拥有所有权限，不受权限点限制
+- 无权限用户访问API返回403，前端隐藏对应操作按钮
 
 ---
 
 ## 6. 关联模块
 ### 依赖模块
-| 模块 | 依赖内容 |
-|------|----------|
-| 素材管理 | 装修组件图片选择 |
-| 商品管理 | 商品推荐组件选择商品 |
-| 分类管理 | 分类导航组件选择分类 |
-| 轮播图管理 | 轮播图组件数据 |
-| 导航图标管理 | 导航图标组件数据 |
+| 模块 | 依赖内容 | 具体关联字段 |
+|------|----------|-------------|
+| 商品管理 | 商品推荐组件 | decorate_components.config → products.id |
+| 素材管理 | 装修图片 | banners.image, components.image → materials.url |
+| 营销管理 | 活动跳转 | components.link → marketing activities |
 
 ### 被依赖模块
-| 模块 | 使用方式 |
-|------|----------|
-| 用户端H5 | 首页/分类页/会员中心渲染 |
-| 装修管理 | 模板管理和组件管理 |
-| 系统设置 | 默认页面配置 |
+| 模块 | 使用方式 | 具体关联字段 |
+|------|----------|-------------|
+| 用户端H5 | 页面动态渲染 | H5首页根据decorate_pages配置渲染 |
 
 ---
 
 ## 7. 验收清单
 ### 功能验收
-- [ ] 页面能正常加载无白屏/500错误
-- [ ] 列表分页正常显示总数和页码
-- [ ] 搜索功能正常
-- [ ] 筛选功能正常
-- [ ] 新增功能完整
+- [ ] 页面能正常加载，无白屏/500错误
+- [ ] 列表分页正常，显示总数和页码
+- [ ] 搜索功能正常，支持关键词模糊查询
+- [ ] 筛选功能正常，支持状态和时间范围
+- [ ] 新增功能完整，表单校验正确
 - [ ] 编辑能正确回显所有字段
-- [ ] 删除有确认弹窗
+- [ ] 删除有确认弹窗，软删除不影响历史数据
 - [ ] 状态切换功能正常
-- [ ] 页面详情能查看所有组件配置
-- [ ] 可视化编辑器正常（组件拖拽）
-- [ ] 组件配置正常（参数设置）
-- [ ] 页面预览功能正常
-- [ ] 保存草稿功能正常
-- [ ] 发布页面功能正常
-- [ ] 应用模板功能正常
-- [ ] 设为默认功能正常
-- [ ] 组件排序功能正常
-- [ ] 按页面类型筛选正常
+- [ ] 数据导出功能正常（如有）
+- [ ] 批量操作功能正常（如有）
 
 ### 权限验收
 - [ ] 有权限的管理员可以正常操作
 - [ ] 无权限的管理员看到403或入口隐藏
+- [ ] 超级管理员不受权限限制
 
 ### 性能验收
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
+- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 列表数据为空 | 数据库无数据或筛选条件不对 | 检查筛选条件确认有测试数据 |
-| 新增保存失败 | 必填字段未填或格式错误 | 检查表单校验查看错误提示 |
-| 编辑回显不全 | 接口返回字段缺失 | 检查控制器返回字段 |
-| 删除后仍显示 | 缓存未清除 | 清除缓存 |
-| 装修不生效 | 页面未发布或缓存未清除 | 发布页面并清除缓存 |
-| 组件拖拽不工作 | 前端JS错误或组件库加载失败 | 检查浏览器控制台和组件库配置 |
+| 装修页面不生效 | 页面未发布或缓存未清除 | 点击发布按钮，清除Redis页面缓存 |
+| 轮播图不显示 | 轮播图未启用或时间未到 | 检查banners.status和start_time/end_time |
+| 模板应用后样式错乱 | 模板组件配置不兼容 | 检查模板组件版本和当前系统版本 |
+| 导航图标点击无反应 | 跳转链接配置错误 | 检查navigations.link格式，支持内部页面和外部URL |
+| 底部导航不显示 | tabbar未启用 | 检查decorate_tabbars.status=1 |
+| 商品推荐不更新 | 缓存时间过长 | 调整组件缓存时间或手动刷新 |
+| 页面装修数据丢失 | 未保存草稿 | 装修过程中定期保存草稿，发布前预览 |
+| 分类页装修不显示 | 分类页模板未设置 | 检查decorate_pages.page_type=category |

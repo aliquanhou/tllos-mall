@@ -2,50 +2,57 @@
 
 ## 1. 页面概述
 ### 功能描述
-装修模板管理页面，支持创建和管理页面装修模板，包括模板导入/导出、模板预览、模板应用。模板是预设的页面装修方案，可以快速应用到新页面。
+可视化页面装修，包括页面装修、模板管理、轮播图、导航图标等。本页面负责模板管理的管理操作，支持数据的增删改查、搜索筛选和状态管理。
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
 |------|------|----------|
-| 模板总数 | 所有模板数量 | 衡量模板库规模 |
-| 系统模板 | 系统预设模板数 | 衡量官方模板 |
-| 自定义模板 | 用户创建模板数 | 衡量自定义能力 |
-| 应用次数 | 模板被应用次数 | 衡量模板使用率 |
+| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
+| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
+| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
+| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
 
 ### 使用场景
-1. 模板管理：查看/编辑/删除模板
-2. 模板应用：将模板应用到页面
-3. 模板导入：导入外部模板
-4. 模板导出：导出当前页面为模板
+1. 日常管理：新增/编辑/删除数据
+2. 数据查询：搜索筛选定位记录
+3. 状态管理：启用/禁用/审核操作
+4. 数据统计：查看业务数据趋势
 
 ---
 
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/decorate/templates | TemplateController@index | 模板列表 | decorate:template:list |
-| GET | /api/v1/admin/decorate/templates/{id} | TemplateController@show | 模板详情 | decorate:template:view |
-| POST | /api/v1/admin/decorate/templates | TemplateController@store | 新增模板 | decorate:template:create |
-| PUT | /api/v1/admin/decorate/templates/{id} | TemplateController@update | 编辑模板 | decorate:template:edit |
-| DELETE | /api/v1/admin/decorate/templates/{id} | TemplateController@destroy | 删除模板 | decorate:template:delete |
-| POST | /api/v1/admin/decorate/templates/{id}/apply | TemplateController@apply | 应用模板 | decorate:template:apply |
+| GET | /api/v1/admin/decorate/template | DecorateController@index | 模板管理列表 | decorate:list |
+| POST | /api/v1/admin/decorate/template | DecorateController@store | 新增模板管理 | decorate:create |
+| GET | /api/v1/admin/decorate/template/{id} | DecorateController@show | 模板管理详情 | decorate:view |
+| PUT | /api/v1/admin/decorate/template/{id} | DecorateController@update | 编辑模板管理 | decorate:edit |
+| DELETE | /api/v1/admin/decorate/template/{id} | DecorateController@destroy | 删除模板管理 | decorate:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| page | int | 否 | 页码默认1 |
-| limit | int | 否 | 每页数量默认20 |
+| page | int | 否 | 页码，默认1 |
+| limit | int | 否 | 每页数量，默认20 |
 | keyword | string | 否 | 搜索关键词 |
-| page_type | string | 否 | 页面类型 |
-| is_system | int | 否 | 是否系统模板 |
+| status | int | 否 | 状态筛选 |
+| start_date | date | 否 | 开始日期 |
+| end_date | date | 否 | 结束日期 |
 
 ### 返回示例
 ```json
 {
-  "code":0,
-  "data":{"total":8,"list":[
-    {"id":1,"name":"经典电商模板","page_type":"home","description":"轮播图+分类导航+商品推荐","thumbnail":"https://.../template1.jpg","components":12,"is_system":1,"apply_count":156,"status":1,"created_at":"2026-08-01"}
-  ]}
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 100,
+    "page": 1,
+    "limit": 20,
+    "list": [
+      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
+    ]
+  },
+  "timestamp": 1756700000
 }
 ```
 
@@ -56,110 +63,112 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 系统模板不能删除 |
-| 10006 | 模板格式错误 |
+| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
-## 3. 字段映射表（基于真实数据表）
+## 3. 字段映射表
 | 展示字段 | 数据来源 | 计算方式 | 更新频率 |
 |----------|----------|----------|----------|
-| 模板ID | decorate_templates.id | 直接读取 | 实时 |
-| 模板名称 | decorate_templates.name | 直接读取 | 实时 |
-| 页面类型 | decorate_templates.page_type | home/category/member | 实时 |
-| 描述 | decorate_templates.description | 直接读取 | 实时 |
-| 缩略图 | decorate_templates.thumbnail | 直接读取 | 实时 |
-| 组件数 | decorate_templates.components | JSON配置 | 实时 |
-| 是否系统 | decorate_templates.is_system | 0自定义1系统 | 实时 |
-| 应用次数 | decorate_templates.apply_count | 累计统计 | 准实时 |
-| 状态 | decorate_templates.status | 0禁用1启用 | 实时 |
+| ID | decorate.id | 直接读取 | 实时 |
+| 名称 | decorate.name | 直接读取 | 实时 |
+| 状态 | decorate.status | 0禁用1启用 | 实时 |
+| 创建时间 | decorate.created_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-```
-进入模板管理 → 查看模板列表
-├── 新建模板 → 从空白创建或从页面保存为模板
-├── 编辑模板 → 修改模板组件配置
-├── 预览模板 → 查看模板效果
-├── 应用模板 → 选择目标页面 → 一键应用
-├── 导出模板 → 导出模板JSON文件
-├── 导入模板 → 上传模板JSON文件
-└── 删除模板 → 自定义模板可删除（系统模板不可删）
+### 模板管理业务流程图
+```mermaid
+flowchart TD
+    A[进入列表页] --> B[加载数据]
+    B --> C[搜索/筛选]
+    C --> D[查看列表]
+    D --> E{操作选择}
+    E -->|新增| F[填写表单]
+    F --> G[提交保存]
+    E -->|编辑| H[回显数据]
+    H --> I[修改并保存]
+    E -->|删除| J[确认弹窗]
+    J --> K[执行删除]
+    E -->|查看| L[详情页]
+    G --> M[刷新列表]
+    I --> M
+    K --> M
 ```
 
 ### 数据刷新机制
-1. 页面加载加载模板列表
-2. 增删改后刷新列表
-3. 应用次数准实时更新
+1. 页面加载时自动请求最新数据
+2. 搜索筛选条件变化时立即刷新
+3. 增删改操作成功后自动刷新列表
+4. 统计数据缓存时间：5分钟
 
 ---
 
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看模板 | decorate:template:list | 管理员/运营 |
-| 新增模板 | decorate:template:create | 管理员/运营 |
-| 编辑模板 | decorate:template:edit | 管理员/运营 |
-| 删除模板 | decorate:template:delete | 管理员 |
-| 应用模板 | decorate:template:apply | 管理员/运营 |
+| 查看列表 | decorate:list | 管理员 |
+| 新增 | decorate:create | 管理员 |
+| 编辑 | decorate:edit | 管理员 |
+| 删除 | decorate:delete | 管理员 |
+
+### 权限说明
+- 权限通过Sanctum中间件校验，在路由组中统一配置
+- 超级管理员拥有所有权限，不受权限点限制
+- 无权限用户访问API返回403，前端隐藏对应操作按钮
 
 ---
 
 ## 6. 关联模块
 ### 依赖模块
-| 模块 | 依赖内容 |
-|------|----------|
-| 页面装修 | 模板应用到页面 |
-| 素材管理 | 模板图片资源 |
-| 组件库 | 模板组件配置 |
+| 模块 | 依赖内容 | 具体关联字段 |
+|------|----------|-------------|
+| 商品管理 | 商品推荐组件 | decorate_components.config → products.id |
+| 素材管理 | 装修图片 | banners.image, components.image → materials.url |
+| 营销管理 | 活动跳转 | components.link → marketing activities |
 
 ### 被依赖模块
-| 模块 | 使用方式 |
-|------|----------|
-| 页面装修 | 选择模板应用 |
-| 用户端H5 | 应用模板后的页面渲染 |
+| 模块 | 使用方式 | 具体关联字段 |
+|------|----------|-------------|
+| 用户端H5 | 页面动态渲染 | H5首页根据decorate_pages配置渲染 |
 
 ---
 
 ## 7. 验收清单
 ### 功能验收
-- [ ] 页面能正常加载无白屏/500错误
-- [ ] 列表分页正常显示总数和页码
-- [ ] 搜索功能正常
-- [ ] 筛选功能正常
-- [ ] 新增功能完整
+- [ ] 页面能正常加载，无白屏/500错误
+- [ ] 列表分页正常，显示总数和页码
+- [ ] 搜索功能正常，支持关键词模糊查询
+- [ ] 筛选功能正常，支持状态和时间范围
+- [ ] 新增功能完整，表单校验正确
 - [ ] 编辑能正确回显所有字段
-- [ ] 删除有确认弹窗
+- [ ] 删除有确认弹窗，软删除不影响历史数据
 - [ ] 状态切换功能正常
-- [ ] 模板详情能查看组件配置和预览
-- [ ] 新建模板功能正常
-- [ ] 编辑模板功能正常
-- [ ] 预览模板功能正常
-- [ ] 应用模板功能正常
-- [ ] 导出模板功能正常
-- [ ] 导入模板功能正常
-- [ ] 删除模板功能正常（系统模板提示）
-- [ ] 按页面类型筛选正常
-- [ ] 应用次数统计正确
+- [ ] 数据导出功能正常（如有）
+- [ ] 批量操作功能正常（如有）
 
 ### 权限验收
 - [ ] 有权限的管理员可以正常操作
 - [ ] 无权限的管理员看到403或入口隐藏
+- [ ] 超级管理员不受权限限制
 
 ### 性能验收
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
+- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 列表数据为空 | 数据库无数据或筛选条件不对 | 检查筛选条件确认有测试数据 |
-| 新增保存失败 | 必填字段未填或格式错误 | 检查表单校验查看错误提示 |
-| 编辑回显不全 | 接口返回字段缺失 | 检查控制器返回字段 |
-| 删除后仍显示 | 缓存未清除 | 清除缓存 |
-| 应用模板后页面不变化 | 缓存未清除或页面未发布 | 清除缓存并重新发布页面 |
-| 导入模板失败 | 模板格式错误或版本不兼容 | 检查模板JSON格式和版本号 |
+| 装修页面不生效 | 页面未发布或缓存未清除 | 点击发布按钮，清除Redis页面缓存 |
+| 轮播图不显示 | 轮播图未启用或时间未到 | 检查banners.status和start_time/end_time |
+| 模板应用后样式错乱 | 模板组件配置不兼容 | 检查模板组件版本和当前系统版本 |
+| 导航图标点击无反应 | 跳转链接配置错误 | 检查navigations.link格式，支持内部页面和外部URL |
+| 底部导航不显示 | tabbar未启用 | 检查decorate_tabbars.status=1 |
+| 商品推荐不更新 | 缓存时间过长 | 调整组件缓存时间或手动刷新 |
+| 页面装修数据丢失 | 未保存草稿 | 装修过程中定期保存草稿，发布前预览 |
+| 分类页装修不显示 | 分类页模板未设置 | 检查decorate_pages.page_type=category |

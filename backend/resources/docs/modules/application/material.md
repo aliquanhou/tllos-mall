@@ -2,50 +2,57 @@
 
 ## 1. 页面概述
 ### 功能描述
-素材管理页面，支持上传和管理图片、视频等媒体素材，支持文件夹分类、批量上传、素材预览。素材管理是商城内容建设的基础，所有商品图片、文章图片、广告图都通过素材库管理。
+商城辅助应用，包括充值管理、素材管理、文章资讯、消息管理、客服设置等。本页面负责素材管理的管理操作，支持数据的增删改查、搜索筛选和状态管理。
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
 |------|------|----------|
-| 素材总数 | 所有素材文件数 | 衡量素材库规模 |
-| 今日上传 | 今日新增素材数 | 衡量内容产出 |
-| 存储空间 | 已使用存储空间 | 衡量存储成本 |
-| 文件夹数 | 素材文件夹数量 | 衡量分类组织 |
+| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
+| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
+| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
+| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
 
 ### 使用场景
-1. 素材上传：上传图片/视频等媒体文件
-2. 素材管理：查看/编辑/删除素材
-3. 文件夹管理：创建和管理素材文件夹
-4. 素材引用：在商品/文章/广告中引用素材
+1. 日常管理：新增/编辑/删除数据
+2. 数据查询：搜索筛选定位记录
+3. 状态管理：启用/禁用/审核操作
+4. 数据统计：查看业务数据趋势
 
 ---
 
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/materials | ApplicationController@materialList | 素材列表 | material:list |
-| POST | /api/v1/admin/materials/upload | MaterialController@upload | 上传素材 | material:upload |
-| DELETE | /api/v1/admin/materials/{id} | MaterialController@destroy | 删除素材 | material:delete |
-| GET | /api/v1/admin/material/folders | MaterialController@folderList | 文件夹列表 | material:folder:list |
-| POST | /api/v1/admin/material/folders | MaterialController@folderStore | 新增文件夹 | material:folder:create |
+| GET | /api/v1/admin/application/material | ApplicationController@index | 素材管理列表 | application:list |
+| POST | /api/v1/admin/application/material | ApplicationController@store | 新增素材管理 | application:create |
+| GET | /api/v1/admin/application/material/{id} | ApplicationController@show | 素材管理详情 | application:view |
+| PUT | /api/v1/admin/application/material/{id} | ApplicationController@update | 编辑素材管理 | application:edit |
+| DELETE | /api/v1/admin/application/material/{id} | ApplicationController@destroy | 删除素材管理 | application:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| page | int | 否 | 页码默认1 |
-| limit | int | 否 | 每页数量默认20 |
+| page | int | 否 | 页码，默认1 |
+| limit | int | 否 | 每页数量，默认20 |
 | keyword | string | 否 | 搜索关键词 |
-| folder_id | int | 否 | 文件夹ID |
-| type | string | 否 | 类型image/video |
+| status | int | 否 | 状态筛选 |
 | start_date | date | 否 | 开始日期 |
+| end_date | date | 否 | 结束日期 |
 
 ### 返回示例
 ```json
 {
-  "code":0,
-  "data":{"total":234,"page":1,"list":[
-    {"id":1,"name":"商品主图-华为MatePad","type":"image","url":"https://.../1001.jpg","thumbnail":"https://.../1001_thumb.jpg","size":256000,"width":800,"height":800,"folder_id":1,"folder_name":"商品图片","uploader":"管理员","created_at":"2026-09-01 10:00:00"}
-  ]}
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 100,
+    "page": 1,
+    "limit": 20,
+    "list": [
+      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
+    ]
+  },
+  "timestamp": 1756700000
 }
 ```
 
@@ -56,114 +63,113 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 文件格式不支持 |
-| 10006 | 文件大小超限 |
+| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
-## 3. 字段映射表（基于真实数据表）
+## 3. 字段映射表
 | 展示字段 | 数据来源 | 计算方式 | 更新频率 |
 |----------|----------|----------|----------|
-| 素材ID | materials.id | 直接读取 | 实时 |
-| 文件名 | materials.name | 直接读取 | 实时 |
-| 类型 | materials.type | image/video/file | 实时 |
-| URL | materials.url | 直接读取 | 实时 |
-| 缩略图 | materials.thumbnail | 直接读取 | 实时 |
-| 文件大小 | materials.size | 字节 | 实时 |
-| 宽度 | materials.width | 像素 | 实时 |
-| 高度 | materials.height | 像素 | 实时 |
-| 文件夹 | material_folders.name | 关联查询 | 实时 |
-| 上传者 | users.nickname | 关联查询 | 实时 |
-| 上传时间 | materials.created_at | 直接读取 | 实时 |
+| ID | application.id | 直接读取 | 实时 |
+| 名称 | application.name | 直接读取 | 实时 |
+| 状态 | application.status | 0禁用1启用 | 实时 |
+| 创建时间 | application.created_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-```
-进入素材管理 → 选择文件夹
-├── 上传素材 → 选择文件 → 上传到存储（本地/OSS/COS）
-│   ├── 图片 → 自动生成缩略图
-│   └── 视频 → 自动获取封面
-├── 创建文件夹 → 分类组织素材
-├── 移动素材 → 更改素材所属文件夹
-├── 删除素材 → 确认删除（已引用的素材提示）
-└── 引用素材 → 在商品/文章/广告中选择素材
+### 素材管理业务流程图
+```mermaid
+flowchart TD
+    A[进入列表页] --> B[加载数据]
+    B --> C[搜索/筛选]
+    C --> D[查看列表]
+    D --> E{操作选择}
+    E -->|新增| F[填写表单]
+    F --> G[提交保存]
+    E -->|编辑| H[回显数据]
+    H --> I[修改并保存]
+    E -->|删除| J[确认弹窗]
+    J --> K[执行删除]
+    E -->|查看| L[详情页]
+    G --> M[刷新列表]
+    I --> M
+    K --> M
 ```
 
 ### 数据刷新机制
-1. 页面加载加载素材列表
-2. 上传/删除后刷新列表
-3. 文件夹切换刷新列表
+1. 页面加载时自动请求最新数据
+2. 搜索筛选条件变化时立即刷新
+3. 增删改操作成功后自动刷新列表
+4. 统计数据缓存时间：5分钟
 
 ---
 
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看素材 | material:list | 管理员/运营 |
-| 上传素材 | material:upload | 管理员/运营 |
-| 删除素材 | material:delete | 管理员 |
-| 管理文件夹 | material:folder:manage | 管理员 |
+| 查看列表 | application:list | 管理员 |
+| 新增 | application:create | 管理员 |
+| 编辑 | application:edit | 管理员 |
+| 删除 | application:delete | 管理员 |
+
+### 权限说明
+- 权限通过Sanctum中间件校验，在路由组中统一配置
+- 超级管理员拥有所有权限，不受权限点限制
+- 无权限用户访问API返回403，前端隐藏对应操作按钮
 
 ---
 
 ## 6. 关联模块
 ### 依赖模块
-| 模块 | 依赖内容 |
-|------|----------|
-| 存储配置 | 素材存储方式配置 |
-| 商品管理 | 商品图片引用素材 |
-| 文章管理 | 文章图片引用素材 |
-| 装修管理 | 广告图引用素材 |
+| 模块 | 依赖内容 | 具体关联字段 |
+|------|----------|-------------|
+| 用户管理 | 充值用户 | recharge_orders.user_id → users.id |
+| 系统设置 | 存储配置 | materials存储依赖system_configs.storage |
 
 ### 被依赖模块
-| 模块 | 使用方式 |
-|------|----------|
-| 商品管理 | 商品主图/附图选择 |
-| 文章管理 | 文章封面/内容图片选择 |
-| 装修管理 | 广告图/轮播图选择 |
-| 用户端H5 | 素材文件访问 |
+| 模块 | 使用方式 | 具体关联字段 |
+|------|----------|-------------|
+| 商品管理 | 商品图片素材 | products.thumbnail → materials.url |
+| 装修管理 | 广告图素材 | banners.image → materials.url |
+| 用户端H5 | 文章和公告展示 | articles, notices在H5端展示 |
 
 ---
 
 ## 7. 验收清单
 ### 功能验收
-- [ ] 页面能正常加载无白屏/500错误
-- [ ] 列表分页正常显示总数和页码
-- [ ] 搜索功能正常
-- [ ] 筛选功能正常
-- [ ] 新增功能完整
+- [ ] 页面能正常加载，无白屏/500错误
+- [ ] 列表分页正常，显示总数和页码
+- [ ] 搜索功能正常，支持关键词模糊查询
+- [ ] 筛选功能正常，支持状态和时间范围
+- [ ] 新增功能完整，表单校验正确
 - [ ] 编辑能正确回显所有字段
-- [ ] 删除有确认弹窗
+- [ ] 删除有确认弹窗，软删除不影响历史数据
 - [ ] 状态切换功能正常
-- [ ] 素材列表能预览图片/视频
-- [ ] 上传素材功能正常（支持批量上传）
-- [ ] 图片自动生成缩略图
-- [ ] 视频自动获取封面
-- [ ] 创建文件夹功能正常
-- [ ] 移动素材功能正常
-- [ ] 删除素材功能正常（已引用提示）
-- [ ] 按文件夹筛选正常
-- [ ] 按类型筛选正常
-- [ ] 文件大小显示正确
+- [ ] 数据导出功能正常（如有）
+- [ ] 批量操作功能正常（如有）
 
 ### 权限验收
 - [ ] 有权限的管理员可以正常操作
 - [ ] 无权限的管理员看到403或入口隐藏
+- [ ] 超级管理员不受权限限制
 
 ### 性能验收
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
+- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 列表数据为空 | 数据库无数据或筛选条件不对 | 检查筛选条件确认有测试数据 |
-| 新增保存失败 | 必填字段未填或格式错误 | 检查表单校验查看错误提示 |
-| 编辑回显不全 | 接口返回字段缺失 | 检查控制器返回字段 |
-| 删除后仍显示 | 缓存未清除 | 清除缓存 |
-| 上传失败 | 存储配置错误或文件超限 | 检查存储配置和文件大小限制 |
-| 素材无法访问 | CDN配置错误或文件已删除 | 检查CDN配置和文件状态 |
+| 素材上传失败 | 存储配置错误或文件超限 | 检查config/filesystems.php和文件大小限制 |
+| 素材缩略图不生成 | GD库未安装 | 安装php-gd扩展，支持jpg/png/webp |
+| 文章不显示 | 文章未发布或分类错误 | 检查articles.status=1和category_id |
+| 消息推送失败 | 推送配置错误 | 检查短信/邮件/站内信配置 |
+| 客服设置不生效 | 缓存未清除 | 修改kefu_settings后清除缓存 |
+| 充值订单未到账 | 支付回调未处理 | 检查recharge_orders.pay_time和users.balance更新 |
+| 素材文件夹无法删除 | 文件夹下有素材 | 先移动或删除文件夹内素材 |
+| 公告不显示 | 公告未启用或时间未到 | 检查notices.status和start_time/end_time |

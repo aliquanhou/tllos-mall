@@ -13,7 +13,7 @@
                 <el-icon><component :is="group.icon" /></el-icon>
                 <span>{{ group.title }}</span>
 
-  <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+  <DocDialog v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
   <HelpDrawer v-model="helpVisible" :module="helpModule" :page="helpPage" :title="helpTitle" />
 </template>
               <el-menu-item v-for="item in group.children" :key="item.path" :index="item.path">
@@ -254,6 +254,11 @@ const openDoc = () => {
   docPage.value = page
   docTitle.value = title
   docVisible.value = true
+  // 弹窗默认最大化，方便阅读完整表格
+  setTimeout(() => {
+    const dialog = document.querySelector(".doc-dialog")
+    if (dialog) dialog.classList.add("doc-dialog-maximized")
+  }, 100)
 }
 
 const openHelp = () => {
