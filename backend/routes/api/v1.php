@@ -647,6 +647,7 @@ Route::prefix('admin/after-sale')->middleware('auth:sanctum')->group(function ()
     Route::post('/{id}/audit', [App\Modules\AfterSale\Controllers\AfterSaleController::class, 'audit']);
 
     Route::post('/{id}/complete', [App\Modules\AfterSale\Controllers\AfterSaleController::class, 'complete']);
+    Route::post('/{id}/receive', [App\Modules\AfterSale\Controllers\AfterSaleController::class, 'receive']);
 
 });
 
@@ -1235,6 +1236,8 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::get('/user/after-sale/{id}', [\App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'detail']);
 
     Route::post('/user/after-sale/{id}/cancel', [\App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'cancel']);
+    Route::post('/user/after-sale/{id}/return-ship', [App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'returnShip']);
+    Route::get('/user/after-sale/reasons/list', [App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'reasons']);
 
 });
 
