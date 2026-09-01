@@ -114,6 +114,17 @@ class MerchantController extends BaseController
             'description' => 'nullable|string',
         ]);
 
+        if (!empty($validated['business_license'])) {
+            if (!preg_match('/^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/', $validated['business_license'])) {
+                return $this->error('营业执照号格式不正确，应为18位统一社会信用代码');
+            }
+        }
+        if (!empty($validated['id_card'])) {
+            if (!preg_match('/^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[0-9Xx]$/', $validated['id_card'])) {
+                return $this->error('身份证号格式不正确');
+            }
+        }
+
         $exists = DB::table('merchants')
             ->where(function($q) use ($validated) {
                 $q->where('contact_mobile', $validated['contact_mobile']);
