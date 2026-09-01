@@ -30,7 +30,7 @@ import { ref, onMounted } from 'vue'
 import request from '@/utils/request'
 const info = ref({}); const stats = ref({})
 onMounted(async () => {
-  const res = await request({ url:'/system-info' })
+  const res = await request({ url:'/admin/system-info' })
   info.value = res.data?.info || {}; stats.value = res.data?.stats || {}
 })
 </script>

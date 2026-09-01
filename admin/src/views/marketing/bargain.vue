@@ -49,18 +49,18 @@ const list = ref([]); const total = ref(0); const page = ref(1); const limit = r
 const showDialog = ref(false)
 const form = reactive({ id:null, name:'', goods_id:1, original_price:0, min_price:0, bargain_min:1, bargain_max:10, start_time:null, end_time:null, total_count:0, status:1 })
 const loadList = async () => {
-  const res = await request({ url:'/bargains', params:{ page:page.value, limit:limit.value } })
+  const res = await request({ url:'/admin/bargains', params:{ page:page.value, limit:limit.value } })
   list.value = res.data?.list || []; total.value = res.data?.total || 0
 }
 const edit = (row) => { Object.assign(form, row); showDialog.value = true }
 const remove = async (row) => {
   await ElMessageBox.confirm('确定删除？','提示',{type:'warning'})
-  await request({ url:`/bargains/${row.id}`, method:'delete' })
+  await request({ url:`/admin/bargains/${row.id}`, method:'delete' })
   ElMessage.success('删除成功'); loadList()
 }
 const submit = async () => {
-  if (form.id) await request({ url:`/bargains/${form.id}`, method:'put', data:form })
-  else await request({ url:'/bargains', method:'post', data:form })
+  if (form.id) await request({ url:`/admin/bargains/${form.id}`, method:'put', data:form })
+  else await request({ url:'/admin/bargains', method:'post', data:form })
   ElMessage.success('保存成功'); showDialog.value = false; loadList()
 }
 onMounted(() => loadList())

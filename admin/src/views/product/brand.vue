@@ -47,18 +47,18 @@ const list = ref([]); const total = ref(0); const page = ref(1); const limit = r
 const showDialog = ref(false)
 const form = reactive({ id:null, name:'', logo:'', description:'', sort:0, status:1 })
 const loadList = async () => {
-  const res = await request({ url:'/brands', params:{ page:page.value, limit:limit.value } })
+  const res = await request({ url:'/admin/brands', params:{ page:page.value, limit:limit.value } })
   list.value = res.data?.list || []; total.value = res.data?.total || 0
 }
 const edit = (row) => { Object.assign(form, row); showDialog.value = true }
 const remove = async (row) => {
   await ElMessageBox.confirm('确定删除？','提示',{type:'warning'})
-  await request({ url:`/brands/${row.id}`, method:'delete' })
+  await request({ url:`/admin/brands/${row.id}`, method:'delete' })
   ElMessage.success('删除成功'); loadList()
 }
 const submit = async () => {
-  if (form.id) await request({ url:`/brands/${form.id}`, method:'put', data:form })
-  else await request({ url:'/brands', method:'post', data:form })
+  if (form.id) await request({ url:`/admin/brands/${form.id}`, method:'put', data:form })
+  else await request({ url:'/admin/brands', method:'post', data:form })
   ElMessage.success('保存成功'); showDialog.value = false; loadList()
 }
 onMounted(() => loadList())

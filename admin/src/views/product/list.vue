@@ -198,6 +198,7 @@ const handleImgError = (e) => { e.target.style.display='none'; e.target.parentEl
 
 const fetchList = async () => { loading.value=true; try { const res = await getProductList({page:page.value,limit:limit.value,...searchForm}); list.value=res.data.list||[]; total.value=res.data.total||0 } finally { loading.value=false } }
 const fetchCategories = async () => { const res = await getCategoryTree(); categories.value=res.data||[] }
+const fetchBrands = async () => { const res = await request({url:'/admin/brands/all'}); brands.value=res.data||[] }
 const resetSearch = () => { searchForm.keyword=''; searchForm.category_id=null; searchForm.status=null; searchForm.is_recommend=null; page.value=1; fetchList() }
 const resetForm = () => { form.value = defaultForm() }
 const handleSelectionChange = (rows) => { selectedRows.value=rows; selectedIds.value=rows.map(r=>r.id) }
@@ -212,7 +213,7 @@ const handleToggleStatus = async row => { await toggleProductStatus(row.id,{stat
 const batchUpdateStatus = async (status) => { await ElMessageBox.confirm(`确定批量${status?'上架':'下架'} ${selectedIds.value.length} 件商品？`,'提示',{type:'info'}); await batchUpdateProducts({ids:selectedIds.value,status}); ElMessage.success('批量操作成功'); fetchList() }
 const batchDelete = async () => { await ElMessageBox.confirm(`确定批量删除 ${selectedIds.value.length} 件商品？此操作不可恢复！`,'警告',{type:'warning'}); await batchDeleteProducts({ids:selectedIds.value}); ElMessage.success('批量删除成功'); selectedIds.value=[]; fetchList() }
 
-onMounted(() => { fetchCategories(); fetchList() })
+onMounted(() => { fetchCategories(); fetchBrands(); fetchList() })
 </script>
 <style scoped>
 .search-form{margin-bottom:0}

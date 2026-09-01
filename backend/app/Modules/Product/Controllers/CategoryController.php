@@ -31,13 +31,16 @@ class CategoryController extends BaseController
     {
         $validated = $request->validate([
             'name' => 'required|string|max:50',
-            'parent_id' => 'nullable|integer|default:0',
+            'parent_id' => 'nullable|integer',
             'icon' => 'nullable|string|max:255',
             'image' => 'nullable|string|max:255',
-            'sort' => 'nullable|integer|default:0',
-            'status' => 'nullable|integer|default:1',
+            'sort' => 'nullable|integer',
+            'status' => 'nullable|integer',
         ]);
-        $parentId = $validated['parent_id'] ?? 0;
+        $validated['parent_id'] = $validated['parent_id'] ?? 0;
+        $validated['sort'] = $validated['sort'] ?? 0;
+        $validated['status'] = $validated['status'] ?? 1;
+        $parentId = $validated['parent_id'];
         $level = 1;
         if ($parentId > 0) {
             $parent = DB::table('categories')->where('id', $parentId)->first();
