@@ -1337,6 +1337,6 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
 // 技术文档API
 Route::prefix('admin/docs')->middleware('auth:sanctum')->group(function () {
     Route::get('/{module}', [App\Modules\System\Controllers\DocController::class, 'show']);
-    Route::get('/{module}/list', [App\Modules\System\Controllers\DocController::class, 'list']);
+    Route::get('/{module}/all-list', [App\Modules\System\Controllers\DocController::class, 'list']);
     Route::get('/{module}/{page}', [App\Modules\System\Controllers\DocController::class, 'show']);
 });
