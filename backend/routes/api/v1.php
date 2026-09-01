@@ -429,6 +429,7 @@ Route::prefix('admin/comments')->middleware('auth:sanctum')->group(function () {
 Route::prefix('admin/merchants')->middleware('auth:sanctum')->group(function () {
 
     Route::get('/', [App\Modules\Merchant\Controllers\MerchantController::class, 'index']);
+    Route::post('/', [App\Modules\Merchant\Controllers\MerchantController::class, 'store']);
 
     Route::get('/{id}', [App\Modules\Merchant\Controllers\MerchantController::class, 'show']);
 
