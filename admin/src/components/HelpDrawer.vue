@@ -1,5 +1,5 @@
 <template>
-  <el-drawer
+  <el-drawer :modal="false" append-to-body
     v-model="visible"
     :title="title"
     direction="rtl"

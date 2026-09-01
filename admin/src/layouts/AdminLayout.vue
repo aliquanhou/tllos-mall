@@ -207,6 +207,26 @@ const pathToPage = {
   'oa-reply': 'reply',
 }
 
+
+// 页面中文标题映射
+const pageTitleMap = {
+  'list': '列表', 'index': '总览', '_index': '模块总览', 'overview': '概览',
+  'category': '分类', 'comment': '评价', 'brand': '品牌',
+  'after-sale': '售后管理', 'refund': '退款管理',
+  'audit': '入驻审核',
+  'level': '等级', 'levels': '等级',
+  'agents': '分销商', 'agent': '分销商', 'orders': '订单', 'settings': '设置', 'setting': '设置',
+  'coupon': '优惠券', 'discount': '会员折扣', 'seckill': '限时秒杀', 'group': '拼团活动',
+  'deposit': '充值管理', 'material': '素材管理', 'article': '文章资讯', 'notice': '消息管理', 'kefu': '客服设置',
+  'pages': '页面装修', 'page': '页面装修', 'template': '模板管理', 'templates': '模板管理', 'banner': '轮播图', 'banners': '轮播图', 'navigation': '导航图标', 'navigations': '导航图标', 'tabbar': '底部导航',
+  'income': '订单收款', 'withdraw': '提现管理', 'settlement': '商家结算',
+  'config': '渠道配置', 'menu': '菜单管理', 'reply': '自动回复',
+  'dept': '部门管理', 'job': '岗位管理',
+  'role': '角色管理', 'admin': '管理员管理',
+  'basic': '基础配置', 'pay': '支付配置', 'logistics': '物流配置', 'order': '订单设置', 'log': '操作日志', 'dict': '数据字典',
+  'generator': '代码生成器', 'export': '数据导出',
+}
+
 const openDoc = () => {
   const path = route.path
   const parts = path.split('/').filter(Boolean)
@@ -227,7 +247,7 @@ const openDoc = () => {
     const rawPage = parts[1]
     module = pathToModule[rawModule] || rawModule
     page = pathToPage[rawPage] || rawPage
-    title = rawPage.charAt(0).toUpperCase() + rawPage.slice(1).replace(/-/g, ' ') + ' - 技术文档'
+    title = (pageTitleMap[rawPage] || rawPage.charAt(0).toUpperCase() + rawPage.slice(1).replace(/-/g, ' ')) + ' - 技术文档'
   }
   
   docModule.value = module
@@ -250,7 +270,7 @@ const openHelp = () => {
   } else {
     helpModule.value = pathToModule[parts[0]] || parts[0]
     helpPage.value = pathToPage[parts[1]] || parts[1]
-    helpTitle.value = parts[1] + ' - 帮助文档'
+    helpTitle.value = (pageTitleMap[parts[1]] || parts[1]) + ' - 帮助文档'
   }
   helpVisible.value = true
 }

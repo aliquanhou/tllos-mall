@@ -1,5 +1,5 @@
 <template>
-  <el-drawer v-model="visible" :title="docTitle" direction="rtl" size="600px">
+  <el-drawer :modal="false" append-to-body v-model="visible" :title="docTitle" direction="rtl" size="600px">
     <template #header>
       <div style="display:flex;align-items:center">
         <span style="font-size:20px;margin-right:8px">📘</span>
