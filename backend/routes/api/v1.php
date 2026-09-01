@@ -115,6 +115,13 @@ Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'lo
     Route::post('/merchant-levels', [\App\Modules\Merchant\Controllers\MerchantLevelController::class,'store']);
     Route::put('/merchant-levels/{id}', [\App\Modules\Merchant\Controllers\MerchantLevelController::class,'update']);
     Route::delete('/merchant-levels/{id}', [\App\Modules\Merchant\Controllers\MerchantLevelController::class,'destroy']);
+    // 商家分类
+    Route::get("/merchant-categories", [App\Modules\ShopCenter\Controllers\CategoryController::class, "index"]);
+    Route::post("/merchant-categories", [App\Modules\ShopCenter\Controllers\CategoryController::class, "store"]);
+    Route::put("/merchant-categories/{id}", [App\Modules\ShopCenter\Controllers\CategoryController::class, "update"]);
+    Route::delete("/merchant-categories/{id}", [App\Modules\ShopCenter\Controllers\CategoryController::class, "destroy"]);
+    // 商家账户日志
+    Route::get("/merchant-account-logs", [App\Modules\Finance\Controllers\MerchantAccountLogController::class, "index"]);
 
     // 兼容路由
     Route::get('/announcements', [\App\Modules\Announcement\Controllers\AnnouncementController::class,'index']);
