@@ -18,18 +18,18 @@ class AfterSaleController extends BaseController
     public function show($id) {
         $item = DB::table('order_after_sales')->where('id',$id)->first();
         if (!$item) return $this->error('售后单不存在');
-        $logs = DB::table('order_after_sale_logs')->where('after_sale_id',$id)->orderBy('id','asc')->get();
+        $logs = DB::table('after_sale_logs')->where('after_sale_id',$id)->orderBy('id','asc')->get();
         return $this->success(['info'=>$item,'logs'=>$logs]);
     }
     public function audit(Request $request, $id) {
-        $v = $request->validate(['status'=>'required|in:1,2','refuse_reason'=>'nullable|string']);
-        DB::table('order_after_sales')->where('id',$id)->update(['status'=>$v['status'],'refuse_reason'=>$v['refuse_reason']??null,'audit_time'=>now(),'updated_at'=>now()]);
-        DB::table('order_after_sale_logs')->insert(['after_sale_id'=>$id,'action'=>$v['status']==1?'审核通过':'审核拒绝','operator'=>'admin','remark'=>$v['refuse_reason']??'','created_at'=>now()]);
+        $v = $request->validate(['status'=>'required|in:1,2','audit_remark'=>'nullable|string']);
+        DB::table('order_after_sales')->where('id',$id)->update(['status'=>$v['status'],'audit_remark'=>$v['audit_remark']??null,'audit_at'=>now(),'updated_at'=>now()]);
+        DB::table('after_sale_logs')->insert(['after_sale_id'=>$id,'action'=>$v['status']==1?'审核通过':'审核拒绝','admin_id'=>1,'remark'=>$v['audit_remark']??'','created_at'=>now()]);
         return $this->success(null,$v['status']==1?'审核通过':'已拒绝');
     }
     public function complete($id) {
-        DB::table('order_after_sales')->where('id',$id)->update(['status'=>3,'updated_at'=>now()]);
-        DB::table('order_after_sale_logs')->insert(['after_sale_id'=>$id,'action'=>'售后完成','operator'=>'admin','created_at'=>now()]);
+        DB::table('order_after_sales')->where('id',$id)->update(['status'=>3,'completed_at'=>now(),'updated_at'=>now()]);
+        DB::table('after_sale_logs')->insert(['after_sale_id'=>$id,'action'=>'售后完成','admin_id'=>1,'created_at'=>now()]);
         return $this->success(null,'已完成');
     }
 }
