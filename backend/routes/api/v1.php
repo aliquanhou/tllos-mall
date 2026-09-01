@@ -122,7 +122,9 @@ Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'lo
     Route::put("/merchant-categories/{id}", [App\Modules\ShopCenter\Controllers\CategoryController::class, "update"]);
     Route::delete("/merchant-categories/{id}", [App\Modules\ShopCenter\Controllers\CategoryController::class, "destroy"]);
     // 商家账户日志
-    Route::get("/merchant-account-logs", [App\Modules\Finance\Controllers\MerchantAccountLogController::class, "index"]);
+    Route::get("/merchant-account-logs/stats", [App\Modules\Finance\Controllers\MerchantAccountLogController::class, "stats"]);
+Route::get("/merchant-account-logs/{id}", [App\Modules\Finance\Controllers\MerchantAccountLogController::class, "show"]);
+Route::get("/merchant-account-logs", [App\Modules\Finance\Controllers\MerchantAccountLogController::class, "index"]);
 
     // 兼容路由
     Route::get('/announcements', [\App\Modules\Announcement\Controllers\AnnouncementController::class,'index']);
@@ -1163,15 +1165,22 @@ Route::prefix('admin/user-auth')->middleware('auth:sanctum')->group(function () 
 // 商家端权限
 
 Route::prefix('admin/shop-permission')->middleware('auth:sanctum')->group(function () {
-
     Route::get('/admins', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'adminList']);
-
+    Route::post('/admins', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'adminStore']);
+    Route::put('/admins/{id}', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'adminUpdate']);
+    Route::delete('/admins/{id}', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'adminDestroy']);
     Route::get('/roles', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'roleList']);
-
+    Route::post('/roles', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'roleStore']);
+    Route::put('/roles/{id}', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'roleUpdate']);
+    Route::delete('/roles/{id}', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'roleDestroy']);
     Route::get('/depts', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'deptList']);
-
+    Route::post('/depts', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'deptStore']);
+    Route::put('/depts/{id}', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'deptUpdate']);
+    Route::delete('/depts/{id}', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'deptDestroy']);
     Route::get('/jobs', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'jobList']);
-
+    Route::post('/jobs', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'jobStore']);
+    Route::put('/jobs/{id}', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'jobUpdate']);
+    Route::delete('/jobs/{id}', [App\Modules\ShopCenter\Controllers\ShopPermissionController::class, 'jobDestroy']);
 });
 
 
