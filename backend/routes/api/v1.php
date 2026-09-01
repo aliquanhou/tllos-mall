@@ -933,6 +933,7 @@ Route::prefix('admin/pt-open')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('admin/shop-menu')->middleware('auth:sanctum')->group(function () {
 
+    Route::get('/tree', [App\Modules\ShopCenter\Controllers\ShopMenuController::class, 'tree']);
     Route::get('/', [App\Modules\ShopCenter\Controllers\ShopMenuController::class, 'index']);
 
     Route::post('/', [App\Modules\ShopCenter\Controllers\ShopMenuController::class, 'store']);
