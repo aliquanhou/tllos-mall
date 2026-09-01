@@ -124,7 +124,7 @@ const loadRecentOrders = async () => {
 
 const loadSystemInfo = async () => {
   try {
-    const res = await request({ url: '/system-info' })
+    const res = await request({ url: '/admin/system-info' })
     systemInfo.value = res.data?.info || {}
   } catch (e) {}
 }

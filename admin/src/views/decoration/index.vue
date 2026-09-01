@@ -70,12 +70,12 @@ const currentPage = ref(null)
 const pageTypeText = { home: '首页', category: '分类页', member: '会员中心' }
 
 const loadPages = async () => {
-  const res = await request({ url: '/decorate/pages' })
+  const res = await request({ url: '/admin/decorate/pages' })
   pages.value = res.data?.list || res.data || []
 }
 
 const loadTemplates = async () => {
-  const res = await request({ url: '/decorate/templates' })
+  const res = await request({ url: '/admin/decorate/templates' })
   templates.value = res.data?.list || res.data || []
 }
 

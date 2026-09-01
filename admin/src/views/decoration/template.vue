@@ -60,7 +60,7 @@ const form = reactive({ id: null, name: '', page_type: 'home', description: '' }
 const pageTypeText = { home: '首页', category: '分类页', member: '会员中心' }
 
 const loadList = async () => {
-  const res = await request({ url: '/decorate/templates' })
+  const res = await request({ url: '/admin/decorate/templates' })
   templates.value = res.data?.list || res.data || []
 }
 
@@ -73,7 +73,7 @@ const save = async () => {
   if (form.id) {
     await request({ url: `/decorate/templates/${form.id}`, method: 'put', data: form })
   } else {
-    await request({ url: '/decorate/templates', method: 'post', data: form })
+    await request({ url: '/admin/decorate/templates', method: 'post', data: form })
   }
   ElMessage.success('保存成功')
   showDialog.value = false
@@ -82,7 +82,7 @@ const save = async () => {
 
 const apply = async (row) => {
   await ElMessageBox.confirm(`确定应用"${row.name}"模板到首页？`, '提示', { type: 'warning' })
-  await request({ url: '/decorate/pages/1/apply-template', method: 'post', data: { template_id: row.id } })
+  await request({ url: '/admin/decorate/pages/1/apply-template', method: 'post', data: { template_id: row.id } })
   ElMessage.success('应用成功')
 }
 

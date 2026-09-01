@@ -195,7 +195,7 @@ const loadPage = async () => {
 }
 
 const loadCategories = async () => {
-  const res = await request({ url: '/categories' })
+  const res = await request({ url: '/admin/categories' })
   categories.value = res.data?.list || res.data || []
 }
 

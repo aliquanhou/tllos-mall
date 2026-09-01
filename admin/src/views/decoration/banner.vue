@@ -69,7 +69,7 @@ const showDialog = ref(false)
 const form = reactive({ id: null, title: '', image: '', link_type: 'none', link_id: 0, link_url: '', sort: 0, status: 1 })
 
 const loadList = async () => {
-  const res = await request({ url: '/decorate/banners' })
+  const res = await request({ url: '/admin/decorate/banners' })
   list.value = res.data?.list || res.data || []
 }
 
@@ -79,7 +79,7 @@ const save = async () => {
   if (form.id) {
     await request({ url: `/decorate/banners/${form.id}`, method: 'put', data: form })
   } else {
-    await request({ url: '/decorate/banners', method: 'post', data: form })
+    await request({ url: '/admin/decorate/banners', method: 'post', data: form })
   }
   ElMessage.success('保存成功')
   showDialog.value = false

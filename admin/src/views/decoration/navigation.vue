@@ -65,7 +65,7 @@ const showDialog = ref(false)
 const form = reactive({ id: null, name: '', icon: '', link_type: 'category', link_id: 1, link_url: '', sort: 0, status: 1 })
 
 const loadList = async () => {
-  const res = await request({ url: '/decorate/navigations' })
+  const res = await request({ url: '/admin/decorate/navigations' })
   list.value = res.data?.list || res.data || []
 }
 
@@ -75,7 +75,7 @@ const save = async () => {
   if (form.id) {
     await request({ url: `/decorate/navigations/${form.id}`, method: 'put', data: form })
   } else {
-    await request({ url: '/decorate/navigations', method: 'post', data: form })
+    await request({ url: '/admin/decorate/navigations', method: 'post', data: form })
   }
   ElMessage.success('保存成功')
   showDialog.value = false
