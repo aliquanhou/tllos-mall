@@ -1,8 +1,8 @@
-# 组织管理模块总览
+# 组织管理总览
 
 ## 1. 页面概述
 ### 功能描述
-企业组织架构，包括部门管理、岗位管理等。本页面负责组织管理模块总览的管理操作，支持数据的增删改查、搜索筛选和状态管理。
+组织架构总览
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
@@ -23,11 +23,13 @@
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/organization/_index | OrganizationController@index | 组织管理模块总览列表 | organization:list |
-| POST | /api/v1/admin/organization/_index | OrganizationController@store | 新增组织管理模块总览 | organization:create |
-| GET | /api/v1/admin/organization/_index/{id} | OrganizationController@show | 组织管理模块总览详情 | organization:view |
-| PUT | /api/v1/admin/organization/_index/{id} | OrganizationController@update | 编辑组织管理模块总览 | organization:edit |
-| DELETE | /api/v1/admin/organization/_index/{id} | OrganizationController@destroy | 删除组织管理模块总览 | organization:delete |
+| GET | /api/v1/admin/organization | OrganizationController@index | Index | organization:index |
+| POST | /api/v1/admin/organization | OrganizationController@store | Store | organization:store |
+| GET | /api/v1/admin/ | JobController@index | Index | organization:index |
+| GET | /api/v1/admin/all | JobController@all | All | organization:all |
+| POST | /api/v1/admin/ | JobController@store | Store | organization:store |
+| PUT | /api/v1/admin/{id} | JobController@update | Update | organization:update |
+| DELETE | /api/v1/admin/{id} | JobController@destroy | Destroy | organization:destroy |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -63,7 +65,6 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
@@ -74,18 +75,14 @@
 | 名称 | organization.name | 直接读取 | 实时 |
 | 状态 | organization.status | 0禁用1启用 | 实时 |
 | 创建时间 | organization.created_at | 直接读取 | 实时 |
+| 更新时间 | organization.updated_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-### 组织管理模块总览业务流程图
+### {title}业务流程图
 ```mermaid
-flowchart TD
-    A[进入模块总览] --> B[加载统计数据]
-    B --> C[查看核心指标]
-    C --> D[趋势图表]
-    D --> E[快捷入口]
-    E --> F[跳转子模块]
+{flowchart}
 ```
 
 ### 数据刷新机制
@@ -99,10 +96,11 @@ flowchart TD
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看列表 | organization:list | 管理员 |
+| 查看列表 | organization:list | 管理员/运营 |
 | 新增 | organization:create | 管理员 |
 | 编辑 | organization:edit | 管理员 |
 | 删除 | organization:delete | 管理员 |
+| 状态管理 | organization:status | 管理员 |
 
 ### 权限说明
 - 权限通过Sanctum中间件校验，在路由组中统一配置
@@ -115,11 +113,14 @@ flowchart TD
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
+| 用户管理 | 操作人信息 | admin_users.id |
+| 系统设置 | 配置参数 | system_configs |
 
 ### 被依赖模块
 | 模块 | 使用方式 | 具体关联字段 |
 |------|----------|-------------|
-| 权限管理 | 管理员归属部门 | admin_users.dept_id → departments.id |
+| 工作台 | 数据统计 | COUNT/SUM统计 |
+| 操作日志 | 记录操作 | operation_logs.module |
 
 ---
 
@@ -145,18 +146,17 @@ flowchart TD
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
-- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 部门无法删除 | 部门下有员工或子部门 | 先转移员工，删除子部门 |
-| 岗位无法关联部门 | 中间表数据错误 | 检查department_positions关联 |
-| 组织架构树不显示 | parent_id关联错误 | 检查departments.parent_id，根部门parent_id=0 |
-| 部门排序错乱 | sort字段重复 | 确保departments.sort唯一 |
-| 岗位人数统计错误 | 统计逻辑问题 | 通过admin_users.dept_id和position_id统计 |
-| 部门负责人不显示 | leader_id未设置 | 设置departments.leader_id关联admin_users |
-| 批量调部门失败 | 事务回滚 | 使用事务确保批量更新一致性 |
-| 岗位编码重复 | 唯一索引缺失 | positions.code添加唯一索引 |
+| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
+| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
+| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
+| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
+| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
+| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
+| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
+| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |

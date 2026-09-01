@@ -1,8 +1,8 @@
-# 订单
+# 分销订单
 
 ## 1. 页面概述
 ### 功能描述
-分销体系核心，管理分销商、等级、订单、佣金、设置等。本页面负责订单的管理操作，支持数据的增删改查、搜索筛选和状态管理。
+查看分销订单和佣金
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
@@ -23,11 +23,11 @@
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/distribute/orders | DistributeController@index | 订单列表 | distribute:list |
-| POST | /api/v1/admin/distribute/orders | DistributeController@store | 新增订单 | distribute:create |
-| GET | /api/v1/admin/distribute/orders/{id} | DistributeController@show | 订单详情 | distribute:view |
-| PUT | /api/v1/admin/distribute/orders/{id} | DistributeController@update | 编辑订单 | distribute:edit |
-| DELETE | /api/v1/admin/distribute/orders/{id} | DistributeController@destroy | 删除订单 | distribute:delete |
+| GET | /api/v1/admin/distribute/orders | DistributeController@index | 分销订单列表 | distribute:list |
+| POST | /api/v1/admin/distribute/orders | DistributeController@store | 新增分销订单 | distribute:create |
+| GET | /api/v1/admin/distribute/orders/{id} | DistributeController@show | 分销订单详情 | distribute:view |
+| PUT | /api/v1/admin/distribute/orders/{id} | DistributeController@update | 编辑分销订单 | distribute:edit |
+| DELETE | /api/v1/admin/distribute/orders/{id} | DistributeController@destroy | 删除分销订单 | distribute:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -63,7 +63,6 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
@@ -74,27 +73,14 @@
 | 名称 | distribute.name | 直接读取 | 实时 |
 | 状态 | distribute.status | 0禁用1启用 | 实时 |
 | 创建时间 | distribute.created_at | 直接读取 | 实时 |
+| 更新时间 | distribute.updated_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-### 订单业务流程图
+### {title}业务流程图
 ```mermaid
-flowchart TD
-    A[进入列表页] --> B[加载数据]
-    B --> C[搜索/筛选]
-    C --> D[查看列表]
-    D --> E{操作选择}
-    E -->|新增| F[填写表单]
-    F --> G[提交保存]
-    E -->|编辑| H[回显数据]
-    H --> I[修改并保存]
-    E -->|删除| J[确认弹窗]
-    J --> K[执行删除]
-    E -->|查看| L[详情页]
-    G --> M[刷新列表]
-    I --> M
-    K --> M
+{flowchart}
 ```
 
 ### 数据刷新机制
@@ -108,10 +94,11 @@ flowchart TD
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看列表 | distribute:list | 管理员 |
+| 查看列表 | distribute:list | 管理员/运营 |
 | 新增 | distribute:create | 管理员 |
 | 编辑 | distribute:edit | 管理员 |
 | 删除 | distribute:delete | 管理员 |
+| 状态管理 | distribute:status | 管理员 |
 
 ### 权限说明
 - 权限通过Sanctum中间件校验，在路由组中统一配置
@@ -124,15 +111,14 @@ flowchart TD
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
-| 用户管理 | 分销商用户 | distributors.user_id → users.id |
-| 商品管理 | 分销商品 | distribute_goods.product_id → products.id |
-| 订单管理 | 分销订单 | distribute_orders.order_id → orders.id |
+| 用户管理 | 操作人信息 | admin_users.id |
+| 系统设置 | 配置参数 | system_configs |
 
 ### 被依赖模块
 | 模块 | 使用方式 | 具体关联字段 |
 |------|----------|-------------|
-| 财务管理 | 佣金结算 | distribute_orders.commission → finance_withdraw |
-| 用户端H5 | 分销中心 | 用户端展示分销商品和佣金 |
+| 工作台 | 数据统计 | COUNT/SUM统计 |
+| 操作日志 | 记录操作 | operation_logs.module |
 
 ---
 
@@ -158,18 +144,17 @@ flowchart TD
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
-- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 分销商审核不通过 | 申请信息不全或不符合条件 | 检查distributors.apply_info和审核标准 |
-| 分销订单不记录 | 分销关系未建立或订单未标记 | 检查orders.is_distribute=1和distributor_id |
-| 佣金计算错误 | 佣金比例配置或层级关系错误 | 检查distribute_levels.commission_rate和上下级关系 |
-| 分销商等级不升级 | 升级条件未达到 | 检查distribute_levels升级条件（销售额/人数） |
-| 分销商品不显示 | 商品未设置分销或已下架 | 检查distribute_goods.is_open和products.status |
-| 佣金无法提现 | 佣金未结算或余额不足 | 检查distribute_orders.status=settled和distributors.commission |
-| 分销关系错乱 | 上级分销商变更或绑定错误 | 检查distributors.parent_id和绑定时间逻辑 |
-| 分销设置不生效 | 缓存未清除 | 修改distribute_settings后清除Redis缓存 |
+| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
+| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
+| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
+| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
+| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
+| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
+| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
+| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |

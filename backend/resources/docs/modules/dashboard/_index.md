@@ -1,8 +1,8 @@
-# 工作台模块总览
+# 工作台
 
 ## 1. 页面概述
 ### 功能描述
-系统首页数据概览，展示核心指标和待办事项。本页面负责工作台模块总览的管理操作，支持数据的增删改查、搜索筛选和状态管理。
+管理员登录首页，展示商城整体统计数据、最近订单和待办事项
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
@@ -23,11 +23,9 @@
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/dashboard/_index | DashboardController@index | 工作台模块总览列表 | dashboard:list |
-| POST | /api/v1/admin/dashboard/_index | DashboardController@store | 新增工作台模块总览 | dashboard:create |
-| GET | /api/v1/admin/dashboard/_index/{id} | DashboardController@show | 工作台模块总览详情 | dashboard:view |
-| PUT | /api/v1/admin/dashboard/_index/{id} | DashboardController@update | 编辑工作台模块总览 | dashboard:edit |
-| DELETE | /api/v1/admin/dashboard/_index/{id} | DashboardController@destroy | 删除工作台模块总览 | dashboard:delete |
+| GET | /api/v1/admin/dashboard/stats | DashboardController@stats | Stats | dashboard:stats |
+| GET | /api/v1/admin/dashboard/recent-orders | DashboardController@recentOrders | Recent Orders | dashboard:recentOrders |
+| GET | /api/v1/admin/dashboard/sales-trend | DashboardController@salesTrend | Sales Trend | dashboard:salesTrend |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -63,7 +61,6 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
@@ -74,18 +71,14 @@
 | 名称 | dashboard.name | 直接读取 | 实时 |
 | 状态 | dashboard.status | 0禁用1启用 | 实时 |
 | 创建时间 | dashboard.created_at | 直接读取 | 实时 |
+| 更新时间 | dashboard.updated_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-### 工作台模块总览业务流程图
+### {title}业务流程图
 ```mermaid
-flowchart TD
-    A[进入模块总览] --> B[加载统计数据]
-    B --> C[查看核心指标]
-    C --> D[趋势图表]
-    D --> E[快捷入口]
-    E --> F[跳转子模块]
+{flowchart}
 ```
 
 ### 数据刷新机制
@@ -99,10 +92,11 @@ flowchart TD
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看列表 | dashboard:list | 管理员 |
+| 查看列表 | dashboard:list | 管理员/运营 |
 | 新增 | dashboard:create | 管理员 |
 | 编辑 | dashboard:edit | 管理员 |
 | 删除 | dashboard:delete | 管理员 |
+| 状态管理 | dashboard:status | 管理员 |
 
 ### 权限说明
 - 权限通过Sanctum中间件校验，在路由组中统一配置
@@ -115,11 +109,14 @@ flowchart TD
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
-| 所有模块 | 汇总各模块数据 | 统计orders, products, users, merchants等 |
+| 用户管理 | 操作人信息 | admin_users.id |
+| 系统设置 | 配置参数 | system_configs |
 
 ### 被依赖模块
 | 模块 | 使用方式 | 具体关联字段 |
 |------|----------|-------------|
+| 工作台 | 数据统计 | COUNT/SUM统计 |
+| 操作日志 | 记录操作 | operation_logs.module |
 
 ---
 
@@ -145,18 +142,17 @@ flowchart TD
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
-- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 工作台数据不更新 | 缓存时间过长 | 调整统计缓存时间为5-10分钟 |
-| 统计数据不准确 | 统计口径不一致 | 统一使用订单完成时间和支付状态 |
-| 图表不显示 | ECharts未加载 | 检查前端ECharts依赖是否安装 |
-| 待办事项不显示 | 权限过滤问题 | 根据当前管理员角色过滤待办数据 |
-| 加载速度慢 | 统计查询未优化 | 使用预统计表或Redis缓存统计结果 |
-| 销售额统计错误 | 退款未扣除 | 销售额=已支付金额-已退款金额 |
-| 访问趋势图空白 | 时间范围无数据 | 检查时间范围选择，默认近7天 |
-| 快捷入口点击无反应 | 路由配置错误 | 检查快捷入口的路由路径是否正确 |
+| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
+| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
+| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
+| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
+| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
+| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
+| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
+| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |

@@ -2,7 +2,7 @@
 
 ## 1. 页面概述
 ### 功能描述
-RBAC权限体系，包括角色管理、菜单管理、管理员、部门等。本页面负责角色管理的管理操作，支持数据的增删改查、搜索筛选和状态管理。
+管理角色和权限分配
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
@@ -23,11 +23,15 @@ RBAC权限体系，包括角色管理、菜单管理、管理员、部门等。�
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/permission/role | PermissionController@index | 角色管理列表 | permission:list |
-| POST | /api/v1/admin/permission/role | PermissionController@store | 新增角色管理 | permission:create |
-| GET | /api/v1/admin/permission/role/{id} | PermissionController@show | 角色管理详情 | permission:view |
-| PUT | /api/v1/admin/permission/role/{id} | PermissionController@update | 编辑角色管理 | permission:edit |
-| DELETE | /api/v1/admin/permission/role/{id} | PermissionController@destroy | 删除角色管理 | permission:delete |
+| GET | /api/v1/admin/role | PermissionController@roleList | Role List | permission:roleList |
+| POST | /api/v1/admin/role | PermissionController@roleStore | Role Store | permission:roleStore |
+| PUT | /api/v1/admin/role/{id} | PermissionController@roleUpdate | Role Update | permission:roleUpdate |
+| DELETE | /api/v1/admin/role/{id} | PermissionController@roleDestroy | Role Destroy | permission:roleDestroy |
+| GET | /api/v1/admin/menu | PermissionController@menuList | Menu List | permission:menuList |
+| GET | /api/v1/admin/dept | PermissionController@deptList | Dept List | permission:deptList |
+| POST | /api/v1/admin/dept | PermissionController@deptStore | Dept Store | permission:deptStore |
+| PUT | /api/v1/admin/dept/{id} | PermissionController@deptUpdate | Dept Update | permission:deptUpdate |
+| DELETE | /api/v1/admin/dept/{id} | PermissionController@deptDestroy | Dept Destroy | permission:deptDestroy |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -63,7 +67,6 @@ RBAC权限体系，包括角色管理、菜单管理、管理员、部门等。�
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
@@ -74,27 +77,14 @@ RBAC权限体系，包括角色管理、菜单管理、管理员、部门等。�
 | 名称 | permission.name | 直接读取 | 实时 |
 | 状态 | permission.status | 0禁用1启用 | 实时 |
 | 创建时间 | permission.created_at | 直接读取 | 实时 |
+| 更新时间 | permission.updated_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-### 角色管理业务流程图
+### {title}业务流程图
 ```mermaid
-flowchart TD
-    A[进入列表页] --> B[加载数据]
-    B --> C[搜索/筛选]
-    C --> D[查看列表]
-    D --> E{操作选择}
-    E -->|新增| F[填写表单]
-    F --> G[提交保存]
-    E -->|编辑| H[回显数据]
-    H --> I[修改并保存]
-    E -->|删除| J[确认弹窗]
-    J --> K[执行删除]
-    E -->|查看| L[详情页]
-    G --> M[刷新列表]
-    I --> M
-    K --> M
+{flowchart}
 ```
 
 ### 数据刷新机制
@@ -108,10 +98,11 @@ flowchart TD
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看列表 | permission:list | 管理员 |
+| 查看列表 | permission:list | 管理员/运营 |
 | 新增 | permission:create | 管理员 |
 | 编辑 | permission:edit | 管理员 |
 | 删除 | permission:delete | 管理员 |
+| 状态管理 | permission:status | 管理员 |
 
 ### 权限说明
 - 权限通过Sanctum中间件校验，在路由组中统一配置
@@ -124,12 +115,14 @@ flowchart TD
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
-| 组织管理 | 部门和岗位 | admin_users.dept_id → departments.id |
+| 用户管理 | 操作人信息 | admin_users.id |
+| 系统设置 | 配置参数 | system_configs |
 
 ### 被依赖模块
 | 模块 | 使用方式 | 具体关联字段 |
 |------|----------|-------------|
-| 所有模块 | 权限控制 | 所有API接口通过中间件校验权限 |
+| 工作台 | 数据统计 | COUNT/SUM统计 |
+| 操作日志 | 记录操作 | operation_logs.module |
 
 ---
 
@@ -155,18 +148,17 @@ flowchart TD
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
-- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 管理员无法登录 | 账号被禁用或角色无权限 | 检查admin_users.status和roles.permissions |
-| 菜单不显示 | 角色未分配菜单权限 | 检查role_permissions和menus.is_show |
-| 权限修改不生效 | 权限缓存未清除 | 修改角色权限后清除Redis权限缓存 |
-| 操作日志不记录 | 日志中间件未启用 | 检查AdminLog中间件是否注册到路由组 |
-| 角色无法删除 | 角色下有管理员 | 先将管理员转移到其他角色 |
-| 菜单排序错乱 | sort字段值重复 | 确保menus.sort值唯一，按升序排列 |
-| 部门树加载慢 | 部门层级过深 | 限制最多5级，使用懒加载 |
-| 密码重置后无法登录 | 密码加密方式错误 | 使用bcrypt加密，确认密码字段长度64 |
+| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
+| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
+| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
+| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
+| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
+| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
+| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
+| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |

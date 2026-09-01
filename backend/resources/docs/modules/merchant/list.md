@@ -1,8 +1,8 @@
-# 列表
+# 商家列表
 
 ## 1. 页面概述
 ### 功能描述
-多商户商城核心，管理商家入驻、审核、信息、商品等。本页面负责列表的管理操作，支持数据的增删改查、搜索筛选和状态管理。
+管理所有入驻商家，支持审核、禁用
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
@@ -23,11 +23,11 @@
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/merchant/list | MerchantController@index | 列表列表 | merchant:list |
-| POST | /api/v1/admin/merchant/list | MerchantController@store | 新增列表 | merchant:create |
-| GET | /api/v1/admin/merchant/list/{id} | MerchantController@show | 列表详情 | merchant:view |
-| PUT | /api/v1/admin/merchant/list/{id} | MerchantController@update | 编辑列表 | merchant:edit |
-| DELETE | /api/v1/admin/merchant/list/{id} | MerchantController@destroy | 删除列表 | merchant:delete |
+| GET | /api/v1/admin/merchant/list | MerchantController@index | 商家列表列表 | merchant:list |
+| POST | /api/v1/admin/merchant/list | MerchantController@store | 新增商家列表 | merchant:create |
+| GET | /api/v1/admin/merchant/list/{id} | MerchantController@show | 商家列表详情 | merchant:view |
+| PUT | /api/v1/admin/merchant/list/{id} | MerchantController@update | 编辑商家列表 | merchant:edit |
+| DELETE | /api/v1/admin/merchant/list/{id} | MerchantController@destroy | 删除商家列表 | merchant:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -63,7 +63,6 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
@@ -74,27 +73,14 @@
 | 名称 | merchant.name | 直接读取 | 实时 |
 | 状态 | merchant.status | 0禁用1启用 | 实时 |
 | 创建时间 | merchant.created_at | 直接读取 | 实时 |
+| 更新时间 | merchant.updated_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-### 列表业务流程图
+### {title}业务流程图
 ```mermaid
-flowchart TD
-    A[进入列表页] --> B[加载数据]
-    B --> C[搜索/筛选]
-    C --> D[查看列表]
-    D --> E{操作选择}
-    E -->|新增| F[填写表单]
-    F --> G[提交保存]
-    E -->|编辑| H[回显数据]
-    H --> I[修改并保存]
-    E -->|删除| J[确认弹窗]
-    J --> K[执行删除]
-    E -->|查看| L[详情页]
-    G --> M[刷新列表]
-    I --> M
-    K --> M
+{flowchart}
 ```
 
 ### 数据刷新机制
@@ -108,10 +94,11 @@ flowchart TD
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看列表 | merchant:list | 管理员 |
+| 查看列表 | merchant:list | 管理员/运营 |
 | 新增 | merchant:create | 管理员 |
 | 编辑 | merchant:edit | 管理员 |
 | 删除 | merchant:delete | 管理员 |
+| 状态管理 | merchant:status | 管理员 |
 
 ### 权限说明
 - 权限通过Sanctum中间件校验，在路由组中统一配置
@@ -124,15 +111,14 @@ flowchart TD
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
-| 用户管理 | 商家关联用户 | merchants.user_id → users.id |
-| 商品分类 | 商家经营类目 | merchants.category_id → product_categories.id |
+| 用户管理 | 操作人信息 | admin_users.id |
+| 系统设置 | 配置参数 | system_configs |
 
 ### 被依赖模块
 | 模块 | 使用方式 | 具体关联字段 |
 |------|----------|-------------|
-| 商品管理 | 商品归属商家 | products.merchant_id → merchants.id |
-| 订单管理 | 订单归属商家 | orders.merchant_id → merchants.id |
-| 财务管理 | 商家结算 | merchant_settlements.merchant_id → merchants.id |
+| 工作台 | 数据统计 | COUNT/SUM统计 |
+| 操作日志 | 记录操作 | operation_logs.module |
 
 ---
 
@@ -158,18 +144,17 @@ flowchart TD
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
-- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 商家入驻审核不通过 | 资质材料不全或不符合要求 | 检查营业执照、法人身份证、经营类目等材料 |
-| 商家无法登录 | 账号未审核通过或被禁用 | 确认merchants.status=1且merchant_users状态正常 |
-| 商家结算金额错误 | 佣金比例配置或订单统计问题 | 检查merchant_settlements计算逻辑，含平台佣金/退款 |
-| 商家商品审核不显示 | 商品审核流程未配置 | 检查系统设置中的商品审核开关 |
-| 商家分类无法删除 | 分类下有商家 | 先转移商家到其他分类 |
-| 商家账户日志缺失 | 日志记录未开启 | 检查merchant_logs记录逻辑，关键操作必须记录 |
-| 商家等级不生效 | 等级规则未配置或未达到条件 | 检查merchant_levels配置和升级条件 |
-| 商家提现失败 | 账户余额不足或提现信息错误 | 检查merchants.balance和提现银行卡信息 |
+| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
+| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
+| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
+| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
+| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
+| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
+| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
+| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |

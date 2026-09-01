@@ -1,8 +1,8 @@
-# 应用管理模块总览
+# 应用管理总览
 
 ## 1. 页面概述
 ### 功能描述
-商城辅助应用，包括充值管理、素材管理、文章资讯、消息管理、客服设置等。本页面负责应用管理模块总览的管理操作，支持数据的增删改查、搜索筛选和状态管理。
+辅助应用总览
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
@@ -23,11 +23,11 @@
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/application/_index | ApplicationController@index | 应用管理模块总览列表 | application:list |
-| POST | /api/v1/admin/application/_index | ApplicationController@store | 新增应用管理模块总览 | application:create |
-| GET | /api/v1/admin/application/_index/{id} | ApplicationController@show | 应用管理模块总览详情 | application:view |
-| PUT | /api/v1/admin/application/_index/{id} | ApplicationController@update | 编辑应用管理模块总览 | application:edit |
-| DELETE | /api/v1/admin/application/_index/{id} | ApplicationController@destroy | 删除应用管理模块总览 | application:delete |
+| GET | /api/v1/admin/application/_index | ApplicationController@index | 应用管理总览列表 | application:list |
+| POST | /api/v1/admin/application/_index | ApplicationController@store | 新增应用管理总览 | application:create |
+| GET | /api/v1/admin/application/_index/{id} | ApplicationController@show | 应用管理总览详情 | application:view |
+| PUT | /api/v1/admin/application/_index/{id} | ApplicationController@update | 编辑应用管理总览 | application:edit |
+| DELETE | /api/v1/admin/application/_index/{id} | ApplicationController@destroy | 删除应用管理总览 | application:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -63,7 +63,6 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
@@ -74,18 +73,14 @@
 | 名称 | application.name | 直接读取 | 实时 |
 | 状态 | application.status | 0禁用1启用 | 实时 |
 | 创建时间 | application.created_at | 直接读取 | 实时 |
+| 更新时间 | application.updated_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-### 应用管理模块总览业务流程图
+### {title}业务流程图
 ```mermaid
-flowchart TD
-    A[进入模块总览] --> B[加载统计数据]
-    B --> C[查看核心指标]
-    C --> D[趋势图表]
-    D --> E[快捷入口]
-    E --> F[跳转子模块]
+{flowchart}
 ```
 
 ### 数据刷新机制
@@ -99,10 +94,11 @@ flowchart TD
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看列表 | application:list | 管理员 |
+| 查看列表 | application:list | 管理员/运营 |
 | 新增 | application:create | 管理员 |
 | 编辑 | application:edit | 管理员 |
 | 删除 | application:delete | 管理员 |
+| 状态管理 | application:status | 管理员 |
 
 ### 权限说明
 - 权限通过Sanctum中间件校验，在路由组中统一配置
@@ -115,15 +111,14 @@ flowchart TD
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
-| 用户管理 | 充值用户 | recharge_orders.user_id → users.id |
-| 系统设置 | 存储配置 | materials存储依赖system_configs.storage |
+| 用户管理 | 操作人信息 | admin_users.id |
+| 系统设置 | 配置参数 | system_configs |
 
 ### 被依赖模块
 | 模块 | 使用方式 | 具体关联字段 |
 |------|----------|-------------|
-| 商品管理 | 商品图片素材 | products.thumbnail → materials.url |
-| 装修管理 | 广告图素材 | banners.image → materials.url |
-| 用户端H5 | 文章和公告展示 | articles, notices在H5端展示 |
+| 工作台 | 数据统计 | COUNT/SUM统计 |
+| 操作日志 | 记录操作 | operation_logs.module |
 
 ---
 
@@ -149,18 +144,17 @@ flowchart TD
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
-- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 素材上传失败 | 存储配置错误或文件超限 | 检查config/filesystems.php和文件大小限制 |
-| 素材缩略图不生成 | GD库未安装 | 安装php-gd扩展，支持jpg/png/webp |
-| 文章不显示 | 文章未发布或分类错误 | 检查articles.status=1和category_id |
-| 消息推送失败 | 推送配置错误 | 检查短信/邮件/站内信配置 |
-| 客服设置不生效 | 缓存未清除 | 修改kefu_settings后清除缓存 |
-| 充值订单未到账 | 支付回调未处理 | 检查recharge_orders.pay_time和users.balance更新 |
-| 素材文件夹无法删除 | 文件夹下有素材 | 先移动或删除文件夹内素材 |
-| 公告不显示 | 公告未启用或时间未到 | 检查notices.status和start_time/end_time |
+| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
+| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
+| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
+| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
+| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
+| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
+| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
+| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |

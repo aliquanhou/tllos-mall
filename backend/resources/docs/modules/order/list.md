@@ -1,8 +1,8 @@
-# 列表
+# 订单列表
 
 ## 1. 页面概述
 ### 功能描述
-管理商城所有订单，包括订单列表、售后、退款等，核心状态机模块。本页面负责列表的管理操作，支持数据的增删改查、搜索筛选和状态管理。
+管理所有订单，支持发货、备注、退款等操作
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
@@ -23,11 +23,11 @@
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/order/list | OrderController@index | 列表列表 | order:list |
-| POST | /api/v1/admin/order/list | OrderController@store | 新增列表 | order:create |
-| GET | /api/v1/admin/order/list/{id} | OrderController@show | 列表详情 | order:view |
-| PUT | /api/v1/admin/order/list/{id} | OrderController@update | 编辑列表 | order:edit |
-| DELETE | /api/v1/admin/order/list/{id} | OrderController@destroy | 删除列表 | order:delete |
+| GET | /api/v1/admin/order/list | OrderController@index | 订单列表列表 | order:list |
+| POST | /api/v1/admin/order/list | OrderController@store | 新增订单列表 | order:create |
+| GET | /api/v1/admin/order/list/{id} | OrderController@show | 订单列表详情 | order:view |
+| PUT | /api/v1/admin/order/list/{id} | OrderController@update | 编辑订单列表 | order:edit |
+| DELETE | /api/v1/admin/order/list/{id} | OrderController@destroy | 删除订单列表 | order:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -63,7 +63,6 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
@@ -74,27 +73,14 @@
 | 名称 | order.name | 直接读取 | 实时 |
 | 状态 | order.status | 0禁用1启用 | 实时 |
 | 创建时间 | order.created_at | 直接读取 | 实时 |
+| 更新时间 | order.updated_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-### 列表业务流程图
+### {title}业务流程图
 ```mermaid
-flowchart TD
-    A[进入列表页] --> B[加载数据]
-    B --> C[搜索/筛选]
-    C --> D[查看列表]
-    D --> E{操作选择}
-    E -->|新增| F[填写表单]
-    F --> G[提交保存]
-    E -->|编辑| H[回显数据]
-    H --> I[修改并保存]
-    E -->|删除| J[确认弹窗]
-    J --> K[执行删除]
-    E -->|查看| L[详情页]
-    G --> M[刷新列表]
-    I --> M
-    K --> M
+{flowchart}
 ```
 
 ### 数据刷新机制
@@ -108,10 +94,11 @@ flowchart TD
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看列表 | order:list | 管理员 |
+| 查看列表 | order:list | 管理员/运营 |
 | 新增 | order:create | 管理员 |
 | 编辑 | order:edit | 管理员 |
 | 删除 | order:delete | 管理员 |
+| 状态管理 | order:status | 管理员 |
 
 ### 权限说明
 - 权限通过Sanctum中间件校验，在路由组中统一配置
@@ -124,18 +111,14 @@ flowchart TD
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
-| 商品管理 | 订单商品信息 | order_items.product_id → products.id |
-| 用户管理 | 下单用户信息 | orders.user_id → users.id |
-| 商家管理 | 订单归属商家 | orders.merchant_id → merchants.id |
-| 支付配置 | 支付方式和回调 | orders.pay_type → system_configs |
+| 用户管理 | 操作人信息 | admin_users.id |
+| 系统设置 | 配置参数 | system_configs |
 
 ### 被依赖模块
 | 模块 | 使用方式 | 具体关联字段 |
 |------|----------|-------------|
-| 财务管理 | 收款和退款记录 | finance_income.order_id → orders.id |
-| 分销管理 | 分销订单佣金计算 | distribute_orders.order_id → orders.id |
-| 物流配置 | 订单发货物流 | orders.express_no, orders.express_code |
-| 营销管理 | 优惠券使用记录 | orders.coupon_id → coupons.id |
+| 工作台 | 数据统计 | COUNT/SUM统计 |
+| 操作日志 | 记录操作 | operation_logs.module |
 
 ---
 
@@ -161,18 +144,17 @@ flowchart TD
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
-- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 订单状态不更新 | 支付回调未处理或队列阻塞 | 检查支付回调日志，确认队列worker运行中 |
-| 订单金额计算错误 | 优惠计算逻辑问题 | 检查订单创建时的价格计算，含优惠/运费/积分抵扣 |
-| 发货后订单仍显示待发货 | 发货接口未调用或物流信息缺失 | 确认调用ship接口，express_no和express_code必填 |
-| 退款申请无法提交 | 订单状态不允许退款 | 仅已支付/已发货订单可申请退款，已完成订单需售后 |
-| 订单导出超时 | 数据量过大 | 使用分批导出或队列异步生成Excel |
-| 订单编号重复 | 并发创建订单 | 使用数据库唯一索引或Redis分布式锁生成订单号 |
-| 售后审核后状态不变 | 事务回滚或状态机错误 | 检查after_sales.status流转逻辑，确保事务提交 |
-| 订单详情商品不显示 | order_items关联查询失败 | 检查order_items.order_id外键关联 |
+| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
+| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
+| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
+| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
+| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
+| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
+| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
+| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |

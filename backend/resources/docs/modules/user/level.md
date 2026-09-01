@@ -1,8 +1,8 @@
-# 等级
+# 用户等级
 
 ## 1. 页面概述
 ### 功能描述
-管理商城所有用户，包括用户列表、等级、标签、认证等。本页面负责等级的管理操作，支持数据的增删改查、搜索筛选和状态管理。
+管理用户等级体系
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
@@ -23,11 +23,11 @@
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/user/level | UserController@index | 等级列表 | user:list |
-| POST | /api/v1/admin/user/level | UserController@store | 新增等级 | user:create |
-| GET | /api/v1/admin/user/level/{id} | UserController@show | 等级详情 | user:view |
-| PUT | /api/v1/admin/user/level/{id} | UserController@update | 编辑等级 | user:edit |
-| DELETE | /api/v1/admin/user/level/{id} | UserController@destroy | 删除等级 | user:delete |
+| GET | /api/v1/admin/user/level | UserController@index | 用户等级列表 | user:list |
+| POST | /api/v1/admin/user/level | UserController@store | 新增用户等级 | user:create |
+| GET | /api/v1/admin/user/level/{id} | UserController@show | 用户等级详情 | user:view |
+| PUT | /api/v1/admin/user/level/{id} | UserController@update | 编辑用户等级 | user:edit |
+| DELETE | /api/v1/admin/user/level/{id} | UserController@destroy | 删除用户等级 | user:delete |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -63,7 +63,6 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
@@ -74,27 +73,14 @@
 | 名称 | user.name | 直接读取 | 实时 |
 | 状态 | user.status | 0禁用1启用 | 实时 |
 | 创建时间 | user.created_at | 直接读取 | 实时 |
+| 更新时间 | user.updated_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-### 等级业务流程图
+### {title}业务流程图
 ```mermaid
-flowchart TD
-    A[进入列表页] --> B[加载数据]
-    B --> C[搜索/筛选]
-    C --> D[查看列表]
-    D --> E{操作选择}
-    E -->|新增| F[填写表单]
-    F --> G[提交保存]
-    E -->|编辑| H[回显数据]
-    H --> I[修改并保存]
-    E -->|删除| J[确认弹窗]
-    J --> K[执行删除]
-    E -->|查看| L[详情页]
-    G --> M[刷新列表]
-    I --> M
-    K --> M
+{flowchart}
 ```
 
 ### 数据刷新机制
@@ -108,10 +94,11 @@ flowchart TD
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看列表 | user:list | 管理员 |
+| 查看列表 | user:list | 管理员/运营 |
 | 新增 | user:create | 管理员 |
 | 编辑 | user:edit | 管理员 |
 | 删除 | user:delete | 管理员 |
+| 状态管理 | user:status | 管理员 |
 
 ### 权限说明
 - 权限通过Sanctum中间件校验，在路由组中统一配置
@@ -124,15 +111,14 @@ flowchart TD
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
-| 系统设置 | 用户注册配置 | system_configs.user_settings |
+| 用户管理 | 操作人信息 | admin_users.id |
+| 系统设置 | 配置参数 | system_configs |
 
 ### 被依赖模块
 | 模块 | 使用方式 | 具体关联字段 |
 |------|----------|-------------|
-| 订单管理 | 下单用户 | orders.user_id → users.id |
-| 商家管理 | 商家关联用户 | merchants.user_id → users.id |
-| 分销管理 | 分销商用户 | distributors.user_id → users.id |
-| 营销管理 | 优惠券发放对象 | user_coupons.user_id → users.id |
+| 工作台 | 数据统计 | COUNT/SUM统计 |
+| 操作日志 | 记录操作 | operation_logs.module |
 
 ---
 
@@ -158,18 +144,17 @@ flowchart TD
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
-- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 用户无法登录 | 密码错误或账号被禁用 | 检查users.status=1，密码使用bcrypt校验 |
-| 用户等级不升级 | 成长值未达到或等级规则未配置 | 检查user_levels配置和users.growth_value |
-| 用户余额异常 | 充值或消费记录不同步 | 检查user_balance_logs流水，确保余额=充值-消费+退款 |
-| 用户实名认证失败 | 身份证信息错误或接口异常 | 检查user_auths记录和实名认证第三方接口 |
-| 用户地址不显示 | 地址被删除或关联错误 | 检查user_addresses.user_id和is_deleted状态 |
-| 用户标签无法添加 | 标签不存在或用户已关联 | 检查user_tags和user_tag_relations中间表 |
-| 用户积分清零 | 积分过期规则生效 | 检查积分有效期配置和user_points_logs |
-| 用户注册收不到短信 | 短信配置错误或频率限制 | 检查短信配置和发送频率限制 |
+| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
+| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
+| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
+| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
+| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
+| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
+| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
+| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |

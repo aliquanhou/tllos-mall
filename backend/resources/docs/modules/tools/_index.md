@@ -1,8 +1,8 @@
-# 开发工具模块总览
+# 开发工具总览
 
 ## 1. 页面概述
 ### 功能描述
-开发辅助工具，包括代码生成器、数据导出等。本页面负责开发工具模块总览的管理操作，支持数据的增删改查、搜索筛选和状态管理。
+开发辅助工具总览
 
 ### 核心指标
 | 指标 | 含义 | 业务价值 |
@@ -23,11 +23,13 @@
 ## 2. API接口清单（基于真实控制器实现）
 | 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
 |------|------|-----------|------|----------|
-| GET | /api/v1/admin/tools/_index | ToolsController@index | 开发工具模块总览列表 | tools:list |
-| POST | /api/v1/admin/tools/_index | ToolsController@store | 新增开发工具模块总览 | tools:create |
-| GET | /api/v1/admin/tools/_index/{id} | ToolsController@show | 开发工具模块总览详情 | tools:view |
-| PUT | /api/v1/admin/tools/_index/{id} | ToolsController@update | 编辑开发工具模块总览 | tools:edit |
-| DELETE | /api/v1/admin/tools/_index/{id} | ToolsController@destroy | 删除开发工具模块总览 | tools:delete |
+| GET | /api/v1/admin/tables | GeneratorController@getModels | Get Models | tools:getModels |
+| GET | /api/v1/admin/table | GeneratorController@selectTable | Select Table | tools:selectTable |
+| GET | /api/v1/admin/data | GeneratorController@dataTable | Data Table | tools:dataTable |
+| POST | /api/v1/admin/generate | GeneratorController@generate | Generate | tools:generate |
+| GET | /api/v1/admin/preview | GeneratorController@preview | Preview | tools:preview |
+| GET | /api/v1/admin/download | GeneratorController@download | Download | tools:download |
+| POST | /api/v1/admin/ | DownloadController@export | Export | tools:export |
 
 ### 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -63,7 +65,6 @@
 | 10002 | 数据不存在或已删除 |
 | 10003 | 参数校验失败 |
 | 10004 | 数据库操作失败 |
-| 10005 | 数据已存在，不可重复创建 |
 
 ---
 
@@ -74,18 +75,14 @@
 | 名称 | tools.name | 直接读取 | 实时 |
 | 状态 | tools.status | 0禁用1启用 | 实时 |
 | 创建时间 | tools.created_at | 直接读取 | 实时 |
+| 更新时间 | tools.updated_at | 直接读取 | 实时 |
 
 ---
 
 ## 4. 操作流程
-### 开发工具模块总览业务流程图
+### {title}业务流程图
 ```mermaid
-flowchart TD
-    A[进入模块总览] --> B[加载统计数据]
-    B --> C[查看核心指标]
-    C --> D[趋势图表]
-    D --> E[快捷入口]
-    E --> F[跳转子模块]
+{flowchart}
 ```
 
 ### 数据刷新机制
@@ -99,10 +96,11 @@ flowchart TD
 ## 5. 权限控制
 | 操作 | 权限标识 | 默认角色 |
 |------|----------|----------|
-| 查看列表 | tools:list | 管理员 |
+| 查看列表 | tools:list | 管理员/运营 |
 | 新增 | tools:create | 管理员 |
 | 编辑 | tools:edit | 管理员 |
 | 删除 | tools:delete | 管理员 |
+| 状态管理 | tools:status | 管理员 |
 
 ### 权限说明
 - 权限通过Sanctum中间件校验，在路由组中统一配置
@@ -115,11 +113,14 @@ flowchart TD
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
-| 所有模块 | 读取表结构生成代码 | 读取information_schema生成CRUD代码 |
+| 用户管理 | 操作人信息 | admin_users.id |
+| 系统设置 | 配置参数 | system_configs |
 
 ### 被依赖模块
 | 模块 | 使用方式 | 具体关联字段 |
 |------|----------|-------------|
+| 工作台 | 数据统计 | COUNT/SUM统计 |
+| 操作日志 | 记录操作 | operation_logs.module |
 
 ---
 
@@ -145,18 +146,17 @@ flowchart TD
 - [ ] 页面加载时间 < 2秒
 - [ ] 数据查询耗时 < 500ms
 - [ ] 列表分页响应 < 1秒
-- [ ] 并发100用户无明显延迟
 
 ---
 
 ## 8. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 代码生成失败 | 表结构读取失败 | 检查数据库连接和information_schema权限 |
-| 生成代码无法运行 | 模板版本不兼容 | 检查生成模板和当前Laravel版本匹配 |
-| 数据导出超时 | 数据量过大 | 使用分批导出或队列异步生成 |
-| 生成的路由冲突 | 路由命名重复 | 生成前检查现有路由，使用模块前缀 |
-| 表列表不显示 | 数据库连接错误 | 检查.env数据库配置 |
-| 预览代码不完整 | 模板变量缺失 | 检查代码生成模板的变量定义 |
-| 下载代码包失败 | zip扩展未安装 | 安装php-zip扩展 |
-| 生成的模型缺少关联 | 外键关系未识别 | 确保表有外键约束或手动添加关联 |
+| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
+| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
+| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
+| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
+| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
+| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
+| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
+| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |
