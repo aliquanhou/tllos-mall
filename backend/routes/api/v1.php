@@ -1137,6 +1137,8 @@ Route::prefix('merchant')->group(function() {
         Route::put('/goods/{id}', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'edit']);
 
         Route::delete('/goods/{id}', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'delete']);
+        Route::post('/goods/batch-status', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'batchUpdateStatus']);
+        Route::post('/goods/batch-delete', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'batchDelete']);
 
         Route::get('/goods/{id}', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'detail']);
 
