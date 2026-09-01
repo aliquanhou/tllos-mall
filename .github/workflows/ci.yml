@@ -26,14 +26,14 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, pdo, pdo_mysql, json, ctype, fileinfo, openssl, tokenizer, xml, bcmath, redis
+          extensions: mbstring, pdo, pdo_mysql, json, ctype, fileinfo, openssl, tokenizer, xml, bcmath
           coverage: none
       
       - name: Copy .env
         run: |
           cd backend
           cp .env.example .env
-          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env
           sed -i 's/DB_DATABASE=.*/DB_DATABASE=tllos_test/' .env
           sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
           sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
@@ -44,18 +44,22 @@ jobs:
       - name: Generate key
         run: cd backend && php artisan key:generate
       
+      - name: Check PHP syntax
+        run: cd backend && find app -name "*.php" -exec php -l {} \; | grep -v "No syntax errors" || echo "All PHP files syntax OK"
+      
       - name: Run migrations
         run: cd backend && php artisan migrate --force
       
-      - name: Check syntax
-        run: cd backend && php -l app/Modules/*/Controllers/*.php 2>&1 | grep -v "No syntax errors" || true
+      - name: Clear caches
+        run: |
+          cd backend
+          php artisan config:clear
+          php artisan route:clear
+          php artisan cache:clear
 
   frontend-build:
     name: Frontend Build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app: [admin, merchant, h5]
     steps:
       - uses: actions/checkout@v4
       
@@ -63,17 +67,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: ${{ matrix.app }}/package-lock.json
       
-      - name: Install dependencies
-        run: cd ${{ matrix.app }} && npm ci
+      - name: Install and build Admin
+        run: |
+          cd admin
+          npm ci
+          npm run build
       
-      - name: Build
-        run: cd ${{ matrix.app }} && npm run build
+      - name: Install and build Merchant
+        run: |
+          cd merchant
+          npm ci
+          npm run build
       
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.app }}-dist
-          path: ${{ matrix.app }}/dist/
+      - name: Install and build H5
+        run: |
+          cd h5
+          npm ci
+          npm run build
