@@ -24,6 +24,8 @@ Route::prefix('auth')->group(function () {
 Route::prefix('admin')->group(function () {
 
     Route::post('login', [\App\Modules\Admin\Controllers\AuthController::class, 'login']);
+Route::get('profile', [\App\Modules\Admin\Controllers\AuthController::class, 'profile']);
+Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'logout']);
 
 });
 
