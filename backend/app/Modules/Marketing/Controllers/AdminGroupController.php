@@ -6,11 +6,17 @@ use Illuminate\Support\Facades\DB;
 class AdminGroupController extends BaseController {
     public function index(Request $request) {
         try {
-            $list = DB::table('groups')->orderBy('id','desc')->paginate($request->get('limit',20));
+            $query = DB::table('groups');
+            if ($request->keyword) $query->where('name','like','%'.$request->keyword.'%');
+            $list = $query->orderBy('id','desc')->paginate($request->get('limit',20));
             return $this->success(['list'=>$list->items(),'total'=>$list->total()]);
         } catch (\Exception $e) {
             return $this->success(['list'=>[],'total'=>0,'error'=>$e->getMessage()]);
         }
+    }
+    public function show($id) {
+        $item = DB::table('groups')->where('id',$id)->first();
+        return $this->success($item);
     }
     public function store(Request $request) {
         $data = $request->only(['name','goods_id','group_price','group_num','start_time','end_time','status']);
