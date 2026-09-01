@@ -11,10 +11,15 @@ const routes = [
       { path: 'product/list', name: 'ProductList', component: () => import('@/views/GoodsList.vue'), meta: { title: '商品管理' } },
       { path: 'product/create', name: 'ProductCreate', component: () => import('@/views/product/GoodsForm.vue'), meta: { title: '新增商品' } },
       { path: 'product/edit/:id', name: 'ProductEdit', component: () => import('@/views/product/GoodsForm.vue'), meta: { title: '编辑商品' } },
+      { path: 'product/category', name: 'ProductCategory', component: () => import('@/views/product/Category.vue'), meta: { title: '商品分类' } },
       { path: 'order/list', name: 'OrderList', component: () => import('@/views/OrderList.vue'), meta: { title: '订单管理' } },
+      { path: 'order/detail/:id', name: 'OrderDetail', component: () => import('@/views/order/Detail.vue'), meta: { title: '订单详情' } },
       { path: 'shop/info', name: 'ShopInfo', component: () => import('@/views/ShopSetting.vue'), meta: { title: '店铺设置' } },
       { path: 'finance/list', name: 'FinanceList', component: () => import('@/views/finance/FinanceList.vue'), meta: { title: '财务管理' } },
+      { path: 'finance/settlement', name: 'FinanceSettlement', component: () => import('@/views/finance/Settlement.vue'), meta: { title: '结算管理' } },
       { path: 'marketing/coupon', name: 'MarketingCoupon', component: () => import('@/views/marketing/Coupon.vue'), meta: { title: '优惠券' } },
+      { path: 'marketing/seckill', name: 'MarketingSeckill', component: () => import('@/views/marketing/Seckill.vue'), meta: { title: '秒杀活动' } },
+      { path: 'data/overview', name: 'DataOverview', component: () => import('@/views/data/Overview.vue'), meta: { title: '数据概览' } },
     ]
   },
 ]

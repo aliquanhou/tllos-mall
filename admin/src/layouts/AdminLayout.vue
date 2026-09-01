@@ -69,6 +69,9 @@ const menuGroups = [
     { path: '/product/category', title: '商品分类', icon: 'Menu' },
     { path: '/product/comment', title: '商品评价', icon: 'ChatDotRound' },
     { path: '/product/sku', title: '商品SKU', icon: 'Grid' },
+    { path: '/product/brand', title: '品牌管理', icon: 'Flag' },
+    { path: '/product/type', title: '商品类型', icon: 'Collection' },
+    { path: '/product/stock-warning', title: '库存预警', icon: 'Warning' },
   ]},
   { key: 'order', title: '订单管理', icon: 'Document', children: [
     { path: '/order/list', title: '订单列表', icon: 'List' },
@@ -82,6 +85,7 @@ const menuGroups = [
     { path: '/merchant/account-log', title: '账户日志', icon: 'Document' },
     { path: '/merchant/menu', title: '商家菜单', icon: 'Menu' },
     { path: '/merchant/permission', title: '商家权限', icon: 'Key' },
+    { path: '/merchant/level', title: '商家等级', icon: 'Medal' },
   ]},
   { key: 'user', title: '用户管理', icon: 'User', children: [
     { path: '/user/list', title: '用户列表', icon: 'List' },
@@ -91,6 +95,8 @@ const menuGroups = [
     { path: '/user/address', title: '收货地址', icon: 'Location' },
     { path: '/user/account-log', title: '账户日志', icon: 'Document' },
     { path: '/user/auth', title: '实名认证', icon: 'Postcard' },
+    { path: '/user-center/point', title: '用户积分', icon: 'Star' },
+    { path: '/user-center/favorite', title: '用户收藏', icon: 'Heart' },
   ]},
   { key: 'distribute', title: '分销管理', icon: 'Share', children: [
     { path: '/distribute/overview', title: '分销概览', icon: 'DataAnalysis' },

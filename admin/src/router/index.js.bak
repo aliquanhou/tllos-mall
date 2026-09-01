@@ -12,9 +12,6 @@ const routes = [
       { path: 'product/category', name: 'ProductCategory', component: () => import('@/views/product/category.vue'), meta: { title: '商品分类' } },
       { path: 'product/comment', name: 'ProductComment', component: () => import('@/views/product/comment.vue'), meta: { title: '商品评价' } },
       { path: 'product/sku', name: 'ProductSku', component: () => import('@/views/product/sku.vue'), meta: { title: '商品SKU' } },
-      { path: 'product/brand', name: 'ProductBrand', component: () => import('@/views/product/brand.vue'), meta: { title: '品牌管理' } },
-      { path: 'product/type', name: 'ProductType', component: () => import('@/views/product/type.vue'), meta: { title: '商品类型' } },
-      { path: 'product/stock-warning', name: 'StockWarning', component: () => import('@/views/product/stock-warning.vue'), meta: { title: '库存预警' } },
       // 订单管理
       { path: 'order/list', name: 'OrderList', component: () => import('@/views/order/list.vue'), meta: { title: '订单列表' } },
       { path: 'order/after-sale', name: 'OrderAfterSale', component: () => import('@/views/order/after-sale.vue'), meta: { title: '订单售后' } },
@@ -26,7 +23,6 @@ const routes = [
       { path: 'merchant/account-log', name: 'MerchantAccountLog', component: () => import('@/views/merchant/account-log.vue'), meta: { title: '账户日志' } },
       { path: 'merchant/menu', name: 'MerchantMenu', component: () => import('@/views/merchant/menu.vue'), meta: { title: '商家菜单' } },
       { path: 'merchant/permission', name: 'MerchantPermission', component: () => import('@/views/merchant/permission.vue'), meta: { title: '商家权限' } },
-      { path: 'merchant/level', name: 'MerchantLevel', component: () => import('@/views/merchant/level.vue'), meta: { title: '商家等级' } },
       // 用户管理
       { path: 'user/list', name: 'UserList', component: () => import('@/views/user/list.vue'), meta: { title: '用户列表' } },
       { path: 'user/level', name: 'UserLevel', component: () => import('@/views/user/level.vue'), meta: { title: '用户等级' } },
@@ -35,8 +31,6 @@ const routes = [
       { path: 'user/address', name: 'UserAddress', component: () => import('@/views/user/address.vue'), meta: { title: '收货地址' } },
       { path: 'user/account-log', name: 'UserAccountLog', component: () => import('@/views/user/account-log.vue'), meta: { title: '账户日志' } },
       { path: 'user/auth', name: 'UserAuth', component: () => import('@/views/user/auth.vue'), meta: { title: '实名认证' } },
-      { path: 'user-center/point', name: 'UserPoint', component: () => import('@/views/user-center/point.vue'), meta: { title: '用户积分' } },
-      { path: 'user-center/favorite', name: 'UserFavorite', component: () => import('@/views/user-center/favorite.vue'), meta: { title: '用户收藏' } },
       // 分销管理
       { path: 'distribute/overview', name: 'DistributeOverview', component: () => import('@/views/distribute/overview.vue'), meta: { title: '分销概览' } },
       { path: 'distribute/goods', name: 'DistributeGoods', component: () => import('@/views/distribute/goods.vue'), meta: { title: '分销商品' } },
@@ -94,7 +88,6 @@ const routes = [
       { path: 'system/notice-setting', name: 'SystemNoticeSetting', component: () => import('@/views/system/notice-setting.vue'), meta: { title: '通知设置' } },
       { path: 'system/sms-config', name: 'SystemSmsConfig', component: () => import('@/views/system/sms-config.vue'), meta: { title: '短信配置' } },
       { path: 'system/storage', name: 'SystemStorage', component: () => import('@/views/system/storage.vue'), meta: { title: '存储设置' } },
-      { path: 'system/storage-config', name: 'SystemStorageConfig', component: () => import('@/views/system/storage-config.vue'), meta: { title: '存储配置' } },
       { path: 'system/pay-scene', name: 'SystemPayScene', component: () => import('@/views/system/pay-scene.vue'), meta: { title: '支付场景' } },
       { path: 'system/dict', name: 'SystemDict', component: () => import('@/views/system/dict.vue'), meta: { title: '数据字典' } },
       { path: 'system/hot-search', name: 'SystemHotSearch', component: () => import('@/views/system/hot-search.vue'), meta: { title: '热门搜索' } },
