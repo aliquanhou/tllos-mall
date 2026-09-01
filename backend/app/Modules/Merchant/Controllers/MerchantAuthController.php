@@ -20,7 +20,7 @@ class MerchantAuthController extends BaseController {
         $user = User::where('id', $shop->user_id)->first();
         if (!$user) {
             $user = User::create([
-                'mobile' => $shop->contact_phone ?: 'merchant_' . $shop->id,
+                'mobile' => $shop->contact_phone ?: $shop->contact_mobile ?: 'merchant_' . $shop->id,
                 'nickname' => $shop->name,
                 'password' => Hash::make($password),
                 'status' => 1,
