@@ -1120,6 +1120,14 @@ Route::prefix('merchant')->group(function() {
 
         Route::get('/workbench', [\App\Modules\Merchant\Controllers\MerchantWorkbenchController::class,'index']);
 
+        // 财务管理
+        Route::get('/finance', [\App\Modules\Merchant\Controllers\MerchantFinanceController::class,'index']);
+        Route::post('/finance/withdraw', [\App\Modules\Merchant\Controllers\MerchantFinanceController::class,'withdraw']);
+
+        // 优惠券
+        Route::get('/coupons', [\App\Modules\Merchant\Controllers\MerchantCouponController::class,'index']);
+        Route::post('/coupons', [\App\Modules\Merchant\Controllers\MerchantCouponController::class,'store']);
+
         // 商品管理
 
         Route::get('/goods', [\App\Modules\Merchant\Controllers\MerchantGoodsController::class,'lists']);
