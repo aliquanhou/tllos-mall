@@ -1340,3 +1340,11 @@ Route::prefix('admin/docs')->middleware('auth:sanctum')->group(function () {
     Route::get('/{module}/all-list', [App\Modules\System\Controllers\DocController::class, 'list']);
     Route::get('/{module}/{page}', [App\Modules\System\Controllers\DocController::class, 'show']);
 });
+
+// 帮助文档路由
+Route::prefix('admin/help')->middleware('auth:sanctum')->group(function () {
+    Route::get('/{module}', [App\Modules\System\Controllers\HelpController::class, 'show']);
+    Route::get('/{module}/all-list', [App\Modules\System\Controllers\HelpController::class, 'list']);
+    Route::get('/{module}/{page}', [App\Modules\System\Controllers\HelpController::class, 'show']);
+    Route::put('/{module}/{page}', [App\Modules\System\Controllers\HelpController::class, 'update']);
+});

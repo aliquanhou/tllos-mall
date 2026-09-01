@@ -14,6 +14,7 @@
                 <span>{{ group.title }}</span>
 
   <DocDrawer v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+  <HelpDrawer v-model="helpVisible" :module="helpModule" :page="helpPage" :title="helpTitle" />
 </template>
               <el-menu-item v-for="item in group.children" :key="item.path" :index="item.path">
                 <el-icon><component :is="item.icon" /></el-icon>
@@ -67,6 +68,10 @@ import { useRoute } from "vue-router"
 
 const route = useRoute()
 const docVisible = ref(false)
+const helpVisible = ref(false)
+const helpModule = ref("")
+const helpPage = ref("_index")
+const helpTitle = ref("帮助文档")
 const docModule = ref("")
 const docPage = ref("_index")
 const docTitle = ref("技术文档")
@@ -230,6 +235,26 @@ const openDoc = () => {
   docTitle.value = title
   docVisible.value = true
 }
+
+const openHelp = () => {
+  const path = route.path
+  const parts = path.split('/').filter(Boolean)
+  if (parts.length === 0) {
+    helpModule.value = 'dashboard'
+    helpPage.value = '_index'
+    helpTitle.value = '工作台 - 帮助文档'
+  } else if (parts.length === 1) {
+    helpModule.value = pathToModule[parts[0]] || parts[0]
+    helpPage.value = '_index'
+    helpTitle.value = parts[0] + ' - 模块帮助'
+  } else {
+    helpModule.value = pathToModule[parts[0]] || parts[0]
+    helpPage.value = pathToPage[parts[1]] || parts[1]
+    helpTitle.value = parts[1] + ' - 帮助文档'
+  }
+  helpVisible.value = true
+}
+
 
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
