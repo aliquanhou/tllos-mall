@@ -40,7 +40,7 @@ const load = async()=>{
   if(!props.module) return
   loading.value=true; error.value=''
   try {
-    const url = props.page&&props.page!=='_index'?`/docs/${props.module}/${props.page}`:`/docs/${props.module}`
+    const url = props.page&&props.page!=='_index'?`/admin/docs/${props.module}/${props.page}`:`/admin/docs/${props.module}`
     const res = await request({url})
     content.value = res.data?.content||''
     if(!content.value) error.value='文档内容为空'
