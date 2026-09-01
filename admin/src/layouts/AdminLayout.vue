@@ -127,6 +127,9 @@ const menuGroups = [
     { path: '/decoration/index', title: '页面装修', icon: 'Monitor' },
     { path: '/decoration/page', title: '装修页面', icon: 'Document' },
     { path: '/decoration/tabbar', title: '底部导航', icon: 'Menu' },
+    { path: '/decoration/template', title: '模板管理', icon: 'Files' },
+    { path: '/decoration/banner', title: '轮播图', icon: 'Picture' },
+    { path: '/decoration/navigation', title: '导航图标', icon: 'Grid' },
   ]},
   { key: 'finance', title: '财务管理', icon: 'Money', children: [
     { path: '/finance/income', title: '订单收款', icon: 'Money' },

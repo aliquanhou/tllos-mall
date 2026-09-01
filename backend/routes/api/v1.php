@@ -727,7 +727,35 @@ Route::prefix('admin/decorate')->middleware('auth:sanctum')->group(function () {
 
     Route::delete('/tabbars/{id}', [App\Modules\Decorate\Controllers\DecorateController::class, 'tabbarDestroy']);
 
-    Route::get('/category-ads', [App\Modules\Decorate\Controllers\DecorateController::class, 'categoryAds']);
+    // 装修页面
+    Route::get('/pages', [App\Modules\Decorate\Controllers\PageController::class, 'index']);
+    Route::get('/pages/{id}', [App\Modules\Decorate\Controllers\PageController::class, 'show']);
+    Route::post('/pages', [App\Modules\Decorate\Controllers\PageController::class, 'store']);
+    Route::put('/pages/{id}', [App\Modules\Decorate\Controllers\PageController::class, 'update']);
+    Route::delete('/pages/{id}', [App\Modules\Decorate\Controllers\PageController::class, 'destroy']);
+    Route::post('/pages/{id}/components', [App\Modules\Decorate\Controllers\PageController::class, 'saveComponents']);
+    Route::post('/pages/{id}/apply-template', [App\Modules\Decorate\Controllers\PageController::class, 'applyTemplate']);
+
+    // 装修模板
+    Route::get('/templates', [App\Modules\Decorate\Controllers\TemplateController::class, 'index']);
+    Route::get('/templates/{id}', [App\Modules\Decorate\Controllers\TemplateController::class, 'show']);
+    Route::post('/templates', [App\Modules\Decorate\Controllers\TemplateController::class, 'store']);
+    Route::put('/templates/{id}', [App\Modules\Decorate\Controllers\TemplateController::class, 'update']);
+    Route::delete('/templates/{id}', [App\Modules\Decorate\Controllers\TemplateController::class, 'destroy']);
+
+    // 轮播图
+    Route::get('/banners', [App\Modules\Decorate\Controllers\BannerController::class, 'index']);
+    Route::post('/banners', [App\Modules\Decorate\Controllers\BannerController::class, 'store']);
+    Route::put('/banners/{id}', [App\Modules\Decorate\Controllers\BannerController::class, 'update']);
+    Route::delete('/banners/{id}', [App\Modules\Decorate\Controllers\BannerController::class, 'destroy']);
+
+    // 导航
+    Route::get('/navigations', [App\Modules\Decorate\Controllers\NavigationController::class, 'index']);
+    Route::post('/navigations', [App\Modules\Decorate\Controllers\NavigationController::class, 'store']);
+    Route::put('/navigations/{id}', [App\Modules\Decorate\Controllers\NavigationController::class, 'update']);
+    Route::delete('/navigations/{id}', [App\Modules\Decorate\Controllers\NavigationController::class, 'destroy']);
+
+        Route::get('/category-ads', [App\Modules\Decorate\Controllers\DecorateController::class, 'categoryAds']);
 
 });
 

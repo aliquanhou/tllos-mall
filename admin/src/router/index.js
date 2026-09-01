@@ -61,6 +61,10 @@ const routes = [
       { path: 'application/kefu', name: 'AppKefu', component: () => import('@/views/application/kefu.vue'), meta: { title: '客服设置' } },
       // 装修管理
       { path: 'decoration/index', name: 'Decoration', component: () => import('@/views/decoration/index.vue'), meta: { title: '页面装修' } },
+      { path: 'decoration/editor/:id', name: 'DecorationEditor', component: () => import('@/views/decoration/editor.vue'), meta: { title: '可视化装修' } },
+      { path: 'decoration/template', name: 'DecorationTemplate', component: () => import('@/views/decoration/template.vue'), meta: { title: '模板管理' } },
+      { path: 'decoration/banner', name: 'DecorationBanner', component: () => import('@/views/decoration/banner.vue'), meta: { title: '轮播图管理' } },
+      { path: 'decoration/navigation', name: 'DecorationNavigation', component: () => import('@/views/decoration/navigation.vue'), meta: { title: '导航管理' } },
       { path: 'decoration/page', name: 'DecorationPage', component: () => import('@/views/decoration/page.vue'), meta: { title: '装修页面' } },
       { path: 'decoration/tabbar', name: 'DecorationTabbar', component: () => import('@/views/decoration/tabbar.vue'), meta: { title: '底部导航' } },
       // 财务管理
