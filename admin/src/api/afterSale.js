@@ -3,3 +3,4 @@ export const getAfterSaleList = params => request({ url: '/admin/after-sale', me
 export const getAfterSaleDetail = id => request({ url: `/admin/after-sale/${id}`, method: 'get' })
 export const auditAfterSale = (id, data) => request({ url: `/admin/after-sale/${id}/audit`, method: 'post', data })
 export const completeAfterSale = id => request({ url: `/admin/after-sale/${id}/complete`, method: 'post' })
+export const receiveAfterSale = id => request({ url: `/admin/after-sale/${id}/receive`, method: 'post' })

@@ -1,160 +1,163 @@
 # 售后管理
 
 ## 1. 页面概述
-### 功能描述
-管理用户售后申请，支持审核、处理
+售后管理是商城交易闭环的关键模块，处理用户的退货退款、仅退款、换货、补发等售后申请。管理员在此审核售后申请、确认退货收货、完成退款，并追踪完整的售后操作日志。售后由用户端发起，管理员不能新增或编辑售后内容，只能查看、审核、确认收货、完成。
 
 ### 核心指标
-| 指标 | 含义 | 业务价值 |
-|------|------|----------|
-| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
-| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
-| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
-| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
+| 指标 | 数据来源 | 含义 |
+|------|----------|------|
+| 全部 | order_after_sales COUNT(*) | 售后单总量 |
+| 待审核 | status=0 | 等待管理员审核 |
+| 待退货 | status=4 | 审核通过，等待用户寄回 |
+| 待收货 | status=6 | 用户已寄回，等待商家确认 |
+| 已完成 | status=3 | 退款完成 |
+| 已拒绝 | status=2 | 审核拒绝 |
 
-### 使用场景
-1. 日常管理：新增/编辑/删除数据
-2. 数据查询：搜索筛选定位记录
-3. 状态管理：启用/禁用/审核操作
-4. 数据统计：查看业务数据趋势
+### 售后类型
+| type | 类型 | 说明 |
+|------|------|------|
+| 1 | 退货退款 | 用户寄回商品，商家确认收货后退款 |
+| 2 | 仅退款 | 不退货，审核通过后直接退款 |
+| 3 | 换货 | 寄回商品，商家重新发货 |
+| 4 | 补发 | 商品漏发/损坏，商家补发 |
 
----
+## 2. API接口清单
+### 管理端
+| 方法 | 路径 | 控制器方法 | 说明 |
+|------|------|-----------|------|
+| GET | /api/v1/admin/after-sale | AfterSaleController@index | 售后列表（分页+筛选+各状态统计） |
+| GET | /api/v1/admin/after-sale/{id} | AfterSaleController@show | 售后详情（含关联订单+商品项+操作日志） |
+| POST | /api/v1/admin/after-sale/{id}/audit | AfterSaleController@audit | 售后审核（通过/拒绝） |
+| POST | /api/v1/admin/after-sale/{id}/receive | AfterSaleController@receive | 确认收货（待收货→已完成，触发退款） |
+| POST | /api/v1/admin/after-sale/{id}/complete | AfterSaleController@complete | 强制完成（兼容旧流程） |
 
-## 2. API接口清单（基于真实控制器实现）
-| 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
-|------|------|-----------|------|----------|
-| GET | /api/v1/admin/order/after-sale | OrderController@index | 售后管理列表 | order:list |
-| POST | /api/v1/admin/order/after-sale | OrderController@store | 新增售后管理 | order:create |
-| GET | /api/v1/admin/order/after-sale/{id} | OrderController@show | 售后管理详情 | order:view |
-| PUT | /api/v1/admin/order/after-sale/{id} | OrderController@update | 编辑售后管理 | order:edit |
-| DELETE | /api/v1/admin/order/after-sale/{id} | OrderController@destroy | 删除售后管理 | order:delete |
+### 用户端
+| 方法 | 路径 | 控制器方法 | 说明 |
+|------|------|-----------|------|
+| GET | /api/v1/user/after-sale | UserAfterSaleController@lists | 用户售后列表 |
+| POST | /api/v1/user/after-sale | UserAfterSaleController@add | 申请售后 |
+| GET | /api/v1/user/after-sale/reasons/list | UserAfterSaleController@reasons | 售后原因列表 |
+| GET | /api/v1/user/after-sale/{id} | UserAfterSaleController@detail | 售后详情 |
+| POST | /api/v1/user/after-sale/{id}/return-ship | UserAfterSaleController@returnShip | 填写退货物流 |
+| POST | /api/v1/user/after-sale/{id}/cancel | UserAfterSaleController@cancel | 取消售后 |
 
-### 请求参数
+## 3. 请求参数
+### 售后列表
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| page | int | 否 | 页码，默认1 |
-| limit | int | 否 | 每页数量，默认20 |
-| keyword | string | 否 | 搜索关键词 |
-| status | int | 否 | 状态筛选 |
-| start_date | date | 否 | 开始日期 |
-| end_date | date | 否 | 结束日期 |
+| page | int | 否 | 页码 |
+| limit | int | 否 | 每页数量 |
+| keyword | string | 否 | 按订单号或原因模糊搜索 |
+| type | int | 否 | 按类型筛选（1-4） |
+| status | int | 否 | 按状态筛选（0-6） |
 
-### 返回示例
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "total": 100,
-    "page": 1,
-    "limit": 20,
-    "list": [
-      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
-    ]
-  },
-  "timestamp": 1756700000
-}
-```
+### 售后审核
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| status | int | 是 | 1=通过，2=拒绝 |
+| audit_remark | string | 否 | 审核备注 |
 
-### 错误码
-| 错误码 | 说明 |
-|--------|------|
-| 10001 | 无权限操作 |
-| 10002 | 数据不存在或已删除 |
-| 10003 | 参数校验失败 |
-| 10004 | 数据库操作失败 |
+> 审核通过分支：type=2仅退款直接完成（status→3）；type=1退货退款进入待退货（status→4）。
 
----
+### 确认收货
+无参数。前置条件：status=6（待收货）。操作后status→3，关联订单status→6（已退款）。
 
-## 3. 字段映射表
-| 展示字段 | 数据来源 | 计算方式 | 更新频率 |
-|----------|----------|----------|----------|
-| ID | order.id | 直接读取 | 实时 |
-| 名称 | order.name | 直接读取 | 实时 |
-| 状态 | order.status | 0禁用1启用 | 实时 |
-| 创建时间 | order.created_at | 直接读取 | 实时 |
-| 更新时间 | order.updated_at | 直接读取 | 实时 |
+### 用户申请售后
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| order_id | int | 是 | 订单ID |
+| order_item_id | int | 否 | 商品项ID |
+| type | int | 是 | 1退货退款/2仅退款/3换货/4补发 |
+| reason | string | 是 | 售后原因 |
+| description | string | 否 | 详细描述 |
+| images | string | 否 | 凭证图片 |
+| refund_amount | decimal | 否 | 退款金额 |
 
----
+### 用户填写退货物流
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| return_express_company | string | 是 | 退货快递公司 |
+| return_express_no | string | 是 | 退货快递单号 |
 
-## 4. 操作流程
-### {title}业务流程图
+## 4. 售后状态机
+| status | 状态 | 说明 |
+|--------|------|------|
+| 0 | 待审核 | 用户申请后初始状态 |
+| 1 | 审核通过 | 管理员审核通过 |
+| 2 | 审核拒绝 | 管理员审核拒绝，终态 |
+| 3 | 已完成 | 退款完成，终态 |
+| 4 | 待退货 | 退货退款审核通过，等待用户寄回 |
+| 5 | 已取消 | 用户主动取消，终态 |
+| 6 | 待收货 | 用户已寄回，等待商家确认 |
+
 ```mermaid
-{flowchart}
+flowchart TD
+    A[用户申请] --> B[status=0 待审核]
+    B --> C{审核}
+    C -->|拒绝| D[status=2 已拒绝]
+    C -->|通过 type=2| E[status=3 已完成 直接退款]
+    C -->|通过 type=1| F[status=4 待退货]
+    F --> G[用户填退货物流]
+    G --> H[status=6 待收货]
+    H --> I[商家确认收货]
+    I --> J[status=3 已完成 退款到账]
+    F --> K[用户取消]
+    K --> L[status=5 已取消]
 ```
 
-### 数据刷新机制
-1. 页面加载时自动请求最新数据
-2. 搜索筛选条件变化时立即刷新
-3. 增删改操作成功后自动刷新列表
-4. 统计数据缓存时间：5分钟
+## 5. 字段映射表（order_after_sales表，22字段）
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 主键 |
+| order_id | bigint | 关联订单 |
+| order_no | varchar(50) | 冗余订单号 |
+| order_item_id | bigint | 关联商品项 |
+| user_id | bigint | 申请人 |
+| merchant_id | bigint | 商家ID |
+| type | tinyint | 1退货退款/2仅退款/3换货/4补发 |
+| reason | varchar(255) | 售后原因 |
+| description | text | 详细描述 |
+| images | text | 凭证图片 |
+| refund_amount | decimal(12,2) | 退款金额 |
+| status | tinyint | 0-6状态枚举 |
+| audit_remark | varchar(255) | 审核备注 |
+| audit_at | timestamp | 审核时间 |
+| return_express_company | varchar(50) | 退货快递公司 |
+| return_express_no | varchar(50) | 退货快递单号 |
+| return_ship_time | timestamp | 退货发货时间 |
+| receive_time | timestamp | 确认收货时间 |
+| refund_time | timestamp | 退款时间 |
+| completed_at | timestamp | 完成时间 |
+| created_at | timestamp | 创建时间 |
+| updated_at | timestamp | 更新时间 |
 
----
+## 6. 权限控制
+- 认证方式：Laravel Sanctum Token
+- 路由中间件：auth:sanctum
+- 当前无细粒度权限控制
 
-## 5. 权限控制
-| 操作 | 权限标识 | 默认角色 |
-|------|----------|----------|
-| 查看列表 | order:list | 管理员/运营 |
-| 新增 | order:create | 管理员 |
-| 编辑 | order:edit | 管理员 |
-| 删除 | order:delete | 管理员 |
-| 状态管理 | order:status | 管理员 |
+## 7. 关联模块
+- 依赖：订单管理（order_id）、订单商品（order_item_id）、用户管理（user_id）、商家管理（merchant_id）
+- 被依赖：订单管理（完成后更新订单status=6）、财务管理（退款统计）、工作台（待审核统计）
 
-### 权限说明
-- 权限通过Sanctum中间件校验，在路由组中统一配置
-- 超级管理员拥有所有权限，不受权限点限制
-- 无权限用户访问API返回403，前端隐藏对应操作按钮
+## 8. 验收清单
+- [x] 售后列表正常加载，返回6项状态统计
+- [x] 按keyword/type/status筛选正常
+- [x] 售后详情返回info+order+order_items+logs
+- [x] 审核通过（退货退款）：status 0→4，生成审核日志+等待退货日志
+- [x] 审核通过（仅退款）：status 0→3，直接完成退款
+- [x] 审核拒绝：status 0→2，记录备注和时间
+- [x] 用户填写退货物流：status 4→6，记录快递公司/单号/时间
+- [x] 商家确认收货：status 6→3，记录收货/退款/完成时间
+- [x] 确认收货后关联订单status→6
+- [x] 用户取消售后：status 0/4→5
+- [x] 售后原因列表返回8种标准原因
+- [x] 每次操作生成对应售后日志
 
----
-
-## 6. 关联模块
-### 依赖模块
-| 模块 | 依赖内容 | 具体关联字段 |
-|------|----------|-------------|
-| 用户管理 | 操作人信息 | admin_users.id |
-| 系统设置 | 配置参数 | system_configs |
-
-### 被依赖模块
-| 模块 | 使用方式 | 具体关联字段 |
-|------|----------|-------------|
-| 工作台 | 数据统计 | COUNT/SUM统计 |
-| 操作日志 | 记录操作 | operation_logs.module |
-
----
-
-## 7. 验收清单
-### 功能验收
-- [ ] 页面能正常加载，无白屏/500错误
-- [ ] 列表分页正常，显示总数和页码
-- [ ] 搜索功能正常，支持关键词模糊查询
-- [ ] 筛选功能正常，支持状态和时间范围
-- [ ] 新增功能完整，表单校验正确
-- [ ] 编辑能正确回显所有字段
-- [ ] 删除有确认弹窗，软删除不影响历史数据
-- [ ] 状态切换功能正常
-- [ ] 数据导出功能正常（如有）
-- [ ] 批量操作功能正常（如有）
-
-### 权限验收
-- [ ] 有权限的管理员可以正常操作
-- [ ] 无权限的管理员看到403或入口隐藏
-- [ ] 超级管理员不受权限限制
-
-### 性能验收
-- [ ] 页面加载时间 < 2秒
-- [ ] 数据查询耗时 < 500ms
-- [ ] 列表分页响应 < 1秒
-
----
-
-## 8. 常见问题
+## 9. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
-| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
-| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
-| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
-| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
-| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
-| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
-| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |
+| 审核提示"当前状态不能审核" | status不是0 | 只有待审核状态可审核 |
+| 确认收货提示"当前状态不能确认" | status不是6 | 只有用户填写物流后才能确认收货 |
+| 仅退款审核后直接完成 | type=2设计逻辑 | 仅退款不需要退货 |
+| 申请售后提示"订单状态不能申请" | 订单status不是2或3 | 只有待收货或已完成订单可申请 |
