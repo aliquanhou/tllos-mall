@@ -1306,3 +1306,30 @@ Route::post('/upload/image', [\App\Modules\Core\Controllers\UploadController::cl
 
 Route::post('/upload/video', [\App\Modules\Core\Controllers\UploadController::class, 'uploadVideo']);
 
+
+// 补充缺失的系统设置路由
+Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+    Route::get('/pay-configs', [App\Modules\SystemConfig\Controllers\PayConfigController::class, 'index']);
+    Route::post('/pay-configs', [App\Modules\SystemConfig\Controllers\PayConfigController::class, 'store']);
+    Route::put('/pay-configs/{id}', [App\Modules\SystemConfig\Controllers\PayConfigController::class, 'update']);
+    Route::delete('/pay-configs/{id}', [App\Modules\SystemConfig\Controllers\PayConfigController::class, 'destroy']);
+
+    Route::get('/logistics-configs', [App\Modules\SystemConfig\Controllers\LogisticsConfigController::class, 'index']);
+    Route::post('/logistics-configs', [App\Modules\SystemConfig\Controllers\LogisticsConfigController::class, 'store']);
+
+    Route::get('/pay-scenes', [App\Modules\SystemConfig\Controllers\PaySceneController::class, 'index']);
+    Route::post('/pay-scenes', [App\Modules\SystemConfig\Controllers\PaySceneController::class, 'store']);
+
+    Route::get('/web-setting', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'index']);
+    Route::post('/web-setting', [App\Modules\SystemConfig\Controllers\WebSettingController::class, 'save']);
+
+    Route::get('/express-templates', [App\Modules\SystemConfig\Controllers\ExpressTemplateController::class, 'index']);
+    Route::post('/express-templates', [App\Modules\SystemConfig\Controllers\ExpressTemplateController::class, 'store']);
+    Route::put('/express-templates/{id}', [App\Modules\SystemConfig\Controllers\ExpressTemplateController::class, 'update']);
+    Route::delete('/express-templates/{id}', [App\Modules\SystemConfig\Controllers\ExpressTemplateController::class, 'destroy']);
+
+    Route::get('/organization', [App\Modules\Permission\Controllers\OrganizationController::class, 'index']);
+    Route::post('/organization', [App\Modules\Permission\Controllers\OrganizationController::class, 'store']);
+
+    Route::get('/operation-logs', [App\Modules\System\Controllers\OperationLogController::class, 'index']);
+});
