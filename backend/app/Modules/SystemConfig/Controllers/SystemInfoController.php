@@ -7,13 +7,15 @@ class SystemInfoController extends BaseController {
     public function index() {
         $info = DB::table('system_info')->first();
         if (!$info) {
-            $info = (object)[
+            $info = [
                 'version' => '1.0.0',
                 'php_version' => PHP_VERSION,
                 'mysql_version' => '10.11.18-MariaDB',
                 'server_software' => request()->server('SERVER_SOFTWARE') ?? 'nginx',
                 'os' => PHP_OS,
             ];
+        } else {
+            $info = (array)$info;
         }
         $stats = [
             'goods_count' => DB::table('products')->count(),
