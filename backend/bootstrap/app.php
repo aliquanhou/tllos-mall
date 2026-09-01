@@ -12,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->statefulApi();
+        // $middleware->statefulApi(); // 使用纯Bearer token认证，不需要CSRF
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
