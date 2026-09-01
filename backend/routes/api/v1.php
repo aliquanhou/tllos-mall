@@ -116,6 +116,7 @@ Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'lo
     Route::put('/merchant-levels/{id}', [\App\Modules\Merchant\Controllers\MerchantLevelController::class,'update']);
     Route::delete('/merchant-levels/{id}', [\App\Modules\Merchant\Controllers\MerchantLevelController::class,'destroy']);
     // 商家分类
+    Route::get("/merchant-categories/tree", [App\Modules\ShopCenter\Controllers\CategoryController::class, "tree"]);
     Route::get("/merchant-categories", [App\Modules\ShopCenter\Controllers\CategoryController::class, "index"]);
     Route::post("/merchant-categories", [App\Modules\ShopCenter\Controllers\CategoryController::class, "store"]);
     Route::put("/merchant-categories/{id}", [App\Modules\ShopCenter\Controllers\CategoryController::class, "update"]);
