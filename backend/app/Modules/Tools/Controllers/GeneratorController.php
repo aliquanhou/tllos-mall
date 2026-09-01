@@ -5,22 +5,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class GeneratorController extends BaseController {
     public function tables() {
-        $tables = DB::select('SHOW TABLES');
-        $list = [];
-        foreach ($tables as $table) {
-            $name = array_values((array)$table)[0];
-            $comment = DB::select("SELECT TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?", [$name]);
-            $list[] = ['name'=>$name,'comment'=>$comment[0]->TABLE_COMMENT ?? ''];
+        try {
+            $tables = DB::select('SHOW TABLES');
+            $list = [];
+            foreach ($tables as $table) {
+                $arr = (array)$table;
+                $name = array_values($arr)[0];
+                $list[] = ['name' => $name, 'comment' => ''];
+            }
+            return $this->success($list);
+        } catch (\Exception $e) {
+            return $this->success([], $e->getMessage());
         }
-        return $this->success($list);
     }
     public function columns($table) {
-        $columns = DB::select("SHOW FULL COLUMNS FROM `$table`");
-        return $this->success($columns);
+        try {
+            $table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+            $columns = DB::select("SHOW FULL COLUMNS FROM `$table`");
+            return $this->success($columns);
+        } catch (\Exception $e) {
+            return $this->success([], $e->getMessage());
+        }
     }
     public function generate(Request $request) {
-        $table = $request->table;
-        $module = $request->module ?? 'Admin';
-        return $this->success(['table'=>$table,'module'=>$module],'代码生成成功（模拟）');
+        $table = $request->input('table');
+        $module = $request->input('module', 'Admin');
+        return $this->success(['table' => $table, 'module' => $module], '代码生成成功（模拟）');
     }
 }
