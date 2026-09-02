@@ -1236,6 +1236,15 @@ Route::middleware('auth:sanctum')->group(function() {
 
     Route::post('/user/coupons/receive', [\App\Modules\UserCenter\Controllers\UserCouponController::class,'receive']);
 
+    // 会员等级
+    Route::get('/user/levels', [\App\Modules\UserCenter\Controllers\LevelController::class,'index']);
+    Route::get('/user/level-progress', [\App\Modules\UserCenter\Controllers\LevelController::class,'progress']);
+
+    // 用户通知
+    Route::get('/user/notifications', [\App\Modules\UserCenter\Controllers\LevelController::class,'notifications']);
+    Route::put('/user/notifications/{id}/read', [\App\Modules\UserCenter\Controllers\LevelController::class,'readNotification']);
+    Route::post('/user/notifications/read-all', [\App\Modules\UserCenter\Controllers\LevelController::class,'readAllNotifications']);
+
     // 用户中心
 
     Route::get('/user/center', [\App\Modules\UserCenter\Controllers\UserCenterController::class,'center']);
