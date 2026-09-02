@@ -44,19 +44,35 @@ class DistributeController extends BaseController
     }
 
     public function agents(Request $request) {
-        $query = DB::table('distribute_agents');
-        if ($request->filled('keyword')) $query->where(function($q)use($request){$q->where('nickname','like','%'.$request->keyword.'%')->orWhere('mobile','like','%'.$request->keyword.'%');});
-        if ($request->filled('level_id')) $query->where('level_id',$request->level_id);
-        if ($request->filled('status') && $request->status!=='') $query->where('status',$request->status);
+        $query = DB::table('distribute_agents as da')
+            ->leftJoin('users as u','da.user_id','=','u.id')
+            ->leftJoin('distribute_levels as dl','da.level_id','=','dl.id')
+            ->leftJoin('distribute_agents as parent','da.parent_id','=','parent.id');
+        if ($request->filled('keyword')) $query->where(function($q)use($request){$q->where('u.nickname','like','%'.$request->keyword.'%')->orWhere('da.mobile','like','%'.$request->keyword.'%')->orWhere('da.real_name','like','%'.$request->keyword.'%');});
+        if ($request->filled('level_id')) $query->where('da.level_id',$request->level_id);
+        if ($request->filled('status') && $request->status!=='') $query->where('da.status',$request->status);
+        if ($request->filled('parent_id')) $query->where('da.parent_id',$request->parent_id);
         $total = $query->count(); $page=$request->get('page',1); $limit=$request->get('limit',20);
-        $list = $query->orderBy('id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
-        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit]);
+        $list = $query->select('da.*','u.nickname','u.avatar','dl.name as level_name','parent.real_name as parent_name')
+            ->orderBy('da.id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
+        $stats = [
+            'total' => DB::table('distribute_agents')->count(),
+            'pending' => DB::table('distribute_agents')->where('status',0)->count(),
+            'approved' => DB::table('distribute_agents')->where('status',1)->count(),
+            'rejected' => DB::table('distribute_agents')->where('status',2)->count(),
+            'disabled' => DB::table('distribute_agents')->where('status',3)->count(),
+        ];
+        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
     }
 
     public function agentAudit(Request $request, $id) {
-        $validated = $request->validate(['status'=>'required|in:1,2']);
-        DB::table('distribute_agents')->where('id',$id)->update(['status'=>$validated['status'],'updated_at'=>now()]);
-        return $this->success(null,$validated['status']==1?'审核通过':'已拒绝');
+        $v = $request->validate(['status'=>'required|in:1,2','remark'=>'nullable|string|max:255']);
+        $agent = DB::table('distribute_agents')->where('id',$id)->first();
+        if (!$agent) return $this->error('分销商不存在');
+        if ($agent->status != 0) return $this->error('该分销商已审核，不能重复审核');
+        $update = ['status'=>$v['status'],'audit_at'=>now(),'updated_at'=>now()];
+        DB::table('distribute_agents')->where('id',$id)->update($update);
+        return $this->success(null,$v['status']==1?'审核通过':'已拒绝');
     }
 
     public function levels(Request $request) {
