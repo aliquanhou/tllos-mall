@@ -27,4 +27,19 @@ class ShopCenterController extends BaseController {
         DB::table('shop_categories')->where('id',$id)->delete();
         return $this->success(null,'删除成功');
     }
+
+    public function accountLogs(Request $request) {
+        try {
+            $query = DB::table('merchant_account_logs');
+            if ($request->filled('shop_id')) $query->where('merchant_id', $request->shop_id);
+            if ($request->filled('type')) $query->where('type', $request->type);
+            $total = $query->count();
+            $page = $request->get('page', 1);
+            $limit = $request->get('limit', 20);
+            $list = $query->orderBy('id', 'desc')->offset(($page-1)*$limit)->limit($limit)->get();
+            return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit]);
+        } catch (\Exception $e) {
+            return $this->success(['list'=>[],'total'=>0,'error'=>$e->getMessage()]);
+        }
+    }
 }

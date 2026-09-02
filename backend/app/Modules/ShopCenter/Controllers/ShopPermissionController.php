@@ -16,7 +16,7 @@ class ShopPermissionController extends BaseController
             ->leftJoin('shop_roles as r', 'a.role_id', '=', 'r.id')
             ->leftJoin('shop_depts as d', 'a.dept_id', '=', 'd.id')
             ->leftJoin('shop_jobs as j', 'a.job_id', '=', 'j.id')
-            ->select('a.*', 'r.name as role_name', 'd.name as dept_name', 'j.name as job_name');
+            ->select('a.id','a.shop_id','a.username','a.nickname','a.avatar','a.mobile','a.role_id','a.dept_id','a.job_id','a.status','a.last_login_at','a.created_at','a.updated_at', 'r.name as role_name', 'd.name as dept_name', 'j.name as job_name');
 
         if ($request->filled('shop_id')) {
             $query->where('a.shop_id', $request->shop_id);
