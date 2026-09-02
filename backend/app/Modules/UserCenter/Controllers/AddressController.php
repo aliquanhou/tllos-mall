@@ -11,7 +11,7 @@ class AddressController extends BaseController {
     }
     public function add(Request $request) {
         $userId = $request->user()->id;
-        $data = $request->only(['name','mobile','province_id','province_name','city_id','city_name','district_id','district_name','detail','is_default']);
+        $data = $request->only(['name','mobile','province_id','province_name','city_id','city_name','district_id','district_name','detail','is_default','label']);
         $data['user_id'] = $userId; $data['created_at'] = now();
         if (!empty($data['is_default'])) DB::table('user_addresses')->where('user_id',$userId)->update(['is_default'=>0]);
         $id = DB::table('user_addresses')->insertGetId($data);
@@ -19,7 +19,7 @@ class AddressController extends BaseController {
     }
     public function edit(Request $request, $id) {
         $userId = $request->user()->id;
-        $data = $request->only(['name','mobile','province_id','province_name','city_id','city_name','district_id','district_name','detail','is_default']);
+        $data = $request->only(['name','mobile','province_id','province_name','city_id','city_name','district_id','district_name','detail','is_default','label']);
         $data['updated_at'] = now();
         if (!empty($data['is_default'])) DB::table('user_addresses')->where('user_id',$userId)->where('id','!=',$id)->update(['is_default'=>0]);
         DB::table('user_addresses')->where('id',$id)->where('user_id',$userId)->update($data);
