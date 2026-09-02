@@ -229,9 +229,42 @@ class UserCenterController extends BaseController
         if($request->filled('user_id'))$q->where('l.user_id',$request->user_id);
         if($request->filled('type'))$q->where('l.type',$request->type);
         if($request->filled('keyword'))$q->where(function($q)use($request){$q->where('u.nickname','like','%'.$request->keyword.'%')->orWhere('l.order_no','like','%'.$request->keyword.'%')->orWhere('l.remark','like','%'.$request->keyword.'%');});
+        if($request->filled('start_time'))$q->where('l.created_at','>=',$request->input('start_time'));
+        if($request->filled('end_time'))$q->where('l.created_at','<=',$request->input('end_time'));
         $total=$q->count();$page=$request->input('page',1);$limit=$request->input('limit',20);
         $list=$q->orderBy('l.id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
         $stats=DB::table('user_balance_logs')->select('type',DB::raw('SUM(amount) as total_amount,COUNT(*) as count'))->groupBy('type')->get();
         return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
+    }
+
+    public function accountLogsExport(Request $request) {
+        $q=DB::table('user_balance_logs as l')->leftJoin('users as u','l.user_id','=','u.id')->select('l.*','u.nickname','u.mobile');
+        if($request->filled('user_id'))$q->where('l.user_id',$request->user_id);
+        if($request->filled('type'))$q->where('l.type',$request->type);
+        if($request->filled('keyword'))$q->where(function($q)use($request){$q->where('u.nickname','like','%'.$request->keyword.'%')->orWhere('l.order_no','like','%'.$request->keyword.'%')->orWhere('l.remark','like','%'.$request->keyword.'%');});
+        if($request->filled('start_time'))$q->where('l.created_at','>=',$request->input('start_time'));
+        if($request->filled('end_time'))$q->where('l.created_at','<=',$request->input('end_time'));
+        $list=$q->orderBy('l.id','desc')->limit(10000)->get();
+
+        $typeMap = [1=>'充值',2=>'消费',3=>'退款',4=>'提现退回',5=>'人工调整'];
+        $filename = '账户日志导出_' . date('YmdHis') . '.csv';
+        $filepath = storage_path('app/public/' . $filename);
+        $fp = fopen($filepath, 'w');
+        fprintf($fp, chr(0xEF).chr(0xBB).chr(0xBF));
+        fputcsv($fp, ['ID','用户ID','用户昵称','手机号','类型','变动金额','变动前余额','变动后余额','订单号','备注','创建时间']);
+        foreach ($list as $row) {
+            fputcsv($fp, [
+                $row->id, $row->user_id, $row->nickname, $row->mobile,
+                $typeMap[$row->type] ?? $row->type,
+                $row->amount, $row->balance_before, $row->balance_after,
+                $row->order_no, $row->remark, $row->created_at
+            ]);
+        }
+        fclose($fp);
+        return response()->streamDownload(function() use ($filepath) {
+            $fp = fopen($filepath, 'r');
+            fpassthru($fp);
+            fclose($fp);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }

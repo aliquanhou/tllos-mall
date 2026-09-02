@@ -686,6 +686,7 @@ Route::prefix('admin/user-center')->middleware('auth:sanctum')->group(function (
 
     Route::get('/addresses', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'addresses']);
 
+    Route::get('/account-logs/export', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'accountLogsExport']);
     Route::get('/account-logs', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'accountLogs']);
 
 });
