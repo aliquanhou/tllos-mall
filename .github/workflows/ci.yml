@@ -52,6 +52,12 @@ jobs:
       - name: Run migrations
         run: cd backend && php artisan migrate --force
       
+      - name: Seed test data
+        run: cd backend && php artisan db:seed --force || echo "Seeder skipped"
+      
+      - name: Run PHPUnit tests
+        run: cd backend && vendor/bin/phpunit --testsuite=Feature --colors=never
+      
       - name: Clear caches
         run: |
           cd backend

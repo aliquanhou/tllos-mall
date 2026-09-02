@@ -87,6 +87,11 @@ class MarketingController extends BaseController {
         return $this->success(null,'删除成功');
     }
 
+    // 折扣列表（兼容旧路由）
+    public function discountList(Request $request) {
+        return $this->memberDiscount($request);
+    }
+
     // 会员折扣
     public function memberDiscount(Request $request) {
         try {
