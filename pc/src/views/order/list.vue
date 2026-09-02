@@ -1,134 +1,131 @@
 <template>
   <div class="order-list-page">
-    <div class="order-tabs">
-      <div class="tab" :class="{active: currentTab === ''}" @click="switchTab('')">全部</div>
-      <div class="tab" :class="{active: currentTab === '0'}" @click="switchTab('0')">待支付</div>
-      <div class="tab" :class="{active: currentTab === '1'}" @click="switchTab('1')">待发货</div>
-      <div class="tab" :class="{active: currentTab === '2'}" @click="switchTab('2')">待收货</div>
-      <div class="tab" :class="{active: currentTab === '3'}" @click="switchTab('3')">已完成</div>
-    </div>
-
-    <div class="order-list" v-if="orders.length">
-      <div class="order-card" v-for="order in orders" :key="order.id" @click="goDetail(order.id)">
-        <div class="order-header">
-          <span class="order-no">订单号: {{ order.order_no }}</span>
-          <span class="order-status" :class="statusClass[order.status]">{{ statusMap[order.status] }}</span>
+    <div class="container">
+      <h2 class="page-title">我的订单</h2>
+      <div class="order-tabs">
+        <div class="tab" v-for="tab in tabs" :key="tab.value" :class="{active: activeTab === tab.value}" @click="activeTab = tab.value">
+          {{ tab.label }}
+          <span class="tab-count" v-if="tab.count">({{ tab.count }})</span>
         </div>
-        <div class="order-items">
-          <div class="order-item" v-for="item in order.items" :key="item.id">
-            <img :src="item.product_image" :alt="item.product_name" />
-            <div class="item-info">
-              <div class="item-name">{{ item.product_name }}</div>
-              <div class="item-sku" v-if="item.sku_text">{{ item.sku_text }}</div>
-            </div>
-            <div class="item-right">
-              <div class="item-price">¥{{ item.price }}</div>
-              <div class="item-qty">x{{ item.quantity }}</div>
-            </div>
+      </div>
+      <div class="order-list" v-if="orders.length">
+        <div class="order-card" v-for="order in orders" :key="order.id">
+          <div class="order-header">
+            <span class="order-time">{{ order.created_at }}</span>
+            <span class="order-no">订单号：{{ order.order_no }}</span>
+            <span class="order-status" :class="'status-' + order.status">{{ statusMap[order.status] || '未知' }}</span>
           </div>
-        </div>
-        <div class="order-footer">
-          <span class="total-label">共{{ totalQty(order) }}件商品 合计:</span>
-          <span class="total-price">¥{{ order.pay_amount }}</span>
-          <div class="order-actions" @click.stop>
-            <button v-if="order.status === 0" class="action-btn danger" @click="cancelOrder(order)">取消订单</button>
-            <button v-if="order.status === 0" class="action-btn primary" @click="payOrder(order)">去支付</button>
-            <button v-if="order.status === 2" class="action-btn primary" @click="confirmOrder(order)">确认收货</button>
-            <button v-if="order.status === 3" class="action-btn" @click="buyAgain(order)">再次购买</button>
+          <div class="order-body">
+            <div class="order-items">
+              <div class="order-item" v-for="item in order.items?.slice(0, 3) || []" :key="item.id" @click="goDetail(order.id)">
+                <div class="item-image"><img :src="item.main_image" :alt="item.name" /></div>
+                <div class="item-info">
+                  <div class="item-name">{{ item.name }}</div>
+                  <div class="item-spec" v-if="item.specs">{{ item.specs }}</div>
+                </div>
+                <div class="item-price">¥{{ item.price }}</div>
+                <div class="item-quantity">x{{ item.quantity }}</div>
+              </div>
+              <div class="more-items" v-if="order.items?.length > 3" @click="goDetail(order.id)">共{{ order.items.length }}件商品，查看详情 →</div>
+            </div>
+            <div class="order-actions">
+              <div class="order-total">
+                <span class="total-label">实付</span>
+                <span class="total-amount">¥{{ order.pay_amount || order.total_amount }}</span>
+              </div>
+              <div class="action-buttons">
+                <el-button size="small" @click="goDetail(order.id)">订单详情</el-button>
+                <el-button type="primary" size="small" v-if="order.status == 0" @click="payOrder(order)">立即付款</el-button>
+                <el-button type="warning" size="small" v-if="order.status == 2" @click="confirmReceive(order)">确认收货</el-button>
+                <el-button type="danger" size="small" v-if="order.status == 1 || order.status == 2" @click="applyAfterSale(order)">申请售后</el-button>
+                <el-button size="small" v-if="order.status == 3" @click="reviewOrder(order)">评价</el-button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      <div class="empty-orders" v-else>
+        <el-icon size="80" color="#ddd"><List /></el-icon>
+        <p>暂无订单</p>
+        <el-button type="primary" size="large" @click="$router.push('/products')">去购物</el-button>
+      </div>
+      <div class="pagination-wrap" v-if="total > limit">
+        <el-pagination v-model:current-page="page" v-model:page-size="limit" :total="total" layout="prev, pager, next, jumper" @current-change="fetchOrders" />
+      </div>
     </div>
-
-    <div class="empty" v-else-if="!loading">
-      <div class="empty-icon">📦</div>
-      <div class="empty-text">暂无订单</div>
-      <button class="go-shop-btn" @click="goHome">去逛逛</button>
-    </div>
-    <div class="loading" v-if="loading">加载中...</div>
   </div>
 </template>
-
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { getOrderList, cancelOrder as cancelApi, confirmOrder as confirmApi } from '@/api/order'
-
-const route = useRoute()
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 const router = useRouter()
+const activeTab = ref('all')
 const orders = ref([])
-const currentTab = ref(route.query.status || '')
-const loading = ref(false)
-
-const statusMap = { 0: '待支付', 1: '待发货', 2: '待收货', 3: '已完成', 4: '已取消', 5: '退款中', 6: '已退款' }
-const statusClass = { 0: 'wait-pay', 1: 'wait-ship', 2: 'wait-confirm', 3: 'completed', 4: 'cancelled', 5: 'refunding', 6: 'refunded' }
-
+const page = ref(1)
+const limit = ref(10)
+const total = ref(0)
+const statusMap = { 0: '待付款', 1: '待发货', 2: '待收货', 3: '已完成', 4: '已取消', 5: '退款中', 6: '已退款' }
+const tabs = [
+  { value: 'all', label: '全部订单', count: 0 },
+  { value: '0', label: '待付款', count: 0 },
+  { value: '1', label: '待发货', count: 0 },
+  { value: '2', label: '待收货', count: 0 },
+  { value: '3', label: '已完成', count: 0 },
+  { value: 'after_sale', label: '售后', count: 0 },
+]
 const fetchOrders = async () => {
-  loading.value = true
   try {
-    const params = { page: 1, limit: 20 }
-    if (currentTab.value !== '') params.status = currentTab.value
-    const res = await getOrderList(params)
-    orders.value = res.data.list || []
-  } catch (e) { console.error(e) } finally { loading.value = false }
+    orders.value = []
+    total.value = 0
+  } catch (e) { console.error(e) }
 }
-
-const switchTab = tab => { currentTab.value = tab; fetchOrders() }
-const totalQty = order => order.items?.reduce((sum, i) => sum + i.quantity, 0) || 0
-const goDetail = id => router.push(`/order/${id}`)
-const goHome = () => router.push('/')
-
-const cancelOrder = async order => {
-  if (!confirm('确定取消该订单？')) return
-  try { await cancelApi(order.id); alert('订单已取消'); fetchOrders() } catch (e) { alert(e.message || '取消失败') }
-}
-
-const confirmOrder = async order => {
-  if (!confirm('确定确认收货？')) return
-  try { await confirmApi(order.id); alert('已确认收货'); fetchOrders() } catch (e) { alert(e.message || '操作失败') }
-}
-
-const payOrder = order => alert('即将跳转到支付页')
-const buyAgain = order => router.push('/')
-
+const goDetail = (id) => router.push(`/order/${id}`)
+const payOrder = (order) => { router.push(`/pay/${order.order_no}`) }
+const confirmReceive = async (order) => { try { await ElMessageBox.confirm('确认已收到商品？', '提示', { type: 'warning' }); ElMessage.success('已确认收货'); fetchOrders() } catch (e) {} }
+const applyAfterSale = (order) => { ElMessage.info('售后功能开发中') }
+const reviewOrder = (order) => { ElMessage.info('评价功能开发中') }
 onMounted(fetchOrders)
 </script>
-
 <style scoped>
-.order-list-page { padding-bottom: 20px; background: #f5f5f5; min-height: 100vh; }
-.order-tabs { display: flex; background: #fff; position: sticky; top: 0; z-index: 10; }
-.tab { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; color: #666; position: relative; }
-.tab.active { color: #ff4444; font-weight: bold; }
-.tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 30px; height: 2px; background: #ff4444; }
-.order-list { padding: 10px 15px; }
-.order-card { background: #fff; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
-.order-header { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f5f5f5; }
-.order-no { font-size: 12px; color: #999; }
-.order-status { font-size: 13px; font-weight: 500; }
-.order-status.wait-pay { color: #ff9500; }
-.order-status.wait-ship { color: #007aff; }
-.order-status.wait-confirm { color: #ff4444; }
-.order-status.completed { color: #34c759; }
-.order-status.cancelled, .order-status.refunded { color: #999; }
-.order-status.refunding { color: #ff3b30; }
-.order-items { padding: 12px; }
-.order-item { display: flex; gap: 10px; padding: 6px 0; }
-.order-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-.item-info { flex: 1; min-width: 0; }
-.item-name { font-size: 13px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.item-sku { font-size: 11px; color: #999; margin-top: 4px; }
-.item-right { text-align: right; flex-shrink: 0; }
-.item-price { font-size: 14px; color: #333; }
-.item-qty { font-size: 12px; color: #999; margin-top: 4px; }
-.order-footer { display: flex; align-items: center; padding: 12px; border-top: 1px solid #f5f5f5; flex-wrap: wrap; gap: 8px; }
-.total-label { font-size: 13px; color: #666; margin-left: auto; }
-.total-price { font-size: 16px; color: #ff4444; font-weight: bold; }
-.order-actions { display: flex; gap: 8px; width: 100%; justify-content: flex-end; }
-.action-btn { padding: 6px 16px; border: 1px solid #ddd; border-radius: 16px; font-size: 13px; color: #666; background: #fff; }
-.action-btn.primary { background: #ff4444; color: #fff; border-color: #ff4444; }
-.action-btn.danger { color: #ff4444; border-color: #ff4444; }
-.empty, .loading { text-align: center; padding: 60px 20px; }
-.empty-icon { font-size: 50px; margin-bottom: 12px; }
-.empty-text { color: #999; font-size: 14px; margin-bottom: 16px; }
-.go-shop-btn { padding: 8px 24px; background: #ff4444; color: #fff; border: none; border-radius: 16px; font-size: 13px; }
+.order-list-page { background: #f5f5f5; min-height: calc(100vh - 200px); padding: 20px 0; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.page-title { font-size: 22px; color: #333; margin: 0 0 20px 0; }
+.order-tabs { display: flex; gap: 0; background: #fff; border-radius: 8px; padding: 0 20px; margin-bottom: 16px; }
+.tab { padding: 16px 20px; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.tab:hover { color: #e6a23c; }
+.tab.active { color: #e6a23c; border-bottom-color: #e6a23c; font-weight: bold; }
+.tab-count { font-size: 12px; color: #999; }
+.order-card { background: #fff; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.order-header { display: flex; align-items: center; gap: 20px; padding: 12px 20px; background: #fafafa; border-bottom: 1px solid #f0f0f0; font-size: 13px; color: #666; }
+.order-time { }
+.order-no { }
+.order-status { margin-left: auto; font-weight: bold; }
+.status-0 { color: #e6a23c; }
+.status-1 { color: #409eff; }
+.status-2 { color: #e6a23c; }
+.status-3 { color: #67c23a; }
+.status-4 { color: #999; }
+.status-5 { color: #f56c6c; }
+.status-6 { color: #999; }
+.order-body { display: flex; padding: 16px 20px; }
+.order-items { flex: 1; }
+.order-item { display: grid; grid-template-columns: 60px 1fr 80px 50px; gap: 12px; padding: 8px 0; align-items: center; cursor: pointer; }
+.item-image { width: 60px; height: 60px; border-radius: 4px; overflow: hidden; }
+.item-image img { width: 100%; height: 100%; object-fit: cover; }
+.item-name { font-size: 13px; color: #333; margin-bottom: 4px; }
+.item-spec { font-size: 11px; color: #999; }
+.item-price { font-size: 13px; color: #333; text-align: right; }
+.item-quantity { font-size: 13px; color: #666; text-align: center; }
+.more-items { font-size: 12px; color: #999; padding: 8px 0; cursor: pointer; }
+.more-items:hover { color: #e6a23c; }
+.order-actions { width: 200px; flex-shrink: 0; border-left: 1px solid #f0f0f0; padding-left: 20px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; }
+.order-total { text-align: right; margin-bottom: 12px; }
+.total-label { font-size: 12px; color: #999; margin-right: 8px; }
+.total-amount { font-size: 20px; color: #f56c6c; font-weight: bold; }
+.action-buttons { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.action-buttons .el-button { width: 100%; }
+.empty-orders { background: #fff; border-radius: 8px; padding: 60px 20px; text-align: center; }
+.empty-orders p { color: #999; margin: 16px 0; }
+.pagination-wrap { display: flex; justify-content: center; margin-top: 20px; }
 </style>

@@ -1,0 +1,1 @@
+import{r}from"./request-nNPCv00F.js";const o=()=>r({url:"/cart",method:"get"}),s=t=>r({url:"/cart",method:"post",data:t}),d=(t,a)=>r({url:`/cart/${t}`,method:"put",data:a}),c=t=>r({url:`/cart/${t}`,method:"delete"});export{s as a,c as d,o as g,d as u};

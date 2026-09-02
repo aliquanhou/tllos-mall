@@ -1,1 +1,0 @@
-import{r as e}from"./request-nNPCv00F.js";const r=t=>e({url:"/products",method:"get",params:t}),s=t=>e({url:`/products/${t}`,method:"get"}),c=()=>e({url:"/products/categories",method:"get"});export{r as a,s as b,c as g};
