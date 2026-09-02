@@ -12,7 +12,7 @@ class MerchantController extends BaseController
     {
         $query = DB::table('merchants as m')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->select('m.*', 'u.nickname', 'u.mobile');
+            ->select('m.id', 'm.username', 'm.nickname', 'm.user_id', 'm.name', 'm.logo', 'm.banner', 'm.description', 'm.category_id', 'm.contact_name', 'm.contact_mobile', 'm.contact_email', 'm.company_name', 'm.business_license', 'm.legal_person', 'm.id_card', 'm.id_card_front', 'm.id_card_back', 'm.bank_name', 'm.bank_account', 'm.bank_account_name', 'm.qualification_images', 'm.agreement_version', 'm.agreement_signed_at', 'm.agreement_signed_ip', 'm.deposit', 'm.deposit_status', 'm.draft_data', 'm.is_blacklisted', 'm.blacklist_reason', 'm.blacklist_at', 'm.source', 'm.reject_count', 'm.province_id', 'm.city_id', 'm.district_id', 'm.address', 'm.balance', 'm.frozen', 'm.total_income', 'm.total_settlement', 'm.product_count', 'm.order_count', 'm.rating', 'm.level', 'm.status', 'm.reject_reason', 'm.approved_at', 'm.created_at', 'm.updated_at', 'm.deleted_at', 'u.nickname', 'u.mobile');
 
         if ($request->filled('keyword')) {
             $query->where(function($q) use ($request) {
@@ -71,7 +71,7 @@ class MerchantController extends BaseController
     {
         $merchant = DB::table('merchants as m')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->select('m.*', 'u.nickname', 'u.mobile', 'u.email')
+            ->select('m.id', 'm.username', 'm.nickname', 'm.user_id', 'm.name', 'm.logo', 'm.banner', 'm.description', 'm.category_id', 'm.contact_name', 'm.contact_mobile', 'm.contact_email', 'm.company_name', 'm.business_license', 'm.legal_person', 'm.id_card', 'm.id_card_front', 'm.id_card_back', 'm.bank_name', 'm.bank_account', 'm.bank_account_name', 'm.qualification_images', 'm.agreement_version', 'm.agreement_signed_at', 'm.agreement_signed_ip', 'm.deposit', 'm.deposit_status', 'm.draft_data', 'm.is_blacklisted', 'm.blacklist_reason', 'm.blacklist_at', 'm.source', 'm.reject_count', 'm.province_id', 'm.city_id', 'm.district_id', 'm.address', 'm.balance', 'm.frozen', 'm.total_income', 'm.total_settlement', 'm.product_count', 'm.order_count', 'm.rating', 'm.level', 'm.status', 'm.reject_reason', 'm.approved_at', 'm.created_at', 'm.updated_at', 'm.deleted_at', 'u.nickname', 'u.mobile', 'u.email')
             ->where('m.id', $id)
             ->first();
         if (!$merchant) return $this->error('商家不存在');
