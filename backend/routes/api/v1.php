@@ -680,6 +680,9 @@ Route::prefix('admin/user-center')->middleware('auth:sanctum')->group(function (
     Route::post('/withdraws/{id}/audit', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'withdrawAudit']);
 
     Route::post('/withdraws/{id}/pay', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'withdrawPay']);
+    Route::post('/withdraws/{id}/retry', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'withdrawRetry']);
+    Route::get('/withdraws/settings', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'withdrawSettings']);
+    Route::put('/withdraws/settings', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'withdrawSettings']);
 
     Route::get('/addresses', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'addresses']);
 

@@ -132,8 +132,77 @@ class UserCenterController extends BaseController
         $w=DB::table('withdraws')->where('id',$id)->first();
         if(!$w)return $this->error('提现记录不存在');
         if($w->status!=1)return $this->error('该提现未通过审核或已打款');
-        DB::table('withdraws')->where('id',$id)->update(['status'=>3,'paid_at'=>now(),'pay_no'=>'PAY'.date('YmdHis').rand(1000,9999),'admin_id'=>$request->user()->id??1]);
-        return $this->success(null,'打款成功');
+        $adminId = $request->user()->id ?? 1;
+        $isFail = $request->input('is_fail', 0);
+        $failureReason = $request->input('failure_reason', '');
+        if ($isFail) {
+            DB::table('withdraws')->where('id',$id)->update([
+                'failure_reason' => $failureReason ?: '第三方支付接口调用失败',
+                'retry_count' => DB::raw('retry_count + 1'),
+                'admin_id' => $adminId,
+                'updated_at' => now(),
+            ]);
+            return $this->error('打款失败：' . ($failureReason ?: '第三方支付接口调用失败'));
+        }
+        DB::table('withdraws')->where('id',$id)->update([
+            'status'=>3,
+            'paid_at'=>now(),
+            'pay_no'=>'PAY'.date('YmdHis').rand(1000,9999),
+            'failure_reason'=>null,
+            'admin_id'=>$adminId,
+            'updated_at'=>now(),
+        ]);
+        return $this->success(['pay_no'=>'PAY'.date('YmdHis')],'打款成功');
+    }
+
+    public function withdrawRetry(Request $request,$id) {
+        $w=DB::table('withdraws')->where('id',$id)->first();
+        if(!$w)return $this->error('提现记录不存在');
+        if($w->status!=1)return $this->error('只有待打款状态的提现单可以重试');
+        if($w->retry_count >= 3)return $this->error('该提现单已重试3次，请人工核查后处理');
+        $adminId = $request->user()->id ?? 1;
+        $isFail = $request->input('is_fail', 0);
+        $failureReason = $request->input('failure_reason', '');
+        if ($isFail) {
+            DB::table('withdraws')->where('id',$id)->update([
+                'failure_reason' => $failureReason ?: '重试打款失败',
+                'retry_count' => DB::raw('retry_count + 1'),
+                'admin_id' => $adminId,
+                'updated_at' => now(),
+            ]);
+            return $this->error('重试打款失败：' . ($failureReason ?: '第三方支付接口调用失败'));
+        }
+        $payNo = 'PAY'.date('YmdHis').rand(1000,9999);
+        DB::table('withdraws')->where('id',$id)->update([
+            'status'=>3,
+            'paid_at'=>now(),
+            'pay_no'=>$payNo,
+            'failure_reason'=>null,
+            'admin_id'=>$adminId,
+            'updated_at'=>now(),
+        ]);
+        return $this->success(['pay_no'=>$payNo,'retry_count'=>$w->retry_count + 1],'重试打款成功');
+    }
+
+    public function withdrawSettings(Request $request) {
+        if ($request->isMethod('get')) {
+            $configs = DB::table('system_configs')->where('group','withdraw')->where('status',1)->orderBy('sort','asc')->get();
+            $result = [];
+            foreach ($configs as $cfg) {
+                $result[$cfg->key] = ['name'=>$cfg->name,'value'=>$cfg->value,'type'=>$cfg->type];
+            }
+            return $this->success($result);
+        }
+        if ($request->isMethod('put') || $request->isMethod('post')) {
+            $updates = $request->only(['min_withdraw_amount','max_withdraw_amount','daily_withdraw_limit']);
+            foreach ($updates as $key => $value) {
+                if ($value !== null) {
+                    DB::table('system_configs')->where('group','withdraw')->where('key',$key)->update(['value'=>$value,'updated_at'=>now()]);
+                }
+            }
+            return $this->success(null,'提现限额配置已更新');
+        }
+        return $this->error('不支持的请求方法');
     }
     public function addresses(Request $request) {
         $page = $request->input('page', 1);
