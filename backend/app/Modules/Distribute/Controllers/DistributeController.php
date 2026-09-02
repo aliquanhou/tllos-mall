@@ -11,13 +11,36 @@ class DistributeController extends BaseController
             'total_agents' => DB::table('distribute_agents')->count(),
             'active_agents' => DB::table('distribute_agents')->where('status',1)->count(),
             'pending_agents' => DB::table('distribute_agents')->where('status',0)->count(),
+            'today_new_agents' => DB::table('distribute_agents')->whereDate('created_at',date('Y-m-d'))->count(),
             'total_orders' => DB::table('distribute_orders')->count(),
+            'week_orders' => DB::table('distribute_orders')->where('created_at','>=',date('Y-m-d',strtotime('-7 days')))->count(),
             'total_commission' => round(DB::table('distribute_orders')->sum('commission'),2),
+            'settled_commission' => round(DB::table('distribute_orders')->where('status',1)->sum('commission'),2),
+            'pending_commission' => round(DB::table('distribute_orders')->where('status',0)->sum('commission'),2),
             'total_goods' => DB::table('distribute_goods')->where('status',1)->count(),
         ];
-        $recentOrders = DB::table('distribute_orders')->orderBy('id','desc')->limit(10)->get();
-        $topAgents = DB::table('distribute_agents')->orderBy('total_income','desc')->limit(5)->get();
-        return $this->success(['stats'=>$stats,'recent_orders'=>$recentOrders,'top_agents'=>$topAgents]);
+        $trend = [];
+        for ($i=6; $i>=0; $i--) {
+            $date = date('Y-m-d', strtotime("-{$i} days"));
+            $trend['labels'][] = date('m-d', strtotime($date));
+            $trend['orders'][] = DB::table('distribute_orders')->whereDate('created_at',$date)->count();
+            $trend['commission'][] = round(DB::table('distribute_orders')->whereDate('created_at',$date)->sum('commission'),2);
+        }
+        $recentOrders = DB::table('distribute_orders as do')
+            ->leftJoin('users as u','do.user_id','=','u.id')
+            ->leftJoin('distribute_agents as da','do.agent_id','=','da.id')
+            ->select('do.*','u.nickname as user_name','da.real_name as agent_name')
+            ->orderBy('do.id','desc')->limit(10)->get();
+        $topAgents = DB::table('distribute_agents as da')
+            ->leftJoin('users as u','da.user_id','=','u.id')
+            ->select('da.*','u.nickname','u.mobile')
+            ->orderBy('da.total_income','desc')->limit(5)->get();
+        $topGoods = DB::table('distribute_goods as dg')
+            ->leftJoin('products as p','dg.product_id','=','p.id')
+            ->select('dg.*','p.sales')
+            ->where('dg.status',1)
+            ->orderBy('p.sales','desc')->limit(5)->get();
+        return $this->success(['stats'=>$stats,'trend'=>$trend,'recent_orders'=>$recentOrders,'top_agents'=>$topAgents,'top_goods'=>$topGoods]);
     }
 
     public function agents(Request $request) {
