@@ -1,76 +1,103 @@
 <template>
   <div class="category-page">
-    <div class="cat-sidebar">
-      <div v-for="(cat, i) in categories" :key="cat.id"
-        :class="['cat-tab', { active: currentCat === i }]"
-        @click="currentCat = i">{{ cat.name }}</div>
-    </div>
-    <div class="cat-content">
-      <h3 class="cat-title">{{ categories[currentCat]?.name }}</h3>
-      <div class="sub-grid">
-        <div v-for="sub in categories[currentCat]?.subs" :key="sub.id" class="sub-item">
-          <div class="sub-icon" :style="{ background: sub.color }">{{ sub.icon }}</div>
-          <span>{{ sub.name }}</span>
+    <div class="container">
+      <div class="category-wrapper">
+        <!-- 左侧分类导航 -->
+        <aside class="category-sidebar">
+          <h3>商品分类</h3>
+          <div class="category-tree">
+            <div class="category-item" v-for="cat in categories" :key="cat.id" :class="{active: activeCategory === cat.id}" @click="selectCategory(cat.id)">
+              <el-icon><CollectionTag /></el-icon>
+              <span>{{ cat.name }}</span>
+              <el-icon class="arrow"><ArrowRight /></el-icon>
+            </div>
+          </div>
+        </aside>
+        <!-- 右侧商品列表 -->
+        <div class="category-content">
+          <div class="content-header">
+            <h2>{{ currentCategoryName || '全部商品' }}</h2>
+            <div class="sort-bar">
+              <span class="sort-item" :class="{active: sort === 'default'}" @click="setSort('default')">综合</span>
+              <span class="sort-item" :class="{active: sort === 'sales'}" @click="setSort('sales')">销量</span>
+              <span class="sort-item" :class="{active: sort === 'price_asc' || sort === 'price_desc'}" @click="togglePriceSort">价格</span>
+              <span class="sort-item" :class="{active: sort === 'new'}" @click="setSort('new')">新品</span>
+            </div>
+          </div>
+          <Skeleton v-if="loading" type="product-grid" :count="10" />
+          <div class="product-grid" v-else-if="products.length">
+            <ProductCard v-for="p in products" :key="p.id" :product="p" />
+          </div>
+          <div class="empty-category" v-else>
+            <el-icon size="64" color="#ddd"><Goods /></el-icon>
+            <p>该分类下暂无商品</p>
+          </div>
+          <div class="pagination-wrap" v-if="!loading && total > limit">
+            <el-pagination v-model:current-page="page" v-model:page-size="limit" :total="total" layout="prev, pager, next, jumper" @current-change="fetchProducts" />
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
-const currentCat = ref(0)
-const categories = [
-  { id: 1, name: '数码电器', subs: [
-    { id: 11, name: '手机', icon: '📱', color: '#e3f2fd' },
-    { id: 12, name: '电脑', icon: '💻', color: '#e3f2fd' },
-    { id: 13, name: '耳机', icon: '🎧', color: '#e3f2fd' },
-    { id: 14, name: '相机', icon: '📷', color: '#e3f2fd' },
-    { id: 15, name: '智能设备', icon: '⌚', color: '#e3f2fd' },
-    { id: 16, name: '配件', icon: '🔌', color: '#e3f2fd' }
-  ]},
-  { id: 2, name: '服饰鞋包', subs: [
-    { id: 21, name: '男装', icon: '👔', color: '#fce4ec' },
-    { id: 22, name: '女装', icon: '👗', color: '#fce4ec' },
-    { id: 23, name: '鞋靴', icon: '👟', color: '#fce4ec' },
-    { id: 24, name: '箱包', icon: '👜', color: '#fce4ec' },
-    { id: 25, name: '配饰', icon: '⌚', color: '#fce4ec' },
-    { id: 26, name: '内衣', icon: '🩲', color: '#fce4ec' }
-  ]},
-  { id: 3, name: '美妆护肤', subs: [
-    { id: 31, name: '护肤', icon: '🧴', color: '#f3e5f5' },
-    { id: 32, name: '彩妆', icon: '💄', color: '#f3e5f5' },
-    { id: 33, name: '香水', icon: '🌸', color: '#f3e5f5' },
-    { id: 34, name: '工具', icon: '🪞', color: '#f3e5f5' }
-  ]},
-  { id: 4, name: '食品生鲜', subs: [
-    { id: 41, name: '零食', icon: '🍪', color: '#e8f5e9' },
-    { id: 42, name: '饮料', icon: '🥤', color: '#e8f5e9' },
-    { id: 43, name: '生鲜', icon: '🥩', color: '#e8f5e9' },
-    { id: 44, name: '粮油', icon: '🍚', color: '#e8f5e9' }
-  ]},
-  { id: 5, name: '家居家装', subs: [
-    { id: 51, name: '家具', icon: '🛋️', color: '#fff3e0' },
-    { id: 52, name: '家纺', icon: '🛏️', color: '#fff3e0' },
-    { id: 53, name: '厨具', icon: '🍳', color: '#fff3e0' },
-    { id: 54, name: '收纳', icon: '📦', color: '#fff3e0' }
-  ]},
-  { id: 6, name: '运动户外', subs: [
-    { id: 61, name: '健身', icon: '🏋️', color: '#e0f7fa' },
-    { id: 62, name: '户外', icon: '⛺', color: '#e0f7fa' },
-    { id: 63, name: '骑行', icon: '🚴', color: '#e0f7fa' },
-    { id: 64, name: '球类', icon: '⚽', color: '#e0f7fa' }
-  ]}
-]
+import { ref, computed, onMounted } from 'vue'
+import { getProductList, getCategories } from '@/api/product'
+import ProductCard from '@/components/ProductCard.vue'
+import Skeleton from '@/components/Skeleton.vue'
+const categories = ref([])
+const activeCategory = ref('')
+const products = ref([])
+const total = ref(0)
+const page = ref(1)
+const limit = ref(20)
+const sort = ref('default')
+const loading = ref(false)
+const currentCategoryName = computed(() => {
+  const cat = categories.value.find(c => c.id == activeCategory.value)
+  return cat?.name || ''
+})
+const fetchCategories = async () => {
+  try {
+    const res = await getCategories()
+    categories.value = res.data?.list || res.data || []
+  } catch (e) { console.error(e) }
+}
+const selectCategory = (id) => { activeCategory.value = id; page.value = 1; fetchProducts() }
+const fetchProducts = async () => {
+  loading.value = true
+  try {
+    const params = { page: page.value, limit: limit.value, sort: sort.value }
+    if (activeCategory.value) params.category_id = activeCategory.value
+    const res = await getProductList(params)
+    products.value = res.data?.list || res.data || []
+    total.value = res.data?.total || 0
+  } catch (e) { console.error(e) } finally { loading.value = false }
+}
+const setSort = (s) => { sort.value = s; page.value = 1; fetchProducts() }
+const togglePriceSort = () => { sort.value = sort.value === 'price_asc' ? 'price_desc' : 'price_asc'; page.value = 1; fetchProducts() }
+onMounted(() => { fetchCategories(); fetchProducts() })
 </script>
 <style scoped>
-.category-page { display: flex; height: 100%; }
-.cat-sidebar { width: 90px; background: #fff; overflow-y: auto; flex-shrink: 0; }
-.cat-tab { padding: 16px 10px; text-align: center; font-size: 13px; color: var(--text-secondary); border-left: 3px solid transparent; }
-.cat-tab.active { background: var(--bg); color: var(--primary); border-left-color: var(--primary); font-weight: 500; }
-.cat-content { flex: 1; padding: 16px; overflow-y: auto; }
-.cat-title { font-size: 16px; margin-bottom: 16px; }
-.sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.sub-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.sub-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-.sub-item span { font-size: 12px; color: var(--text); }
+.category-page { background: #f5f5f5; min-height: calc(100vh - 200px); padding: 20px 0; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.category-wrapper { display: flex; gap: 20px; align-items: flex-start; }
+.category-sidebar { width: 200px; flex-shrink: 0; background: #fff; border-radius: 8px; padding: 16px; position: sticky; top: 20px; }
+.category-sidebar h3 { font-size: 16px; color: #333; margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+.category-tree { }
+.category-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 14px; color: #666; transition: all 0.2s; margin-bottom: 4px; }
+.category-item:hover { background: #fafafa; color: #e6a23c; }
+.category-item.active { background: #fdf6ec; color: #e6a23c; font-weight: bold; }
+.category-item .arrow { margin-left: auto; font-size: 12px; opacity: 0.5; }
+.category-content { flex: 1; min-width: 0; }
+.content-header { background: #fff; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.content-header h2 { font-size: 18px; color: #333; margin: 0; }
+.sort-bar { display: flex; gap: 20px; }
+.sort-item { font-size: 14px; color: #666; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+.sort-item:hover { color: #e6a23c; }
+.sort-item.active { color: #e6a23c; background: #fdf6ec; font-weight: bold; }
+.product-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
+.empty-category { background: #fff; border-radius: 8px; padding: 60px 20px; text-align: center; }
+.empty-category p { color: #999; margin: 16px 0; }
+.pagination-wrap { display: flex; justify-content: center; }
 </style>

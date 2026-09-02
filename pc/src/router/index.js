@@ -19,6 +19,7 @@ const routes = [
   { path:'/address/edit', component:()=>import('@/views/user/AddressEdit.vue') },
   { path:'/collects', component:()=>import('@/views/user/Collect.vue') },
   { path:'/coupons', component:()=>import('@/views/user/Coupon.vue') },
+  { path:'/after-sale', component:()=>import('@/views/after-sale/index.vue') },
 ]
 const router = createRouter({ history:createWebHistory('/'), routes })
 router.beforeEach((to,from,next)=>{
