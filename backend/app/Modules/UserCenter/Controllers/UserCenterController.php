@@ -72,6 +72,26 @@ class UserCenterController extends BaseController
         DB::table('withdraws')->where('id',$id)->update(['status'=>3,'paid_at'=>now(),'pay_no'=>'PAY'.date('YmdHis').rand(1000,9999),'admin_id'=>$request->user()->id??1]);
         return $this->success(null,'打款成功');
     }
+    public function addresses(Request $request) {
+        $page = $request->input('page', 1);
+        $limit = $request->input('limit', 20);
+        $query = \App\Models\UserAddress::query()->with('user:id,mobile,nickname');
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->input('user_id'));
+        }
+        if ($request->filled('keyword')) {
+            $kw = $request->input('keyword');
+            $query->where(function($q) use ($kw) {
+                $q->where('name', 'like', "%{$kw}%")
+                  ->orWhere('mobile', 'like', "%{$kw}%")
+                  ->orWhere('detail', 'like', "%{$kw}%");
+            });
+        }
+        $total = $query->count();
+        $list = $query->orderBy('id', 'desc')->offset(($page-1)*$limit)->limit($limit)->get();
+        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit]);
+    }
+
     public function accountLogs(Request $request) {
         $q=DB::table('user_balance_logs as l')->leftJoin('users as u','l.user_id','=','u.id')->select('l.*','u.nickname','u.mobile');
         if($request->filled('user_id'))$q->where('l.user_id',$request->user_id);
