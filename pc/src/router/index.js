@@ -22,6 +22,14 @@ const routes = [
   { path:'/after-sale', component:()=>import('@/views/after-sale/index.vue') },
   { path:'/review', component:()=>import('@/views/review/index.vue') },
   { path:'/messages', component:()=>import('@/views/message/index.vue') },
+  { path:'/brand', component:()=>import('@/views/brand/index.vue') },
+  { path:'/flash-sale', component:()=>import('@/views/promotion/flash-sale.vue') },
+  { path:'/new-arrivals', component:()=>import('@/views/promotion/new-arrivals.vue') },
+  { path:'/shop/:id', component:()=>import('@/views/shop/index.vue') },
+  { path:'/help', component:()=>import('@/views/help/index.vue') },
+  { path:'/about', component:()=>import('@/views/about/index.vue') },
+  { path:'/agreement/user', component:()=>import('@/views/agreement/user.vue') },
+  { path:'/agreement/privacy', component:()=>import('@/views/agreement/privacy.vue') },
 ]
 const router = createRouter({ history:createWebHistory('/'), routes })
 router.beforeEach((to,from,next)=>{
