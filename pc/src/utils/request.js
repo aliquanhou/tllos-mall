@@ -6,7 +6,7 @@ const request = axios.create({
 })
 
 request.interceptors.request.use(config => {
-  const token = localStorage.getItem('tllos_user_token')
+  const token = localStorage.getItem('tllos_pc_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
@@ -16,8 +16,8 @@ request.interceptors.response.use(
     const res = response.data
     if (res.code !== 200 && res.code !== 0) {
       if (res.code === 401) {
-        localStorage.removeItem('tllos_user_token')
-        window.location.href = '/h5/login'
+        localStorage.removeItem('tllos_pc_token')
+        window.location.href = '/login'
       }
       return Promise.reject(new Error(res.message || 'Error'))
     }
@@ -25,8 +25,8 @@ request.interceptors.response.use(
   },
   error => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('tllos_user_token')
-      window.location.href = '/h5/login'
+      localStorage.removeItem('tllos_pc_token')
+      window.location.href = '/login'
     }
     return Promise.reject(error)
   }
