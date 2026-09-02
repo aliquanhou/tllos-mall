@@ -15,7 +15,7 @@ class AnnouncementController extends BaseController
         return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit]);
     }
     public function store(Request $request) {
-        $v = $request->validate(['title'=>'required|string','content'=>'nullable|string','type'=>'nullable|integer','sort'=>'nullable|integer','status'=>'nullable|integer']);
+        $v = $request->validate(['title'=>'required|string','content'=>'nullable|string','type'=>'nullable|string','sort'=>'nullable|integer','status'=>'nullable|integer']);
         $v['created_at']=now(); $v['updated_at']=now();
         $id = DB::table('announcements')->insertGetId($v);
         return $this->success(['id'=>$id],'创建成功');
