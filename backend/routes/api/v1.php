@@ -28,9 +28,6 @@ Route::get('profile', [\App\Modules\Admin\Controllers\AuthController::class, 'pr
 Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'logout']);
 
     // 工作台统计
-    Route::get('dashboard/stats', [App\Modules\Admin\Controllers\DashboardController::class, 'stats']);
-    Route::get('dashboard/recent-orders', [App\Modules\Admin\Controllers\DashboardController::class, 'recentOrders']);
-    Route::get('dashboard/sales-trend', [App\Modules\Admin\Controllers\DashboardController::class, 'salesTrend']);
 
     // 品牌管理    Route::get("/brands", [\App\Modules\Product\Controllers\BrandController::class,"index"]);    Route::get("/brands/all", [\App\Modules\Product\Controllers\BrandController::class,"all"]);    Route::post("/brands", [\App\Modules\Product\Controllers\BrandController::class,"store"]);    Route::put("/brands/{id}", [\App\Modules\Product\Controllers\BrandController::class,"update"]);    Route::delete("/brands/{id}", [\App\Modules\Product\Controllers\BrandController::class,"destroy"]);    // 商品类型    Route::get("/product-types", [\App\Modules\Product\Controllers\ProductTypeController::class,"index"]);    Route::post("/product-types", [\App\Modules\Product\Controllers\ProductTypeController::class,"store"]);    Route::put("/product-types/{id}", [\App\Modules\Product\Controllers\ProductTypeController::class,"update"]);    Route::delete("/product-types/{id}", [\App\Modules\Product\Controllers\ProductTypeController::class,"destroy"]);    // 库存预警    Route::get("/stock-warnings", [\App\Modules\Product\Controllers\StockWarningController::class,"index"]);    Route::post("/stock-warnings/setting", [\App\Modules\Product\Controllers\StockWarningController::class,"setting"]);    // 用户积分    Route::get("/user-points", [\App\Modules\UserCenter\Controllers\PointLogController::class,"index"]);    Route::post("/user-points", [\App\Modules\UserCenter\Controllers\PointLogController::class,"store"]);    // 用户收藏    Route::get("/user-favorites", [\App\Modules\UserCenter\Controllers\FavoriteController::class,"index"]);    Route::delete("/user-favorites/{id}", [\App\Modules\UserCenter\Controllers\FavoriteController::class,"destroy"]);    // 砍价活动    Route::get("/bargains", [\App\Modules\Marketing\Controllers\BargainController::class,"index"]);    Route::post("/bargains", [\App\Modules\Marketing\Controllers\BargainController::class,"store"]);    Route::put("/bargains/{id}", [\App\Modules\Marketing\Controllers\BargainController::class,"update"]);    Route::delete("/bargains/{id}", [\App\Modules\Marketing\Controllers\BargainController::class,"destroy"]);    Route::get("/bargains/records", [\App\Modules\Marketing\Controllers\BargainController::class,"records"]);    // 短信配置    Route::get("/sms-configs", [\App\Modules\SystemConfig\Controllers\SmsConfigController::class,"index"]);    Route::post("/sms-configs", [\App\Modules\SystemConfig\Controllers\SmsConfigController::class,"store"]);    Route::put("/sms-configs/{id}", [\App\Modules\SystemConfig\Controllers\SmsConfigController::class,"update"]);    Route::delete("/sms-configs/{id}", [\App\Modules\SystemConfig\Controllers\SmsConfigController::class,"destroy"]);    // 存储配置    Route::get("/storage-configs", [\App\Modules\SystemConfig\Controllers\StorageConfigController::class,"index"]);    Route::post("/storage-configs", [\App\Modules\SystemConfig\Controllers\StorageConfigController::class,"store"]);    Route::put("/storage-configs/{id}", [\App\Modules\SystemConfig\Controllers\StorageConfigController::class,"update"]);    Route::delete("/storage-configs/{id}", [\App\Modules\SystemConfig\Controllers\StorageConfigController::class,"destroy"]);    // 定时任务    Route::get("/crontabs", [\App\Modules\SystemConfig\Controllers\CrontabController::class,"index"]);    Route::post("/crontabs", [\App\Modules\SystemConfig\Controllers\CrontabController::class,"store"]);    Route::put("/crontabs/{id}", [\App\Modules\SystemConfig\Controllers\CrontabController::class,"update"]);    Route::delete("/crontabs/{id}", [\App\Modules\SystemConfig\Controllers\CrontabController::class,"destroy"]);    Route::post("/crontabs/{id}/run", [\App\Modules\SystemConfig\Controllers\CrontabController::class,"run"]);    // 文件管理    Route::get("/file-managers", [\App\Modules\SystemConfig\Controllers\FileManagerController::class,"index"]);    Route::delete("/file-managers/{id}", [\App\Modules\SystemConfig\Controllers\FileManagerController::class,"destroy"]);    // 系统信息    Route::get("/system-info", [\App\Modules\SystemConfig\Controllers\SystemInfoController::class,"index"]);    // 商家等级
     Route::get("/merchant-levels/{id}", [\App\Modules\Merchant\Controllers\MerchantLevelController::class,"show"]);
@@ -192,9 +189,6 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'logout']);
 
     // 工作台统计
-    Route::get('dashboard/stats', [App\Modules\Admin\Controllers\DashboardController::class, 'stats']);
-    Route::get('dashboard/recent-orders', [App\Modules\Admin\Controllers\DashboardController::class, 'recentOrders']);
-    Route::get('dashboard/sales-trend', [App\Modules\Admin\Controllers\DashboardController::class, 'salesTrend']);
 
 
 
@@ -1394,4 +1388,57 @@ Route::prefix('admin/help')->middleware('auth:sanctum')->group(function () {
     Route::get('/{module}/all-list', [App\Modules\System\Controllers\HelpController::class, 'list']);
     Route::get('/{module}/{page}', [App\Modules\System\Controllers\HelpController::class, 'show']);
     Route::put('/{module}/{page}', [App\Modules\System\Controllers\HelpController::class, 'update']);
+});
+
+// 支付回调（不需要认证）
+Route::post('/payment/notify/wechat', [\App\Modules\Payment\Controllers\PaymentNotifyController::class, 'wechat']);
+Route::post('/payment/notify/alipay', [\App\Modules\Payment\Controllers\PaymentNotifyController::class, 'alipay']);
+Route::post('/payment/refund-notify/wechat', [\App\Modules\Payment\Controllers\PaymentNotifyController::class, 'wechatRefund']);
+Route::post('/payment/refund-notify/alipay', [\App\Modules\Payment\Controllers\PaymentNotifyController::class, 'alipayRefund']);
+
+// 退款管理（需要认证）
+Route::middleware('auth:sanctum')->prefix('admin/refunds')->group(function () {
+    Route::get('/', [\App\Modules\Payment\Controllers\RefundController::class, 'index']);
+    Route::post('/', [\App\Modules\Payment\Controllers\RefundController::class, 'refund']);
+});
+Route::get('/payment/methods', [\App\Modules\Payment\Controllers\PaymentController::class, 'methods']);
+
+// 协议管理
+Route::get('/agreements/{type}', [\App\Modules\User\Controllers\AgreementController::class, 'show']);
+Route::middleware('auth:sanctum')->prefix('admin/agreements')->group(function () {
+    Route::get('/', [\App\Modules\User\Controllers\AgreementController::class, 'index']);
+    Route::post('/', [\App\Modules\User\Controllers\AgreementController::class, 'store']);
+    Route::put('/{id}', [\App\Modules\User\Controllers\AgreementController::class, 'update']);
+});
+Route::middleware('auth:sanctum')->post('/agreements/sign', [\App\Modules\User\Controllers\AgreementController::class, 'sign']);
+
+// 发票管理
+Route::middleware('auth:sanctum')->prefix('invoices')->group(function () {
+    Route::get('/my', [\App\Modules\User\Controllers\InvoiceController::class, 'userIndex']);
+    Route::post('/apply', [\App\Modules\User\Controllers\InvoiceController::class, 'apply']);
+});
+Route::middleware('auth:sanctum')->prefix('admin/invoices')->group(function () {
+    Route::get('/', [\App\Modules\User\Controllers\InvoiceController::class, 'index']);
+    Route::post('/{id}/issue', [\App\Modules\User\Controllers\InvoiceController::class, 'issue']);
+    Route::post('/{id}/reject', [\App\Modules\User\Controllers\InvoiceController::class, 'reject']);
+});
+
+// 数据看板
+Route::middleware('auth:sanctum')->prefix('admin/dashboard')->group(function () {
+    Route::get('/overview', [\App\Modules\System\Controllers\DashboardController::class, 'overview']);
+    Route::get('/stats', [\App\Modules\System\Controllers\DashboardController::class, 'overview']);
+    Route::get('/order-trend', [\App\Modules\System\Controllers\DashboardController::class, 'orderTrend']);
+    Route::get('/merchant-ranking', [\App\Modules\System\Controllers\DashboardController::class, 'merchantRanking']);
+    Route::get('/product-ranking', [\App\Modules\System\Controllers\DashboardController::class, 'productRanking']);
+    Route::get('/user-activity', [\App\Modules\System\Controllers\DashboardController::class, 'userActivity']);
+    Route::get('/category-stats', [\App\Modules\System\Controllers\DashboardController::class, 'categoryStats']);
+});
+
+// 敏感词管理
+Route::middleware('auth:sanctum')->prefix('admin/sensitive-words')->group(function () {
+    Route::get('/', [\App\Modules\System\Controllers\SensitiveWordController::class, 'index']);
+    Route::post('/', [\App\Modules\System\Controllers\SensitiveWordController::class, 'store']);
+    Route::put('/{id}', [\App\Modules\System\Controllers\SensitiveWordController::class, 'update']);
+    Route::delete('/{id}', [\App\Modules\System\Controllers\SensitiveWordController::class, 'destroy']);
+    Route::post('/check', [\App\Modules\System\Controllers\SensitiveWordController::class, 'check']);
 });

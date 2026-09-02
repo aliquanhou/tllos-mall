@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 namespace App\Modules\Product\Controllers;
 
 use App\Core\Controllers\BaseController;
@@ -18,6 +18,8 @@ class ProductController extends BaseController
         if ($request->is_hot) $query->where('is_hot', 1);
         if ($request->is_new) $query->where('is_new', 1);
         if ($request->is_recommend) $query->where('is_recommend', 1);
+        if ($request->min_price) $query->where('price', '>=', $request->min_price);
+        if ($request->max_price) $query->where('price', '<=', $request->max_price);
 
         $sort = $request->sort ?: 'default';
         if ($sort == 'sales') $query->orderBy('sales', 'desc');

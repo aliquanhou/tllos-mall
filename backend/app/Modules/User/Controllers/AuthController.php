@@ -15,7 +15,12 @@ class AuthController extends BaseController
             'account' => 'required|string|unique:users,mobile|unique:users,account',
             'password' => 'required|string|min:6',
             'nickname' => 'nullable|string',
+            'agreed' => 'required|boolean',
         ]);
+
+        if (!$request->agreed) {
+            return $this->error('请阅读并同意用户协议和隐私政策');
+        }
 
         $user = User::create([
             'mobile' => $request->account,
@@ -23,6 +28,16 @@ class AuthController extends BaseController
             'password' => Hash::make($request->password),
             'nickname' => $request->nickname ?: '用户' . substr($request->account, -4),
             'status' => 1,
+        ]);
+
+        // 记录协议签署
+        DB::table('user_agreement_logs')->insert([
+            'user_id' => $user->id,
+            'agreement_id' => 1,
+            'agreement_type' => 1,
+            'version' => '1.0',
+            'ip' => $request->ip(),
+            'created_at' => now(),
         ]);
 
         $token = $user->createToken('api-token')->plainTextToken;
