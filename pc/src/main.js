@@ -7,6 +7,7 @@ import App from './App.vue'
 import router from './router'
 import i18n from './locales'
 import './assets/main.css'
+import './assets/responsive.css'
 
 const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
