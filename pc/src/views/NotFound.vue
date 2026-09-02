@@ -10,9 +10,9 @@
       </div>
       <div class="help-links">
         <span>您可能想访问：</span>
-        <a href="javascript:;" @click="$router.push('/products')">全部商品</a>
-        <a href="javascript:;" @click="$router.push('/orders')">我的订单</a>
-        <a href="javascript:;" @click="$router.push('/profile')">个人中心</a>
+        <el-button link type="primary" @click="$router.push('/products')">全部商品</el-button>
+        <el-button link type="primary" @click="$router.push('/orders')">我的订单</el-button>
+        <el-button link type="primary" @click="$router.push('/profile')">个人中心</el-button>
       </div>
     </div>
   </div>
