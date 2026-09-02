@@ -79,21 +79,45 @@ class DistributeController extends BaseController
     }
 
     public function orders(Request $request) {
-        $query = DB::table('distribute_orders');
-        if ($request->filled('keyword')) $query->where(function($q)use($request){$q->where('order_no','like','%'.$request->keyword.'%')->orWhere('agent_name','like','%'.$request->keyword.'%');});
-        if ($request->filled('status') && $request->status!=='') $query->where('status',$request->status);
+        $query = DB::table('distribute_orders as do')
+            ->leftJoin('users as u','do.user_id','=','u.id')
+            ->leftJoin('distribute_agents as da','do.agent_id','=','da.id')
+            ->leftJoin('distribute_levels as dl','do.level_id','=','dl.id');
+        if ($request->filled('keyword')) $query->where(function($q)use($request){$q->where('do.order_no','like','%'.$request->keyword.'%')->orWhere('da.real_name','like','%'.$request->keyword.'%')->orWhere('u.nickname','like','%'.$request->keyword.'%');});
+        if ($request->filled('status') && $request->status!=='') $query->where('do.status',$request->status);
+        if ($request->filled('agent_id')) $query->where('do.agent_id',$request->agent_id);
+        if ($request->filled('start_time')) $query->where('do.created_at','>=',$request->start_time);
+        if ($request->filled('end_time')) $query->where('do.created_at','<=',$request->end_time);
         $total = $query->count(); $page=$request->get('page',1); $limit=$request->get('limit',20);
-        $list = $query->orderBy('id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
-        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit]);
+        $list = $query->select('do.*','u.nickname as user_name','u.mobile as user_mobile','da.real_name as agent_name','dl.name as level_name')
+            ->orderBy('do.id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
+        $stats = [
+            'total' => DB::table('distribute_orders')->count(),
+            'pending' => DB::table('distribute_orders')->where('status',0)->count(),
+            'settled' => DB::table('distribute_orders')->where('status',1)->count(),
+            'commission_total' => round(DB::table('distribute_orders')->sum('commission'),2),
+            'commission_pending' => round(DB::table('distribute_orders')->where('status',0)->sum('commission'),2),
+            'commission_settled' => round(DB::table('distribute_orders')->where('status',1)->sum('commission'),2),
+        ];
+        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
     }
 
     public function goods(Request $request) {
-        $query = DB::table('distribute_goods');
-        if ($request->filled('keyword')) $query->where('product_name','like','%'.$request->keyword.'%');
-        if ($request->filled('status') && $request->status!=='') $query->where('status',$request->status);
+        $query = DB::table('distribute_goods as dg')->leftJoin('products as p','dg.product_id','=','p.id');
+        if ($request->filled('keyword')) $query->where('dg.product_name','like','%'.$request->keyword.'%');
+        if ($request->filled('status') && $request->status!=='') $query->where('dg.status',$request->status);
+        if ($request->filled('commission_type')) $query->where('dg.commission_type',$request->commission_type);
         $total = $query->count(); $page=$request->get('page',1); $limit=$request->get('limit',20);
-        $list = $query->orderBy('sort','asc')->orderBy('id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
-        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit]);
+        $list = $query->select('dg.*','p.sales','p.price','p.stock','p.status as product_status')
+            ->orderBy('dg.sort','asc')->orderBy('dg.id','desc')->offset(($page-1)*$limit)->limit($limit)->get();
+        $stats = [
+            'total' => DB::table('distribute_goods')->count(),
+            'active' => DB::table('distribute_goods')->where('status',1)->count(),
+            'inactive' => DB::table('distribute_goods')->where('status',0)->count(),
+            'rate_type' => DB::table('distribute_goods')->where('commission_type',1)->count(),
+            'amount_type' => DB::table('distribute_goods')->where('commission_type',2)->count(),
+        ];
+        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
     }
 
     public function goodsToggle($id) {
