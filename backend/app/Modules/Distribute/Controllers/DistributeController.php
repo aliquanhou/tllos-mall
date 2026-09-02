@@ -72,6 +72,23 @@ class DistributeController extends BaseController
         if ($agent->status != 0) return $this->error('该分销商已审核，不能重复审核');
         $update = ['status'=>$v['status'],'audit_at'=>now(),'updated_at'=>now()];
         DB::table('distribute_agents')->where('id',$id)->update($update);
+        // 发送审核通知
+        if ($v['status']==1) {
+            $title = '分销商审核通过通知';
+            $content = '恭喜您！您的分销商申请已审核通过，您现在可以推广商品并获得佣金收益。';
+        } else {
+            $title = '分销商审核拒绝通知';
+            $content = '很抱歉，您的分销商申请未通过审核。原因：'.($v['remark'] ?? '资料不符合要求').'。如有疑问请联系客服。';
+        }
+        DB::table('user_notifications')->insert([
+            'user_id'=>$agent->user_id,
+            'title'=>$title,
+            'content'=>$content,
+            'type'=>'distribute',
+            'is_read'=>0,
+            'created_at'=>now(),
+            'updated_at'=>now()
+        ]);
         return $this->success(null,$v['status']==1?'审核通过':'已拒绝');
     }
 

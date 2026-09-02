@@ -29,7 +29,7 @@
 | 方法 | 路径 | 控制器方法 | 说明 |
 |------|------|-----------|------|
 | GET | /api/v1/admin/distribute/agents | DistributeController@agents | 分销商列表（分页+搜索+筛选+5项统计+关联查询） |
-| POST | /api/v1/admin/distribute/agents/{id}/audit | DistributeController@agentAudit | 审核分销商（通过/拒绝，含重复审核保护） |
+| POST | /api/v1/admin/distribute/agents/{id}/audit | DistributeController@agentAudit | 审核分销商（通过/拒绝，含重复审核保护+审核通知） |
 
 ## 3. 请求参数
 
@@ -156,10 +156,12 @@ flowchart TD
     D --> E{审核结果?}
     E -->|通过| F[更新 status=1已通过]
     F --> G[记录 audit_at 审核时间]
-    G --> H[分销商可推广商品]
+    G --> G2[发送审核通过站内信通知]
+    G2 --> H[分销商可推广商品]
     E -->|拒绝| I[更新 status=2已拒绝]
     I --> J[记录 audit_at 审核时间]
-    J --> K[用户不可推广]
+    J --> J2[发送审核拒绝站内信通知(含拒绝原因)]
+    J2 --> K[用户不可推广]
     H --> L[推广商品产生订单]
     L --> M[佣金计入 total_income]
     M --> N[订单完成后佣金可提现 available_income]
@@ -216,6 +218,8 @@ flowchart TD
 - [x] 审核通过正常（status 0→1，记录audit_at）
 - [x] 审核拒绝正常（status 0→2，记录audit_at）
 - [x] 重复审核保护正常（已审核的分销商报错）
+- [x] 审核通过通知正常（发送type=distribute站内信，title=分销商审核通过通知）
+- [x] 审核拒绝通知正常（发送type=distribute站内信，title=分销商审核拒绝通知，含拒绝原因）
 - [x] 修复了nickname搜索bug（原代码搜索distribute_agents.nickname，表中不存在该字段）
 - [x] 修复了audit_at不记录bug（原代码审核时不记录审核时间）
 - [x] 分销商数据真实存在（3个：张三/李四/王五）
