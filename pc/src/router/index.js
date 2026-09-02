@@ -20,6 +20,8 @@ const routes = [
   { path:'/collects', component:()=>import('@/views/user/Collect.vue') },
   { path:'/coupons', component:()=>import('@/views/user/Coupon.vue') },
   { path:'/after-sale', component:()=>import('@/views/after-sale/index.vue') },
+  { path:'/review', component:()=>import('@/views/review/index.vue') },
+  { path:'/messages', component:()=>import('@/views/message/index.vue') },
 ]
 const router = createRouter({ history:createWebHistory('/'), routes })
 router.beforeEach((to,from,next)=>{
@@ -27,4 +29,6 @@ router.beforeEach((to,from,next)=>{
   if(!localStorage.getItem('tllos_pc_token') && !['/home','/category','/products','/search'].includes(to.path) && !to.path.startsWith('/product/')) return next('/login')
   next()
 })
+const routes404 = { path: '/:pathMatch(.*)*', component: () => import('@/views/NotFound.vue') }
+router.addRoute(routes404)
 export default router
