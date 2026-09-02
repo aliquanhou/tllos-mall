@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 class AdminManageController extends BaseController
 {
     public function index(Request $request) {
-        $query = DB::table('admins as a')->leftJoin('admin_roles as r','a.role_id','=','r.id')->select('a.*','r.name as role_name');
+        $query = DB::table('admins as a')->leftJoin('admin_roles as r','a.role_id','=','r.id')->select('a.id','a.username','a.nickname','a.avatar','a.mobile','a.email','a.role_id','a.status','a.last_login_at','a.last_login_ip','a.created_at','a.updated_at','r.name as role_name');
         if ($request->filled('keyword')) $query->where(function($q)use($request){$q->where('a.username','like','%'.$request->keyword.'%')->orWhere('a.nickname','like','%'.$request->keyword.'%');});
         $total = $query->count(); $page=$request->get('page',1); $limit=$request->get('limit',20);
         $list = $query->orderBy('a.id','asc')->offset(($page-1)*$limit)->limit($limit)->get();
