@@ -31,7 +31,6 @@ jobs:
             php artisan view:clear
             cd ../admin && npm ci && npm run build
             cd ../merchant && npm ci && npm run build
-            cd ../h5 && npm ci && npm run build
             cd ../pc && npm ci && npm run build
             echo "Deploy completed at $(date)"
           EOFSSH
