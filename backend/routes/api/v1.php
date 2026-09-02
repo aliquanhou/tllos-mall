@@ -73,6 +73,8 @@ Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'lo
 
     // 用户积分
     Route::get('/user-points/rules', [\App\Modules\UserCenter\Controllers\PointLogController::class,'rules']);
+    Route::get('/user-points/config', [App\Modules\UserCenter\Controllers\PointLogController::class, 'config']);
+    Route::put('/user-points/config', [App\Modules\UserCenter\Controllers\PointLogController::class, 'config']);
     Route::get('/user-points', [\App\Modules\UserCenter\Controllers\PointLogController::class,'index']);
     Route::post('/user-points', [\App\Modules\UserCenter\Controllers\PointLogController::class,'store']);
 
@@ -1224,6 +1226,9 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::delete('/user/addresses/{id}', [\App\Modules\UserCenter\Controllers\AddressController::class,'delete']);
 
     Route::get('/user/addresses/{id}', [\App\Modules\UserCenter\Controllers\AddressController::class,'detail']);
+    Route::post('/user/points/sign', [\App\Modules\UserCenter\Controllers\UserPointController::class,'sign']);
+    Route::post('/user/points/share', [\App\Modules\UserCenter\Controllers\UserPointController::class,'share']);
+    Route::get('/user/points/my', [\App\Modules\UserCenter\Controllers\UserPointController::class,'myPoints']);
 
     // 收藏
 

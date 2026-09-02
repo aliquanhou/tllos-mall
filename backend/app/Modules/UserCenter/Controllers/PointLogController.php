@@ -27,4 +27,19 @@ class PointLogController extends BaseController
         $list=DB::table('point_rules')->orderBy('id','asc')->get();
         return $this->success(['list'=>$list,'total'=>count($list)]);
     }
+    public function config(Request $request) {
+        if ($request->isMethod('get')) {
+            $config = DB::table('system_configs')->where('group','points')->where('status',1)->first();
+            return $this->success(['points_to_money_ratio' => $config ? $config->value : '100']);
+        }
+        if ($request->isMethod('put') || $request->isMethod('post')) {
+            $v = $request->validate(['points_to_money_ratio' => 'required|integer|min:1']);
+            DB::table('system_configs')->updateOrInsert(
+                ['group' => 'points', 'key' => 'points_to_money_ratio'],
+                ['value' => $v['points_to_money_ratio'], 'name' => '积分兑换比例（多少积分=1元）', 'type' => 'number', 'status' => 1, 'updated_at' => now()]
+            );
+            return $this->success(null, '积分兑换比例已更新');
+        }
+        return $this->error('不支持的请求方法');
+    }
 }
