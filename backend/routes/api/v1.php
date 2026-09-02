@@ -1283,7 +1283,7 @@ Route::middleware('auth:sanctum')->group(function() {
 });
 
 // 售后原因列表（公开）
-Route::get('/user/after-sale/reasons/list'', [App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'reasons']);
+Route::get('/user/after-sale/reasons/list', [App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'reasons']);
 
 
 
