@@ -32,8 +32,15 @@ jobs:
             cd ../admin && npm ci && npm run build
             cd ../merchant && npm ci && npm run build
             cd ../h5 && npm ci && npm run build
+            cd ../pc && npm ci && npm run build
             echo "Deploy completed at $(date)"
           EOFSSH
       
+      - name: Verify deployment
+        run: |
+          echo "Verifying deployment..."
+          curl -sI https://mall.tllos.com/ | head -5
+          curl -sI https://mall.tllos.com/api/v1/products | head -5
+      
       - name: Deployment notification
-        run: echo "Deployment completed successfully"
+        run: echo "Deployment completed successfully - https://mall.tllos.com/"
