@@ -48,10 +48,13 @@ class CouponController extends BaseController
             'start_time' => 'nullable|date',
             'end_time' => 'nullable|date',
             'valid_days' => 'nullable|integer|min:0',
-            'status' => 'nullable|integer|default:1',
-            'is_new_user' => 'nullable|integer|default:0',
-            'sort' => 'nullable|integer|default:0',
+            'status' => 'nullable|integer',
+            'is_new_user' => 'nullable|integer',
+            'sort' => 'nullable|integer',
         ]);
+        $validated['status'] = $validated['status'] ?? 1;
+        $validated['is_new_user'] = $validated['is_new_user'] ?? 0;
+        $validated['sort'] = $validated['sort'] ?? 0;
         $validated['created_at'] = now();
         $validated['updated_at'] = now();
         $id = DB::table('coupons')->insertGetId($validated);
