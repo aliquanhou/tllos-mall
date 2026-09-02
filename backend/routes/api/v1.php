@@ -1279,9 +1279,11 @@ Route::middleware('auth:sanctum')->group(function() {
 
     Route::post('/user/after-sale/{id}/cancel', [\App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'cancel']);
     Route::post('/user/after-sale/{id}/return-ship', [App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'returnShip']);
-    Route::get('/user/after-sale/reasons/list', [App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'reasons']);
 
 });
+
+// 售后原因列表（公开）
+Route::get('/user/after-sale/reasons/list'', [App\Modules\AfterSale\Controllers\UserAfterSaleController::class,'reasons']);
 
 
 
