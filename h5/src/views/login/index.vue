@@ -10,8 +10,8 @@
         <span :class="{ active: mode === 'register' }" @click="mode = 'register'">{{ t('common.register') }}</span>
       </div>
       <div class="form-item">
-        <label>{{ t('login.mobile') }}</label>
-        <input v-model="form.mobile" type="tel" placeholder="请输入手机号" maxlength="11" />
+        <label>{{ mode === 'login' ? '账号/手机号' : t('login.mobile') }}</label>
+        <input v-model="form.mobile" :type="mode === 'login' ? 'text' : 'tel'" :placeholder="mode === 'login' ? '请输入账号或手机号' : '请输入手机号'" :maxlength="mode === 'login' ? 50 : 11" />
       </div>
       <div v-if="mode === 'register'" class="form-item">
         <label>{{ t('login.smsCode') }}</label>
@@ -53,7 +53,8 @@ const sendCode = () => {
 }
 
 const handleSubmit = async () => {
-  if (!form.mobile || form.mobile.length !== 11) { alert('请输入正确的手机号'); return }
+  if (!form.mobile) { alert(mode.value === 'login' ? '请输入账号或手机号' : '请输入手机号'); return }
+  if (mode.value === 'register' && form.mobile.length !== 11) { alert('请输入正确的手机号'); return }
   if (!form.password || form.password.length < 6) { alert('密码至少6位'); return }
   loading.value = true
   try {
