@@ -1442,3 +1442,10 @@ Route::middleware('auth:sanctum')->prefix('admin/sensitive-words')->group(functi
     Route::delete('/{id}', [\App\Modules\System\Controllers\SensitiveWordController::class, 'destroy']);
     Route::post('/check', [\App\Modules\System\Controllers\SensitiveWordController::class, 'check']);
 });
+
+// 登录路由别名（供auth中间件重定向使用）
+
+// 登录路由别名（供auth中间件重定向使用）
+Route::get('/login', function () {
+    return response()->json(['code' => 401, 'message' => '未登录或登录已过期'], 401);
+})->name('login');
