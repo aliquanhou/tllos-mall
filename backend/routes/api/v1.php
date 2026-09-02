@@ -539,6 +539,8 @@ Route::prefix('admin/distribute')->middleware('auth:sanctum')->group(function ()
 
     Route::get('/goods', [App\Modules\Distribute\Controllers\DistributeController::class, 'goods']);
 
+    Route::post('/goods/batch-toggle', [App\Modules\Distribute\Controllers\DistributeController::class, 'goodsBatchToggle']);
+    Route::post('/goods/batch-commission', [App\Modules\Distribute\Controllers\DistributeController::class, 'goodsBatchCommission']);
     Route::post('/goods/{id}/toggle', [App\Modules\Distribute\Controllers\DistributeController::class, 'goodsToggle']);
 
     Route::get('/settings', [App\Modules\Distribute\Controllers\DistributeController::class, 'getSettings']);

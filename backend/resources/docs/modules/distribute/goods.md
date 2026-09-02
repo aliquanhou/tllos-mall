@@ -20,6 +20,8 @@
 |------|------|-----------|------|
 | GET | /api/v1/admin/distribute/goods | DistributeController@goods | 分销商品列表（分页+搜索+筛选+5项统计+商品关联） |
 | POST | /api/v1/admin/distribute/goods/{id}/toggle | DistributeController@goodsToggle | 分销商品开关（status 0/1切换） |
+| POST | /api/v1/admin/distribute/goods/batch-toggle | DistributeController@goodsBatchToggle | 批量开关分销（P1新增） |
+| POST | /api/v1/admin/distribute/goods/batch-commission | DistributeController@goodsBatchCommission | 批量设置佣金（P1新增） |
 
 ## 3. 请求参数
 | 参数 | 类型 | 必填 | 说明 |
@@ -109,6 +111,10 @@ flowchart TD
 - [x] 再次开关正常（status 0→1返回"已开启"）
 - [x] 不存在商品开关返回错误
 - [x] product_id唯一约束
+- [x] 批量开关分销正常（ids数组+status，返回updated数量）
+- [x] 批量设置佣金正常（按比例commission_rate，返回updated数量）
+- [x] 批量设置佣金参数校验（按比例时commission_rate必填）
+- [x] 无参数路由放在{id}路由之前（batch-toggle在{id}/toggle之前）
 
 ## 10. 常见问题
 | 问题 | 原因 | 解决方案 |

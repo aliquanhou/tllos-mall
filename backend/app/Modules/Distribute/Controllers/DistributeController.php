@@ -127,6 +127,24 @@ class DistributeController extends BaseController
         DB::table('distribute_goods')->where('id',$id)->update(['status'=>$new,'updated_at'=>now()]);
         return $this->success(['status'=>$new],$new==1?'已开启':'已关闭');
     }
+    public function goodsBatchToggle(Request $request) {
+        $v = $request->validate(['ids'=>'required|array','ids.*'=>'integer','status'=>'required|integer|in:0,1']);
+        $count = DB::table('distribute_goods')->whereIn('id',$v['ids'])->update(['status'=>$v['status'],'updated_at'=>now()]);
+        return $this->success(['updated'=>$count],$v['status']==1?'批量开启成功':'批量关闭成功');
+    }
+    public function goodsBatchCommission(Request $request) {
+        $v = $request->validate(['ids'=>'required|array','ids.*'=>'integer','commission_type'=>'required|integer|in:1,2','commission_rate'=>'nullable|numeric|min:0|max:100','commission_amount'=>'nullable|numeric|min:0']);
+        $update = ['commission_type'=>$v['commission_type'],'updated_at'=>now()];
+        if ($v['commission_type']==1) {
+            if (!isset($v['commission_rate'])) return $this->error('按比例佣金时commission_rate必填');
+            $update['commission_rate'] = $v['commission_rate'];
+        } else {
+            if (!isset($v['commission_amount'])) return $this->error('固定金额佣金时commission_amount必填');
+            $update['commission_amount'] = $v['commission_amount'];
+        }
+        $count = DB::table('distribute_goods')->whereIn('id',$v['ids'])->update($update);
+        return $this->success(['updated'=>$count],'批量设置佣金成功');
+    }
 
     public function getSettings() {
         $settings = DB::table('distribute_settings')->pluck('value','key')->toArray();
