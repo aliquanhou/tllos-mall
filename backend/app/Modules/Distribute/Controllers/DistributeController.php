@@ -59,22 +59,56 @@ class DistributeController extends BaseController
         return $this->success(null,$validated['status']==1?'审核通过':'已拒绝');
     }
 
-    public function levels() {
-        $list = DB::table('distribute_levels')->orderBy('level','asc')->get();
-        return $this->success(['list'=>$list,'total'=>count($list)]);
+    public function levels(Request $request) {
+        $query = DB::table('distribute_levels');
+        if ($request->filled('status') && $request->status!=='') $query->where('status',$request->status);
+        if ($request->filled('keyword')) $query->where('name','like','%'.$request->keyword.'%');
+        $total = $query->count();
+        $page = $request->get('page',1); $limit = $request->get('limit',20);
+        $list = $query->orderBy('level','asc')->offset(($page-1)*$limit)->limit($limit)->get();
+        // 统计每个等级的分销商数量
+        foreach ($list as $level) {
+            $level->agent_count = DB::table('distribute_agents')->where('level_id',$level->id)->count();
+        }
+        $stats = ['total'=>$total,'active'=>DB::table('distribute_levels')->where('status',1)->count(),'inactive'=>DB::table('distribute_levels')->where('status',0)->count()];
+        return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
     }
 
     public function levelStore(Request $request) {
-        $validated = $request->validate(['name'=>'required|string','level'=>'required|integer','commission_rate'=>'required|numeric','description'=>'nullable|string']);
-        $validated['created_at']=now(); $validated['updated_at']=now();
-        $id = DB::table('distribute_levels')->insertGetId($validated);
+        $v = $request->validate([
+            'name'=>'required|string|max:50',
+            'level'=>'required|integer|min:1',
+            'commission_rate'=>'required|numeric|min:0|max:100',
+            'self_rate'=>'nullable|numeric|min:0|max:100',
+            'first_rate'=>'nullable|numeric|min:0|max:100',
+            'second_rate'=>'nullable|numeric|min:0|max:100',
+            'third_rate'=>'nullable|numeric|min:0|max:100',
+            'upgrade_orders'=>'nullable|integer|min:0',
+            'upgrade_amount'=>'nullable|numeric|min:0',
+            'sort'=>'nullable|integer',
+            'status'=>'nullable|integer|in:0,1'
+        ]);
+        $v['created_at']=now(); $v['updated_at']=now();
+        $id = DB::table('distribute_levels')->insertGetId($v);
         return $this->success(['id'=>$id],'创建成功');
     }
 
     public function levelUpdate(Request $request, $id) {
-        $validated = $request->validate(['name'=>'sometimes|required|string','commission_rate'=>'sometimes|required|numeric','description'=>'sometimes|nullable|string','status'=>'sometimes|integer']);
-        $validated['updated_at']=now();
-        DB::table('distribute_levels')->where('id',$id)->update($validated);
+        $v = $request->validate([
+            'name'=>'sometimes|required|string|max:50',
+            'level'=>'sometimes|required|integer|min:1',
+            'commission_rate'=>'sometimes|required|numeric|min:0|max:100',
+            'self_rate'=>'sometimes|nullable|numeric|min:0|max:100',
+            'first_rate'=>'sometimes|nullable|numeric|min:0|max:100',
+            'second_rate'=>'sometimes|nullable|numeric|min:0|max:100',
+            'third_rate'=>'sometimes|nullable|numeric|min:0|max:100',
+            'upgrade_orders'=>'sometimes|nullable|integer|min:0',
+            'upgrade_amount'=>'sometimes|nullable|numeric|min:0',
+            'sort'=>'sometimes|nullable|integer',
+            'status'=>'sometimes|integer|in:0,1'
+        ]);
+        $v['updated_at']=now();
+        DB::table('distribute_levels')->where('id',$id)->update($v);
         return $this->success(null,'更新成功');
     }
 

@@ -1,160 +1,198 @@
 # 分销等级
 
 ## 1. 页面概述
-### 功能描述
-管理分销等级和佣金比例
+分销等级管理分销商的等级体系，支持等级名称、佣金比例、多级分销佣金率（自购/一级/二级/三级）、升级条件（订单数/销售额）、等级排序和状态管理。等级越高，佣金比例越高，分销商达到升级条件后可自动升级。
 
-### 核心指标
-| 指标 | 含义 | 业务价值 |
-|------|------|----------|
-| 数据总数 | 当前模块记录总数 | 衡量业务规模 |
-| 今日新增 | 今日新创建记录数 | 衡量运营活跃度 |
-| 启用数量 | 状态为启用的记录数 | 衡量有效数据量 |
-| 待处理 | 需要审核或处理的记录数 | 及时处理提醒 |
+### 等级体系
+| 等级 | 名称 | 佣金比例 | 升级条件 | 分销商数 |
+|------|------|----------|----------|----------|
+| 1 | 一级分销商 | 10% | 默认等级 | 2 |
+| 2 | 二级分销商 | 15% | 订单>=0, 金额>=0 | 1 |
+| 3 | 三级分销商 | 20% | 订单>=0, 金额>=0 | 0 |
+
+### 多级分销佣金率
+| 字段 | 说明 |
+|------|------|
+| commission_rate | 直推佣金比例（分销商直接推广获得） |
+| self_rate | 自购佣金比例（分销商自己购买获得） |
+| first_rate | 一级下级佣金比例（下级分销商推广，上级获得） |
+| second_rate | 二级下级佣金比例 |
+| third_rate | 三级下级佣金比例 |
 
 ### 使用场景
-1. 日常管理：新增/编辑/删除数据
-2. 数据查询：搜索筛选定位记录
-3. 状态管理：启用/禁用/审核操作
-4. 数据统计：查看业务数据趋势
+1. 等级配置：设置不同等级的佣金比例和升级条件
+2. 佣金管理：配置多级分销佣金率（自购/一级/二级/三级）
+3. 等级排序：按level升序展示等级体系
+4. 状态管理：启用/禁用等级
 
----
+## 2. API接口清单
 
-## 2. API接口清单（基于真实控制器实现）
-| 方法 | 路径 | 控制器方法 | 说明 | 权限标识 |
-|------|------|-----------|------|----------|
-| GET | /api/v1/admin/distribute/levels | DistributeController@index | 分销等级列表 | distribute:list |
-| POST | /api/v1/admin/distribute/levels | DistributeController@store | 新增分销等级 | distribute:create |
-| GET | /api/v1/admin/distribute/levels/{id} | DistributeController@show | 分销等级详情 | distribute:view |
-| PUT | /api/v1/admin/distribute/levels/{id} | DistributeController@update | 编辑分销等级 | distribute:edit |
-| DELETE | /api/v1/admin/distribute/levels/{id} | DistributeController@destroy | 删除分销等级 | distribute:delete |
+| 方法 | 路径 | 控制器方法 | 说明 |
+|------|------|-----------|------|
+| GET | /api/v1/admin/distribute/levels | DistributeController@levels | 等级列表（分页+搜索+筛选+3项统计+分销商数量） |
+| POST | /api/v1/admin/distribute/levels | DistributeController@levelStore | 新增等级 |
+| PUT | /api/v1/admin/distribute/levels/{id} | DistributeController@levelUpdate | 编辑等级 |
 
-### 请求参数
+## 3. 请求参数
+
+### 等级列表
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| page | int | 否 | 页码，默认1 |
-| limit | int | 否 | 每页数量，默认20 |
-| keyword | string | 否 | 搜索关键词 |
-| status | int | 否 | 状态筛选 |
-| start_date | date | 否 | 开始日期 |
-| end_date | date | 否 | 结束日期 |
+| page | int | 否 | 页码默认1 |
+| limit | int | 否 | 每页数量默认20 |
+| keyword | string | 否 | 按等级名称搜索 |
+| status | int | 否 | 按状态筛选（1启用0禁用） |
 
-### 返回示例
+### 新增等级
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| name | string | 是 | 等级名称（最大50字符） |
+| level | int | 是 | 等级序号（最小1） |
+| commission_rate | decimal | 是 | 直推佣金比例（0-100） |
+| self_rate | decimal | 否 | 自购佣金比例 |
+| first_rate | decimal | 否 | 一级下级佣金比例 |
+| second_rate | decimal | 否 | 二级下级佣金比例 |
+| third_rate | decimal | 否 | 三级下级佣金比例 |
+| upgrade_orders | int | 否 | 升级所需订单数 |
+| upgrade_amount | decimal | 否 | 升级所需累计销售额 |
+| sort | int | 否 | 排序 |
+| status | int | 否 | 状态（1启用0禁用） |
+
+### 编辑等级
+所有参数均为可选（sometimes），只更新传入的字段。
+
+## 4. 返回示例
+
+### 等级列表
 ```json
 {
-  "code": 0,
-  "message": "success",
+  "code": 200,
   "data": {
-    "total": 100,
+    "list": [
+      {"id":1,"name":"一级分销商","level":1,"commission_rate":"10.00","self_rate":"0.00","first_rate":"0.00","second_rate":"0.00","third_rate":"0.00","upgrade_orders":0,"upgrade_amount":"0.00","status":1,"sort":1,"agent_count":2},
+      {"id":2,"name":"二级分销商","level":2,"commission_rate":"15.00","upgrade_orders":0,"upgrade_amount":"0.00","status":1,"sort":2,"agent_count":1},
+      {"id":3,"name":"三级分销商","level":3,"commission_rate":"20.00","upgrade_orders":0,"upgrade_amount":"0.00","status":1,"sort":3,"agent_count":0}
+    ],
+    "total": 3,
     "page": 1,
     "limit": 20,
-    "list": [
-      {"id": 1, "name": "示例数据", "status": 1, "created_at": "2026-09-01 10:00:00"}
-    ]
-  },
-  "timestamp": 1756700000
+    "stats": {"total":3,"active":3,"inactive":0}
+  }
 }
 ```
 
-### 错误码
-| 错误码 | 说明 |
-|--------|------|
-| 10001 | 无权限操作 |
-| 10002 | 数据不存在或已删除 |
-| 10003 | 参数校验失败 |
-| 10004 | 数据库操作失败 |
-
----
-
-## 3. 字段映射表
-| 展示字段 | 数据来源 | 计算方式 | 更新频率 |
-|----------|----------|----------|----------|
-| ID | distribute.id | 直接读取 | 实时 |
-| 名称 | distribute.name | 直接读取 | 实时 |
-| 状态 | distribute.status | 0禁用1启用 | 实时 |
-| 创建时间 | distribute.created_at | 直接读取 | 实时 |
-| 更新时间 | distribute.updated_at | 直接读取 | 实时 |
-
----
-
-## 4. 操作流程
-### {title}业务流程图
-```mermaid
-{flowchart}
+### 新增等级
+```json
+{"code":200,"message":"创建成功","data":{"id":4}}
 ```
 
-### 数据刷新机制
-1. 页面加载时自动请求最新数据
-2. 搜索筛选条件变化时立即刷新
-3. 增删改操作成功后自动刷新列表
-4. 统计数据缓存时间：5分钟
+### 编辑等级
+```json
+{"code":200,"message":"更新成功","data":null}
+```
 
----
+## 5. 字段映射表
 
-## 5. 权限控制
-| 操作 | 权限标识 | 默认角色 |
-|------|----------|----------|
-| 查看列表 | distribute:list | 管理员/运营 |
-| 新增 | distribute:create | 管理员 |
-| 编辑 | distribute:edit | 管理员 |
-| 删除 | distribute:delete | 管理员 |
-| 状态管理 | distribute:status | 管理员 |
+### distribute_levels表（14字段）
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | 主键 |
+| name | varchar(50) | 等级名称 |
+| level | int | 等级序号（升序） |
+| commission_rate | decimal(5,2) | 直推佣金比例（%） |
+| self_rate | decimal(5,2) | 自购佣金比例（%） |
+| first_rate | decimal(5,2) | 一级下级佣金比例（%） |
+| second_rate | decimal(5,2) | 二级下级佣金比例（%） |
+| third_rate | decimal(5,2) | 三级下级佣金比例（%） |
+| upgrade_orders | int | 升级所需累计订单数 |
+| upgrade_amount | decimal(12,2) | 升级所需累计销售额 |
+| status | tinyint | 状态（1启用0禁用） |
+| sort | int | 排序 |
+| created_at | timestamp | 创建时间 |
+| updated_at | timestamp | 更新时间 |
 
-### 权限说明
-- 权限通过Sanctum中间件校验，在路由组中统一配置
-- 超级管理员拥有所有权限，不受权限点限制
-- 无权限用户访问API返回403，前端隐藏对应操作按钮
+### 关联统计字段
+| 字段 | 来源 | 说明 |
+|------|------|------|
+| agent_count | distribute_agents COUNT | 该等级的分销商数量 |
 
----
+### 统计字段
+| 统计项 | 数据来源 | 计算方式 |
+|--------|----------|----------|
+| total | distribute_levels | COUNT(*) |
+| active | distribute_levels | WHERE status=1 COUNT(*) |
+| inactive | distribute_levels | WHERE status=0 COUNT(*) |
 
-## 6. 关联模块
+## 6. 操作流程
+
+### 分销商等级升级流程
+```mermaid
+flowchart TD
+    A[分销商注册] --> B[默认分配一级分销商]
+    B --> C[分销商推广商品]
+    C --> D[产生分销订单]
+    D --> E[累计订单数和销售额]
+    E --> F{达到二级升级条件?}
+    F -->|订单>=upgrade_orders 且 金额>=upgrade_amount| G[自动升级为二级分销商]
+    F -->|未达到| C
+    G --> H[佣金比例从10%提升到15%]
+    H --> I{达到三级升级条件?}
+    I -->|是| J[自动升级为三级分销商]
+    I -->|否| C
+    J --> K[佣金比例从15%提升到20%]
+```
+
+### 等级管理流程
+1. 管理员新增等级，设置名称、佣金比例、升级条件
+2. 等级按level升序展示
+3. 管理员可编辑等级的佣金比例和升级条件
+4. 管理员可启用/禁用等级
+5. 分销商达到升级条件后自动升级
+
+## 7. 权限控制
+- 认证：Sanctum Token
+- 中间件：auth:sanctum
+- 当前权限模型：登录管理员可查看和管理分销等级
+- 无细粒度权限点（permissions表不存在）
+- 等级管理为写操作（新增/编辑），需管理员权限
+
+## 8. 关联模块
+
 ### 依赖模块
 | 模块 | 依赖内容 | 具体关联字段 |
 |------|----------|-------------|
-| 用户管理 | 操作人信息 | admin_users.id |
-| 系统设置 | 配置参数 | system_configs |
+| 分销商管理 | 分销商等级 | distribute_agents.level_id → distribute_levels.id |
+| 分销订单 | 佣金计算 | distribute_orders.level_id → distribute_levels.id（订单产生时的等级快照） |
+| 分销概览 | 等级统计 | distribute_levels COUNT |
 
 ### 被依赖模块
-| 模块 | 使用方式 | 具体关联字段 |
-|------|----------|-------------|
-| 工作台 | 数据统计 | COUNT/SUM统计 |
-| 操作日志 | 记录操作 | operation_logs.module |
+| 模块 | 使用方式 |
+|------|----------|
+| 分销商端 | 展示当前等级和升级进度 |
+| 分销订单 | 按等级佣金比例计算佣金 |
 
----
+## 9. 验收清单
+- [x] 等级列表正常加载（分页+搜索+筛选）
+- [x] 按等级名称搜索正常
+- [x] 按状态筛选正常（1启用0禁用）
+- [x] 3项统计正常（total/active/inactive）
+- [x] 每个等级的分销商数量正常（agent_count）
+- [x] 按level升序排序正常
+- [x] 新增等级正常（name/level/commission_rate必填）
+- [x] 新增等级支持多级佣金率（self/first/second/third_rate）
+- [x] 新增等级支持升级条件（upgrade_orders/upgrade_amount）
+- [x] 编辑等级正常（sometimes验证，只更新传入字段）
+- [x] 佣金比例范围校验正常（0-100）
+- [x] 等级序号最小值校验正常（min:1）
+- [x] 修复了description字段验证错误（表中不存在该字段）
+- [x] 等级数据真实存在（3个等级：一级10%/二级15%/三级20%）
 
-## 7. 验收清单
-### 功能验收
-- [ ] 页面能正常加载，无白屏/500错误
-- [ ] 列表分页正常，显示总数和页码
-- [ ] 搜索功能正常，支持关键词模糊查询
-- [ ] 筛选功能正常，支持状态和时间范围
-- [ ] 新增功能完整，表单校验正确
-- [ ] 编辑能正确回显所有字段
-- [ ] 删除有确认弹窗，软删除不影响历史数据
-- [ ] 状态切换功能正常
-- [ ] 数据导出功能正常（如有）
-- [ ] 批量操作功能正常（如有）
-
-### 权限验收
-- [ ] 有权限的管理员可以正常操作
-- [ ] 无权限的管理员看到403或入口隐藏
-- [ ] 超级管理员不受权限限制
-
-### 性能验收
-- [ ] 页面加载时间 < 2秒
-- [ ] 数据查询耗时 < 500ms
-- [ ] 列表分页响应 < 1秒
-
----
-
-## 8. 常见问题
+## 10. 常见问题
 | 问题 | 原因 | 解决方案 |
 |------|------|----------|
-| 页面数据不显示 | API接口错误或无数据 | 检查浏览器Network请求，确认API返回200且有数据 |
-| 统计数据不准确 | 统计口径或缓存问题 | 确认统计SQL逻辑，清除Redis缓存 |
-| 操作无反应 | 权限不足或JS错误 | 检查管理员角色权限，查看浏览器Console报错 |
-| 保存失败 | 参数校验失败或数据库错误 | 查看错误提示，检查必填字段和数据格式 |
-| 列表加载慢 | 数据量过大或未分页 | 确认使用分页查询，添加必要索引 |
-| 删除后仍显示 | 软删除未过滤或缓存 | 检查查询是否过滤is_deleted，清除缓存 |
-| 导入导出失败 | 文件格式或大小超限 | 检查文件格式，确认大小限制配置 |
-| 状态切换不生效 | 事务回滚或缓存 | 检查数据库事务，清除相关缓存 |
+| 新增等级报错description字段 | 控制器验证了表中不存在的description字段 | 已修复，移除description验证，添加真实字段验证 |
+| 分销商不升级 | 升级条件设置过高或定时任务未执行 | 检查upgrade_orders/upgrade_amount设置，确认升级定时任务运行 |
+| 佣金计算不正确 | 订单产生时的等级快照与当前等级不同 | 分销订单记录level_id快照，佣金按订单产生时的等级计算 |
+| 等级列表无分销商数量 | agent_count字段未统计 | 已修复，levels方法中统计每个等级的分销商数量 |
+| 多级佣金率不生效 | self/first/second/third_rate为0 | 检查等级配置中的多级佣金率，当前默认均为0（仅直推佣金生效） |
+| 删除等级后分销商异常 | 等级被删除但分销商仍引用该等级 | 建议禁用等级而非删除，删除前需将分销商迁移到其他等级 |
