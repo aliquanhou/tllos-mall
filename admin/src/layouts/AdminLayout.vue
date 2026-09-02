@@ -173,7 +173,7 @@ const pathToPage = {
   'income': 'income',
   'settlement': 'settlement',
   'settlement-record': 'settlement',
-  'setting': 'config',
+  'setting': 'settings',
   'config': 'basic',
   'payment': 'pay',
   'pay': 'pay',
