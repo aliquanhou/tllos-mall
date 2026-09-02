@@ -35,6 +35,29 @@
       </el-col>
     </el-row>
 
+    <!-- 销售趋势 -->
+    <el-row :gutter="20" style="margin-top:20px">
+      <el-col :span="24">
+        <el-card>
+          <template #header>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span>近7天销售趋势</span>
+              <span style="font-size:12px;color:#909399">销售额 ¥{{ totalSalesTrend }} / 订单 {{ totalOrdersTrend }} 单</span>
+            </div>
+          </template>
+          <div class="sales-trend-chart">
+            <div class="trend-bar" v-for="(day, index) in salesTrend.days" :key="index">
+              <div class="bar-wrapper">
+                <div class="bar" :style="{ height: getBarHeight(salesTrend.sales[index]) + '%' }" :title="'¥' + salesTrend.sales[index]"></div>
+              </div>
+              <div class="bar-label">{{ day.slice(5) }}</div>
+              <div class="bar-value" v-if="salesTrend.orders[index] > 0">{{ salesTrend.orders[index] }}单</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 最近订单 + 系统信息 -->
     <el-row :gutter="20" style="margin-top:20px">
       <el-col :span="16">
@@ -70,7 +93,7 @@
             <el-descriptions-item label="前端框架">Vue3 + Element Plus</el-descriptions-item>
             <el-descriptions-item label="数据库">{{ systemInfo.mysql_version || 'MySQL' }}</el-descriptions-item>
             <el-descriptions-item label="Web服务器">{{ systemInfo.server_software || 'Nginx' }}</el-descriptions-item>
-            <el-descriptions-item label="多端支持">H5 / 小程序 / Flutter APK</el-descriptions-item>
+            <el-descriptions-item label="多端支持">PC响应式 / 小程序 / Flutter APK</el-descriptions-item>
           </el-descriptions>
         </el-card>
       </el-col>
@@ -88,6 +111,7 @@ const loading = ref(false)
 const stats = ref({})
 const recentOrders = ref([])
 const systemInfo = ref({})
+const salesTrend = ref({ days: [], sales: [], orders: [] })
 
 const statCards = computed(() => [
   { title: '用户总数', value: stats.value.total_users || 0, icon: 'User', color: '#409eff', sub: `今日新增 ${stats.value.today_new_users || 0}` },
@@ -95,6 +119,17 @@ const statCards = computed(() => [
   { title: '销售总额', value: '¥' + (stats.value.total_sales || 0), icon: 'Money', color: '#e6a23c', sub: `今日 ¥${stats.value.today_sales || 0}` },
   { title: '商品总数', value: stats.value.total_products || 0, icon: 'Goods', color: '#f56c6c', sub: `商家 ${stats.value.total_merchants || 0} 家` },
 ])
+
+const totalSalesTrend = computed(() => {
+  return (salesTrend.value.sales || []).reduce((a, b) => a + Number(b), 0).toFixed(2)
+})
+const totalOrdersTrend = computed(() => {
+  return (salesTrend.value.orders || []).reduce((a, b) => a + Number(b), 0)
+})
+const getBarHeight = (value) => {
+  const max = Math.max(...(salesTrend.value.sales || [1]).map(Number))
+  return max > 0 ? (Number(value) / max * 100) : 0
+}
 
 const pendingItems = computed(() => [
   { title: '待发货订单', count: stats.value.pending_orders || 0, color: '#e6a23c', path: '/order/list' },
@@ -122,6 +157,13 @@ const loadRecentOrders = async () => {
   }
 }
 
+const loadSalesTrend = async () => {
+  try {
+    const res = await request({ url: '/admin/dashboard/sales-trend' })
+    salesTrend.value = res.data || { days: [], sales: [], orders: [] }
+  } catch (e) {}
+}
+
 const loadSystemInfo = async () => {
   try {
     const res = await request({ url: '/admin/system-info' })
@@ -132,6 +174,7 @@ const loadSystemInfo = async () => {
 onMounted(() => {
   loadStats()
   loadRecentOrders()
+  loadSalesTrend()
   loadSystemInfo()
 })
 </script>
@@ -147,4 +190,11 @@ onMounted(() => {
 .pending-item:hover { background: #f5f7fa; }
 .pending-count { font-size: 28px; font-weight: bold; }
 .pending-title { font-size: 13px; color: #606266; margin-top: 5px; }
+.sales-trend-chart { display: flex; align-items: flex-end; justify-content: space-around; height: 200px; padding: 20px 10px 0; }
+.trend-bar { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.bar-wrapper { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.bar { width: 40%; max-width: 50px; background: linear-gradient(180deg, #409eff 0%, #66b1ff 100%); border-radius: 4px 4px 0 0; min-height: 2px; transition: all 0.3s; }
+.bar:hover { background: linear-gradient(180deg, #337ecc 0%, #409eff 100%); }
+.bar-label { font-size: 12px; color: #909399; margin-top: 8px; }
+.bar-value { font-size: 11px; color: #409eff; margin-top: 2px; }
 </style>
