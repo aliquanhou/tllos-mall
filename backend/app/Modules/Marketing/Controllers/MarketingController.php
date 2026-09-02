@@ -96,4 +96,16 @@ class MarketingController extends BaseController {
             return $this->success(['list'=>[],'total'=>0,'error'=>$e->getMessage()]);
         }
     }
+
+    // 更新会员折扣
+    public function memberDiscountUpdate(Request $request, $id) {
+        $v = $request->validate([
+            'discount' => 'required|numeric|min:0|max:100',
+            'name' => 'sometimes|required|string|max:100',
+            'status' => 'sometimes|integer|in:0,1'
+        ]);
+        $v['updated_at'] = now();
+        DB::table('user_levels')->where('id', $id)->update($v);
+        return $this->success(null, '更新成功');
+    }
 }

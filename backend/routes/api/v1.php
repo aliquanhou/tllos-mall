@@ -581,6 +581,10 @@ Route::prefix('admin/marketing')->middleware('auth:sanctum')->group(function () 
 
     Route::delete('/discount/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'discountDestroy']);
 
+    // 会员折扣
+    Route::get('/member-discount', [App\Modules\Marketing\Controllers\MarketingController::class, 'memberDiscount']);
+    Route::put('/member-discount/{id}', [App\Modules\Marketing\Controllers\MarketingController::class, 'memberDiscountUpdate']);
+
 });
 
 
