@@ -46,6 +46,69 @@ class UserCenterController extends BaseController
         $stats=['total_amount'=>DB::table('user_recharges')->where('status',1)->sum('amount'),'total_count'=>DB::table('user_recharges')->where('status',1)->count(),'pending_count'=>DB::table('user_recharges')->where('status',0)->count()];
         return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
     }
+    public function rechargeConfirm(Request $request, $id) {
+        $v = $request->validate([
+            'remark' => 'nullable|string|max:255',
+            'pay_type' => 'nullable|string|max:50',
+            'pay_no' => 'nullable|string|max:100',
+        ]);
+        $recharge = DB::table('user_recharges')->where('id', $id)->first();
+        if (!$recharge) return $this->error('充值记录不存在');
+        if ($recharge->status == 1) return $this->error('该充值单已支付，无需补单');
+        if ($recharge->status != 0) return $this->error('该充值单状态不允许补单');
+
+        $admin = $request->user();
+        $now = now();
+
+        DB::beginTransaction();
+        try {
+            // 1. 更新充值单状态
+            DB::table('user_recharges')->where('id', $id)->update([
+                'status' => 1,
+                'paid_at' => $now,
+                'admin_id' => $admin->id ?? null,
+                'pay_type' => $v['pay_type'] ?? $recharge->pay_type,
+                'pay_no' => $v['pay_no'] ?? $recharge->pay_no,
+                'remark' => $v['remark'] ?? $recharge->remark,
+                'updated_at' => $now,
+            ]);
+
+            // 2. 增加用户余额（充值金额+赠送金额）
+            $totalAmount = $recharge->amount + $recharge->give_amount;
+            $balanceBefore = DB::table('users')->where('id', $recharge->user_id)->value('balance');
+            DB::table('users')->where('id', $recharge->user_id)->increment('balance', $totalAmount);
+            $balanceAfter = $balanceBefore + $totalAmount;
+
+            // 3. 记录余额变动日志
+            DB::table('user_balance_logs')->insert([
+                'user_id' => $recharge->user_id,
+                'type' => 1, // 1=充值
+                'amount' => $totalAmount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'remark' => '人工补单，充值单号ID:' . $id . '，充值' . $recharge->amount . '元，赠送' . $recharge->give_amount . '元',
+                'created_at' => $now,
+            ]);
+
+            // 4. 发送通知给用户
+            DB::table('user_notifications')->insert([
+                'user_id' => $recharge->user_id,
+                'title' => '充值到账通知',
+                'content' => '您的充值订单（金额：' . $recharge->amount . '元，赠送：' . $recharge->give_amount . '元）已到账，当前余额已增加' . $totalAmount . '元。',
+                'type' => 'system',
+                'is_read' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            DB::commit();
+            return $this->success(['id' => $id, 'total_amount' => $totalAmount], '补单成功，用户余额已增加' . $totalAmount . '元');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error('补单失败：' . $e->getMessage());
+        }
+    }
+
     public function withdraws(Request $request) {
         $q=DB::table('withdraws as w')->leftJoin('users as u','w.user_id','=','u.id')->select('w.*','u.nickname','u.mobile');
         if($request->filled('status'))$q->where('w.status',$request->status);

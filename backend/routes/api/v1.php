@@ -673,6 +673,7 @@ Route::prefix('admin/user-center')->middleware('auth:sanctum')->group(function (
     Route::delete('/levels/{id}', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'levelDestroy']);
 
     Route::get('/recharges', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'recharges']);
+    Route::post('/recharges/{id}/confirm', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'rechargeConfirm']);
 
     Route::get('/withdraws', [App\Modules\UserCenter\Controllers\UserCenterController::class, 'withdraws']);
 
