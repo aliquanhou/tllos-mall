@@ -6,5 +6,5 @@ export default defineConfig({
   plugins: [vue()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: { port: 5175, host: '0.0.0.0' },
-  base: '/pc/', build: { outDir: 'dist', chunkSizeWarningLimit: 1000 }
+  base: '/', build: { outDir: 'dist', chunkSizeWarningLimit: 1000 }
 })

@@ -20,7 +20,7 @@ const routes = [
   { path:'/collects', component:()=>import('@/views/user/Collect.vue') },
   { path:'/coupons', component:()=>import('@/views/user/Coupon.vue') },
 ]
-const router = createRouter({ history:createWebHistory('/pc/'), routes })
+const router = createRouter({ history:createWebHistory('/'), routes })
 router.beforeEach((to,from,next)=>{
   if(to.meta.public) return next()
   if(!localStorage.getItem('tllos_pc_token') && !['/home','/category','/products','/search'].includes(to.path) && !to.path.startsWith('/product/')) return next('/login')
