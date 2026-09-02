@@ -19,7 +19,7 @@ class AdminUserController extends BaseController
         return $this->success(['list'=>$list,'total'=>$total,'page'=>$page,'limit'=>$limit,'stats'=>$stats]);
     }
     public function show($id) {
-        $user=DB::table('users as u')->leftJoin('user_levels as l','u.level_id','=','l.id')->select('u.*','l.name as level_name')->where('u.id',$id)->first();
+        $user=DB::table('users as u')->leftJoin('user_levels as l','u.level_id','=','l.id')->select('u.id','u.account','u.mobile','u.nickname','u.avatar','u.balance','u.points','u.level_id','u.status','u.created_at','u.updated_at','l.name as level_name')->where('u.id',$id)->first();
         if(!$user)return $this->error('用户不存在');
         $orders=DB::table('orders')->where('user_id',$id)->orderBy('id','desc')->limit(5)->get();
         $addresses=DB::table('user_addresses')->where('user_id',$id)->get();

@@ -74,7 +74,31 @@ class FinanceController extends BaseController
         $s = DB::table('merchant_settlements')->where('id',$id)->first();
         if (!$s) return $this->error('结算单不存在');
         if ($s->status != 0) return $this->error('该结算单已处理');
-        DB::table('merchant_settlements')->where('id',$id)->update(['status'=>1,'settled_at'=>now(),'updated_at'=>now()]);
-        return $this->success(null,'结算成功');
+        DB::beginTransaction();
+        try {
+            DB::table('merchant_settlements')->where('id',$id)->update(['status'=>1,'settled_at'=>now(),'updated_at'=>now()]);
+            // 更新商家余额
+            $merchant = DB::table('merchants')->where('id', $s->merchant_id)->first();
+            if ($merchant) {
+                $balanceBefore = $merchant->balance;
+                DB::table('merchants')->where('id', $s->merchant_id)->increment('balance', $s->settlement_amount);
+                // 记录商家账户日志
+                DB::table('merchant_account_logs')->insert([
+                    'merchant_id' => $s->merchant_id,
+                    'type' => 1,
+                    'amount' => $s->settlement_amount,
+                    'before_balance' => $balanceBefore,
+                    'after_balance' => $balanceBefore + $s->settlement_amount,
+                    'remark' => '结算单' . $s->settlement_no . '结算到账',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+            DB::commit();
+            return $this->success(null,'结算成功，金额已到账商家余额');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error('结算失败: ' . $e->getMessage());
+        }
     }
 }
