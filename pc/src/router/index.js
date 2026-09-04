@@ -19,6 +19,7 @@ const routes = [
   { path:'/address/edit', component:()=>import('@/views/user/AddressEdit.vue') },
   { path:'/collects', component:()=>import('@/views/user/Collect.vue') },
   { path:'/coupons', component:()=>import('@/views/user/Coupon.vue') },
+  { path:'/distribution/apply', component:()=>import('@/views/user/DistributionApply.vue') },
   { path:'/after-sale', component:()=>import('@/views/after-sale/index.vue') },
   { path:'/review', component:()=>import('@/views/review/index.vue') },
   { path:'/messages', component:()=>import('@/views/message/index.vue') },

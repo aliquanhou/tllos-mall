@@ -35,6 +35,12 @@
               </div>
             </div>
             <div class="menu-group">
+              <div class="group-title">推广中心</div>
+              <div class="menu-item" :class="{active: activeMenu === 'distribution'}" @click="goMenu('/distribution/apply')">
+                <el-icon><Money /></el-icon> 申请分销
+              </div>
+            </div>
+            <div class="menu-group">
               <div class="group-title">账户设置</div>
               <div class="menu-item" :class="{active: activeMenu === 'profile'}" @click="activeMenu = 'profile'">
                 <el-icon><User /></el-icon> 个人资料

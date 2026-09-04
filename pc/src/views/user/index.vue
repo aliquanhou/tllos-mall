@@ -58,6 +58,7 @@ const orderTabs = [
 ]
 
 const menus = [
+  { name: 'user.distribution', icon: '💰', path: '/distribution/apply' },
   { name: 'user.address', icon: '📍', path: '' },
   { name: 'user.coupons', icon: '🎫', path: '' },
   { name: 'user.favorites', icon: '❤️', path: '' },

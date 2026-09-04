@@ -17,6 +17,13 @@ Route::prefix('auth')->group(function () {
 
 });
 
+// 用户端分销
+Route::middleware('auth:sanctum')->prefix('distribution')->group(function () {
+    Route::get('/apply-status', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'applyStatus']);
+    Route::post('/apply', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'submitApply']);
+});
+
+
 
 
 // 管理员公开路由
