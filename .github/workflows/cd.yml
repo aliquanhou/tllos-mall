@@ -1,4 +1,4 @@
-name: CD
+name: CD - Deploy to Production
 
 on:
   push:
@@ -7,39 +7,44 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Server
+    name: Deploy to Production Server
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    
     steps:
-      - uses: actions/checkout@v4
-      
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       
-      - name: Deploy to server
+      - name: Add server to known hosts
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOFSSH'
-            cd /var/www/tllos
-            git pull origin main
-            cd backend
-            composer install --no-interaction --prefer-dist --optimize-autoloader
-            php artisan migrate --force
-            php artisan config:clear
-            php artisan route:clear
-            php artisan view:clear
-            cd ../admin && npm ci && npm run build
-            cd ../merchant && npm ci && npm run build
-            cd ../pc && npm ci && npm run build
-            echo "Deploy completed at $(date)"
-          EOFSSH
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to production server
+        run: |
+          echo "开始部署到生产服务器..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash /usr/local/bin/tllos-deploy.sh'
       
       - name: Verify deployment
         run: |
-          echo "Verifying deployment..."
-          curl -sI https://mall.tllos.com/ | head -5
-          curl -sI https://mall.tllos.com/api/v1/products | head -5
+          echo "验证部署结果..."
+          echo "--- 首页 ---"
+          curl -sI https://mall.tllos.com/ | head -3
+          echo "--- API ---"
+          curl -sI https://mall.tllos.com/api/v1/payment/methods | head -3
+          echo "--- 后台登录 ---"
+          curl -s -X POST https://mall.tllos.com/api/v1/admin/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"admin","password":"admin123"}' | head -c 200
+          echo ""
       
       - name: Deployment notification
-        run: echo "Deployment completed successfully - https://mall.tllos.com/"
+        run: |
+          echo "=========================================="
+          echo "部署完成!"
+          echo "站点: https://mall.tllos.com/"
+          echo "后台: https://mall.tllos.com/admin/"
+          echo "商家: https://mall.tllos.com/merchant/"
+          echo "=========================================="
