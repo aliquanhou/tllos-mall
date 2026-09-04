@@ -1425,11 +1425,11 @@
         },
         {
             "name": "league/flysystem",
-            "version": "3.35.3",
+            "version": "3.36.0",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/league/flysystem/3.35.3/league-flysystem-3.35.3.zip",
-                "reference": "5fc8404762179ae514678487b23494fd69b2309c",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/league/flysystem/3.36.0/league-flysystem-3.36.0.zip",
+                "reference": "f7fb152932f30072d573510cbd4dd657d6475b25",
                 "shasum": ""
             },
             "require": {
@@ -1496,9 +1496,9 @@
             ],
             "support": {
                 "issues": "https://github.com/thephpleague/flysystem/issues",
-                "source": "https://github.com/thephpleague/flysystem/tree/3.35.3"
+                "source": "https://github.com/thephpleague/flysystem/tree/3.36.0"
             },
-            "time": "2026-08-22T12:55:54+00:00"
+            "time": "2026-09-02T08:00:27+00:00"
         },
         {
             "name": "league/flysystem-local",
@@ -1743,11 +1743,11 @@
         },
         {
             "name": "monolog/monolog",
-            "version": "3.10.0",
+            "version": "3.11.0",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/monolog/monolog/3.10.0/monolog-monolog-3.10.0.zip",
-                "reference": "b321dd6749f0bf7189444158a3ce785cc16d69b0",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/monolog/monolog/3.11.0/monolog-monolog-3.11.0.zip",
+                "reference": "147f303310f06334f03f409e49d7ad1e275ff05a",
                 "shasum": ""
             },
             "require": {
@@ -1824,9 +1824,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Seldaek/monolog/issues",
-                "source": "https://github.com/Seldaek/monolog/tree/3.10.0"
+                "source": "https://github.com/Seldaek/monolog/tree/3.11.0"
             },
-            "time": "2026-01-02T08:56:05+00:00"
+            "time": "2026-09-02T12:39:56+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -2855,16 +2855,17 @@
         },
         {
             "name": "symfony/clock",
-            "version": "v8.1.0",
+            "version": "v7.4.8",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/clock/v8.1.0/symfony-clock-v8.1.0.zip",
-                "reference": "701ef4de9705d6c32292ebee5e8044094a09fbf6",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/clock/v7.4.8/symfony-clock-v7.4.8.zip",
+                "reference": "674fa3b98e21531dd040e613479f5f6fa8f32111",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.4.1",
-                "psr/clock": "^1.0"
+                "php": ">=8.2",
+                "psr/clock": "^1.0",
+                "symfony/polyfill-php83": "^1.28"
             },
             "provide": {
                 "psr/clock-implementation": "1.0"
@@ -2902,9 +2903,9 @@
                 "time"
             ],
             "support": {
-                "source": "https://github.com/symfony/clock/tree/v8.1.0"
+                "source": "https://github.com/symfony/clock/tree/v7.4.8"
             },
-            "time": "2026-05-29T05:06:50+00:00"
+            "time": "2026-03-24T13:12:05+00:00"
         },
         {
             "name": "symfony/console",
@@ -2982,15 +2983,15 @@
         },
         {
             "name": "symfony/css-selector",
-            "version": "v8.1.6",
+            "version": "v7.4.18",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/css-selector/v8.1.6/symfony-css-selector-v8.1.6.zip",
-                "reference": "08e2905152a39cf3fd1745d83f8c483e258887d9",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/css-selector/v7.4.18/symfony-css-selector-v7.4.18.zip",
+                "reference": "fecf40067fc8d8880ea87b8ac227600b9aadd1d0",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.4.1"
+                "php": ">=8.2"
             },
             "type": "library",
             "autoload": {
@@ -3021,9 +3022,9 @@
             "description": "Converts CSS selectors to XPath expressions",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/css-selector/tree/v8.1.6"
+                "source": "https://github.com/symfony/css-selector/tree/v7.4.18"
             },
-            "time": "2026-08-23T10:06:25+00:00"
+            "time": "2026-08-23T10:03:40+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -3132,20 +3133,19 @@
         },
         {
             "name": "symfony/event-dispatcher",
-            "version": "v8.1.5",
+            "version": "v7.4.17",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/event-dispatcher/v8.1.5/symfony-event-dispatcher-v8.1.5.zip",
-                "reference": "7458da64220376b2e0dc2d8451bf43382c1ad297",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/event-dispatcher/v7.4.17/symfony-event-dispatcher-v7.4.17.zip",
+                "reference": "d269974ee93c61d03620ffee358355bfdb471d66",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.4.1",
-                "symfony/deprecation-contracts": "^2.5|^3",
+                "php": ">=8.2",
                 "symfony/event-dispatcher-contracts": "^2.5|^3"
             },
             "conflict": {
-                "symfony/security-http": "<7.4",
+                "symfony/dependency-injection": "<6.4",
                 "symfony/service-contracts": "<2.5"
             },
             "provide": {
@@ -3154,14 +3154,14 @@
             },
             "require-dev": {
                 "psr/log": "^1|^2|^3",
-                "symfony/config": "^7.4|^8.0",
-                "symfony/dependency-injection": "^7.4|^8.0",
-                "symfony/error-handler": "^7.4|^8.0",
-                "symfony/expression-language": "^7.4|^8.0",
-                "symfony/framework-bundle": "^7.4|^8.0",
-                "symfony/http-foundation": "^7.4|^8.0",
+                "symfony/config": "^6.4|^7.0|^8.0",
+                "symfony/dependency-injection": "^6.4|^7.0|^8.0",
+                "symfony/error-handler": "^6.4|^7.0|^8.0",
+                "symfony/expression-language": "^6.4|^7.0|^8.0",
+                "symfony/framework-bundle": "^6.4|^7.0|^8.0",
+                "symfony/http-foundation": "^6.4|^7.0|^8.0",
                 "symfony/service-contracts": "^2.5|^3",
-                "symfony/stopwatch": "^7.4|^8.0"
+                "symfony/stopwatch": "^6.4|^7.0|^8.0"
             },
             "type": "library",
             "autoload": {
@@ -3188,9 +3188,9 @@
             "description": "Provides tools that allow your application components to communicate with each other by dispatching events and listening to them",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/event-dispatcher/tree/v8.1.5"
+                "source": "https://github.com/symfony/event-dispatcher/tree/v7.4.17"
             },
-            "time": "2026-08-21T17:47:34+00:00"
+            "time": "2026-08-21T17:40:08+00:00"
         },
         {
             "name": "symfony/event-dispatcher-contracts",
@@ -4270,29 +4270,30 @@
         },
         {
             "name": "symfony/string",
-            "version": "v8.1.2",
+            "version": "v7.4.15",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/string/v8.1.2/symfony-string-v8.1.2.zip",
-                "reference": "286a76b7255e5cc4bf0101a0bc5388ecf1c38ccc",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/string/v7.4.15/symfony-string-v7.4.15.zip",
+                "reference": "e394af32256bf9e7bf80849d95e589167c10097b",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.4.1",
-                "symfony/polyfill-ctype": "^1.8",
-                "symfony/polyfill-intl-grapheme": "^1.33",
-                "symfony/polyfill-intl-normalizer": "^1.0",
-                "symfony/polyfill-mbstring": "^1.0"
+                "php": ">=8.2",
+                "symfony/deprecation-contracts": "^2.5|^3.0",
+                "symfony/polyfill-ctype": "~1.8",
+                "symfony/polyfill-intl-grapheme": "~1.33",
+                "symfony/polyfill-intl-normalizer": "~1.0",
+                "symfony/polyfill-mbstring": "~1.0"
             },
             "conflict": {
                 "symfony/translation-contracts": "<2.5"
             },
             "require-dev": {
-                "symfony/emoji": "^7.4|^8.0",
-                "symfony/http-client": "^7.4|^8.0",
-                "symfony/intl": "^7.4|^8.0",
+                "symfony/emoji": "^7.1|^8.0",
+                "symfony/http-client": "^6.4|^7.0|^8.0",
+                "symfony/intl": "^6.4|^7.0|^8.0",
                 "symfony/translation-contracts": "^2.5|^3.0",
-                "symfony/var-exporter": "^7.4|^8.0"
+                "symfony/var-exporter": "^6.4|^7.0|^8.0"
             },
             "type": "library",
             "autoload": {
@@ -4330,28 +4331,35 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v8.1.2"
+                "source": "https://github.com/symfony/string/tree/v7.4.15"
             },
-            "time": "2026-07-28T07:35:25+00:00"
+            "time": "2026-07-28T07:33:02+00:00"
         },
         {
             "name": "symfony/translation",
-            "version": "v8.1.5",
+            "version": "v7.4.17",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/translation/v8.1.5/symfony-translation-v8.1.5.zip",
-                "reference": "d9e1caba0d6b6f9a26710af8a2f88d37f001215a",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/translation/v7.4.17/symfony-translation-v7.4.17.zip",
+                "reference": "2ee1e4a3b32a528a642babe041ff7c440b213b4b",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.4.1",
-                "symfony/polyfill-mbstring": "^1.0",
-                "symfony/translation-contracts": "^3.6.1"
+                "php": ">=8.2",
+                "symfony/deprecation-contracts": "^2.5|^3",
+                "symfony/polyfill-mbstring": "~1.0",
+                "symfony/translation-contracts": "^2.5.3|^3.3"
             },
             "conflict": {
                 "nikic/php-parser": "<5.0",
+                "symfony/config": "<6.4",
+                "symfony/console": "<6.4",
+                "symfony/dependency-injection": "<6.4",
                 "symfony/http-client-contracts": "<2.5",
-                "symfony/service-contracts": "<2.5"
+                "symfony/http-kernel": "<6.4",
+                "symfony/service-contracts": "<2.5",
+                "symfony/twig-bundle": "<6.4",
+                "symfony/yaml": "<6.4"
             },
             "provide": {
                 "symfony/translation-implementation": "2.3|3.0"
@@ -4359,17 +4367,17 @@
             "require-dev": {
                 "nikic/php-parser": "^5.0",
                 "psr/log": "^1|^2|^3",
-                "symfony/config": "^7.4|^8.0",
-                "symfony/console": "^7.4|^8.0",
-                "symfony/dependency-injection": "^7.4|^8.0",
-                "symfony/finder": "^7.4|^8.0",
+                "symfony/config": "^6.4|^7.0|^8.0",
+                "symfony/console": "^6.4|^7.0|^8.0",
+                "symfony/dependency-injection": "^6.4|^7.0|^8.0",
+                "symfony/finder": "^6.4|^7.0|^8.0",
                 "symfony/http-client-contracts": "^2.5|^3.0",
-                "symfony/http-kernel": "^7.4|^8.0",
-                "symfony/intl": "^7.4|^8.0",
+                "symfony/http-kernel": "^6.4|^7.0|^8.0",
+                "symfony/intl": "^6.4|^7.0|^8.0",
                 "symfony/polyfill-intl-icu": "^1.21",
-                "symfony/routing": "^7.4|^8.0",
+                "symfony/routing": "^6.4|^7.0|^8.0",
                 "symfony/service-contracts": "^2.5|^3",
-                "symfony/yaml": "^7.4|^8.0"
+                "symfony/yaml": "^6.4|^7.0|^8.0"
             },
             "type": "library",
             "autoload": {
@@ -4399,9 +4407,9 @@
             "description": "Provides tools to internationalize your application",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/translation/tree/v8.1.5"
+                "source": "https://github.com/symfony/translation/tree/v7.4.17"
             },
-            "time": "2026-08-21T17:47:34+00:00"
+            "time": "2026-08-21T17:40:08+00:00"
         },
         {
             "name": "symfony/translation-contracts",
@@ -4984,11 +4992,11 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.30.5",
+            "version": "v1.30.4",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/laravel/pint/v1.30.5/laravel-pint-v1.30.5.zip",
-                "reference": "fe4148c503a0e266353d61396b79bbf7f35122df",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/laravel/pint/v1.30.4/laravel-pint-v1.30.4.zip",
+                "reference": "a96cb6eee2961905d2fce7207aefb80945bf6b28",
                 "shasum": ""
             },
             "require": {
@@ -4996,19 +5004,19 @@
                 "ext-mbstring": "*",
                 "ext-tokenizer": "*",
                 "ext-xml": "*",
-                "php": "^8.3.0"
+                "php": "^8.2.0"
             },
             "require-dev": {
                 "composer/semver": "^3.4.4",
                 "friendsofphp/php-cs-fixer": "^3.95.18",
-                "illuminate/view": "^13.24.0",
+                "illuminate/view": "^12.65.0",
                 "larastan/larastan": "^3.10.0",
-                "laravel-zero/framework": "^13.0.0",
+                "laravel-zero/framework": "^12.1.0",
                 "laravel/agent-detector": "^2.0.2",
                 "laravel/prompts": "^0.3.22",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^2.4.0",
-                "pestphp/pest": "^4.7.8"
+                "pestphp/pest": "^3.8.7"
             },
             "bin": [
                 "builds/pint"
@@ -5044,7 +5052,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2026-08-10T15:35:50+00:00"
+            "time": "2026-08-05T16:47:22+00:00"
         },
         {
             "name": "laravel/sail",
@@ -6536,23 +6544,23 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v8.1.6",
+            "version": "v7.4.18",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/yaml/v8.1.6/symfony-yaml-v8.1.6.zip",
-                "reference": "0b4aa53a67f9fece88c665f1a1dadcfd25d93fe5",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/symfony/yaml/v7.4.18/symfony-yaml-v7.4.18.zip",
+                "reference": "4cef939e55b8a21c5780418de0d98ab00d0736e1",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.4.1",
+                "php": ">=8.2",
+                "symfony/deprecation-contracts": "^2.5|^3",
                 "symfony/polyfill-ctype": "^1.8"
             },
             "conflict": {
-                "symfony/console": "<7.4"
+                "symfony/console": "<6.4"
             },
             "require-dev": {
-                "symfony/console": "^7.4|^8.0",
-                "yaml/yaml-test-suite": "*"
+                "symfony/console": "^6.4|^7.0|^8.0"
             },
             "bin": [
                 "Resources/bin/yaml-lint"
@@ -6582,9 +6590,9 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/yaml/tree/v8.1.6"
+                "source": "https://github.com/symfony/yaml/tree/v7.4.18"
             },
-            "time": "2026-08-30T01:03:44+00:00"
+            "time": "2026-08-30T00:47:26+00:00"
         },
         {
             "name": "theseer/tokenizer",

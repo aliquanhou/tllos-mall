@@ -104,7 +104,7 @@
           <div class="footer-col"><h4>关于我们</h4><a href="javascript:;">公司简介</a><a href="javascript:;">联系我们</a><a href="javascript:;">人才招聘</a><a href="javascript:;">商家入驻</a></div>
         </div>
       </div>
-      <div class="footer-bottom"><div class="container"><p>© 2026 TLLOS商城 版权所有 | ICP备案号：粤ICP备2026000000号</p></div></div>
+      <div class="footer-bottom"><div class="container"><p>© 2026 TLLOS商城 版权所有 | <a href="https://beian.miit.gov.cn" target="_blank" style="color:#999;text-decoration:none;">ICP备案号：粤ICP备2026000000号</a></p></div></div>
     </footer>
   </div>
 </template>
