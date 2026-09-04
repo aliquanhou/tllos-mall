@@ -1428,6 +1428,8 @@ Route::middleware('auth:sanctum')->prefix('admin/dashboard')->group(function () 
     Route::get('/overview', [\App\Modules\System\Controllers\DashboardController::class, 'overview']);
     Route::get('/stats', [\App\Modules\System\Controllers\DashboardController::class, 'overview']);
     Route::get('/order-trend', [\App\Modules\System\Controllers\DashboardController::class, 'orderTrend']);
+    Route::get('/sales-trend', [\App\Modules\System\Controllers\DashboardController::class, 'orderTrend']);
+    Route::get('/recent-orders', [\App\Modules\System\Controllers\DashboardController::class, 'recentOrders']);
     Route::get('/merchant-ranking', [\App\Modules\System\Controllers\DashboardController::class, 'merchantRanking']);
     Route::get('/product-ranking', [\App\Modules\System\Controllers\DashboardController::class, 'productRanking']);
     Route::get('/user-activity', [\App\Modules\System\Controllers\DashboardController::class, 'userActivity']);

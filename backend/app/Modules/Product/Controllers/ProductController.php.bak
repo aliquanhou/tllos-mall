@@ -56,21 +56,16 @@ class ProductController extends BaseController
             'images' => $product->images ?: [$product->main_image],
             'price' => $product->price,
             'market_price' => $product->market_price,
-            'original_price' => $product->original_price,
             'stock' => $product->stock,
             'sales' => $product->sales,
             'views' => $product->views,
             'unit' => $product->unit,
             'is_sku' => $product->is_sku,
             'description' => $product->description,
-            'detail' => $product->detail,
-            'video' => $product->video,
-            'video_poster' => $product->video_poster,
             'category' => $product->category,
             'skus' => $product->skus,
             'is_free_shipping' => $product->is_free_shipping,
             'shipping_fee' => $product->shipping_fee,
-            'weight' => $product->weight,
         ]);
     }
 

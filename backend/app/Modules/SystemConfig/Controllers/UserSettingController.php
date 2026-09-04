@@ -3,7 +3,6 @@ namespace App\Modules\SystemConfig\Controllers;
 use App\Core\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
 class UserSettingController extends BaseController {
     public function index(Request $request) { return $this->getConfig(); }
     public function getConfig() {
@@ -19,4 +18,8 @@ class UserSettingController extends BaseController {
         return $this->success(null,'保存成功');
     }
     public function saveConfig(Request $request) { return $this->setConfig($request); }
+    public function getRegisterConfig() {
+        $settings = DB::table('user_settings')->where('key', 'like', 'register_%')->pluck('value','key')->toArray();
+        return $this->success($settings);
+    }
 }

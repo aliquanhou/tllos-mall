@@ -14,8 +14,6 @@ class Product extends Model
         'cost_price', 'stock', 'sales', 'views', 'favorites', 'is_sku',
         'unit', 'weight', 'is_free_shipping', 'shipping_fee',
         'is_new', 'is_hot', 'is_recommend', 'status', 'on_sale_at',
-        'cover_image', 'original_price', 'detail', 'video', 'video_poster',
-        'source', 'source_url',
     ];
     protected $casts = [
         'images' => 'array',

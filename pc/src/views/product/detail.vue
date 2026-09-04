@@ -17,15 +17,22 @@
         <!-- 左侧图片区 -->
         <div class="detail-images">
           <div class="main-image" @mousemove="handleZoom" @mouseleave="zoomShow=false" @mouseenter="zoomShow=true">
-            <img :src="currentImage" :alt="product.name" ref="mainImgRef" />
-            <div class="zoom-lens" v-if="zoomShow" :style="lensStyle"></div>
+            <!-- 视频播放 -->
+            <video v-if="currentMedia.type === 'video'" :src="currentMedia.url" :poster="product.video_poster || ''" controls class="main-video" @mouseenter.stop @mousemove.stop></video>
+            <!-- 图片 -->
+            <img v-else :src="currentMedia.url" :alt="product.name" ref="mainImgRef" />
+            <div class="zoom-lens" v-if="zoomShow && currentMedia.type === 'image'" :style="lensStyle"></div>
           </div>
-          <div class="zoom-result" v-if="zoomShow" :style="resultStyle">
-            <img :src="currentImage" :style="zoomImgStyle" />
+          <div class="zoom-result" v-if="zoomShow && currentMedia.type === 'image'" :style="resultStyle">
+            <img :src="currentMedia.url" :style="zoomImgStyle" />
           </div>
           <div class="thumb-list">
-            <div class="thumb-item" v-for="(img, idx) in allImages" :key="idx" :class="{active: currentImageIndex === idx}" @click="currentImageIndex = idx">
-              <img :src="img" :alt="'缩略图'+(idx+1)" />
+            <div class="thumb-item" v-for="(media, idx) in allMedia" :key="idx" :class="{active: currentMediaIndex === idx}" @click="currentMediaIndex = idx">
+              <img v-if="media.type === 'image'" :src="media.url" :alt="'缩略图'+(idx+1)" />
+              <div v-else class="thumb-video">
+                <img :src="product.video_poster || media.url" alt="视频缩略图" />
+                <div class="play-icon"><el-icon :size="20"><VideoPlay /></el-icon></div>
+              </div>
             </div>
           </div>
         </div>
@@ -49,12 +56,15 @@
             </div>
           </div>
 
-          <!-- 规格选择 -->
+          <!-- 规格选择（带缩略图） -->
           <div class="spec-section" v-if="product.skus && product.skus.length">
             <div class="spec-row" v-for="spec in specOptions" :key="spec.name">
               <span class="spec-label">{{ spec.name }}</span>
               <div class="spec-values">
-                <span class="spec-value" v-for="val in spec.values" :key="val" :class="{active: selectedSpecs[spec.name] === val}" @click="selectSpec(spec.name, val)">{{ val }}</span>
+                <div class="spec-value" v-for="val in spec.values" :key="val" :class="{active: selectedSpecs[spec.name] === val}" @click="selectSpec(spec.name, val)">
+                  <img v-if="getSkuImage(spec.name, val)" :src="getSkuImage(spec.name, val)" class="spec-img" :alt="val" />
+                  <span class="spec-text">{{ val }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -98,10 +108,8 @@
       <div v-if="product" class="detail-tabs">
         <el-tabs v-model="activeTab">
           <el-tab-pane label="商品详情" name="detail">
-            <div class="detail-content" v-if="product.description" v-html="product.description"></div>
-            <div class="detail-images" v-if="product.images && product.images.length">
-              <img v-for="(img, idx) in product.images" :key="idx" :src="img" class="detail-img" />
-            </div>
+            <div class="detail-content" v-if="product.detail" v-html="product.detail"></div>
+            <div class="detail-content" v-else-if="product.description" v-html="product.description"></div>
             <div class="empty-detail" v-else>暂无商品详情</div>
           </el-tab-pane>
           <el-tab-pane label="规格参数" name="specs">
@@ -145,6 +153,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { VideoPlay } from '@element-plus/icons-vue'
 import { getProductDetail, getProductList } from '@/api/product'
 import { addToCart as addCartApi } from '@/api/cart'
 import ProductCard from '@/components/ProductCard.vue'
@@ -154,7 +163,7 @@ const route = useRoute()
 const router = useRouter()
 const product = ref(null)
 const loading = ref(true)
-const currentImageIndex = ref(0)
+const currentMediaIndex = ref(0)
 const quantity = ref(1)
 const activeTab = ref('detail')
 const isFavorite = ref(false)
@@ -169,16 +178,49 @@ const lensStyle = ref({})
 const resultStyle = ref({})
 const zoomImgStyle = ref({})
 
-const allImages = computed(() => {
+// 所有媒体（图片+视频）
+const allMedia = computed(() => {
   if (!product.value) return []
-  const imgs = [product.value.main_image].filter(Boolean)
-  if (product.value.images && Array.isArray(product.value.images)) {
-    product.value.images.forEach(img => { if (img && !imgs.includes(img)) imgs.push(img) })
+  const media = []
+  // 视频放在第一个
+  if (product.value.video) {
+    media.push({ type: 'video', url: product.value.video })
   }
-  return imgs.length ? imgs : ['data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f5f5f5" width="400" height="400"/%3E%3Ctext fill="%23ccc" font-size="20" x="50%25" y="50%25" text-anchor="middle"%3E暂无图片%3C/text%3E%3C/svg%3E']
+  // 主图
+  if (product.value.main_image) {
+    media.push({ type: 'image', url: product.value.main_image })
+  }
+  // 详情图
+  if (product.value.images && Array.isArray(product.value.images)) {
+    product.value.images.forEach(img => {
+      if (img && !media.find(m => m.url === img)) {
+        media.push({ type: 'image', url: img })
+      }
+    })
+  }
+  return media.length ? media : [{ type: 'image', url: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f5f5f5" width="400" height="400"/%3E%3Ctext fill="%23ccc" font-size="20" x="50%25" y="50%25" text-anchor="middle"%3E暂无图片%3C/text%3E%3C/svg%3E' }]
 })
 
-const currentImage = computed(() => allImages.value[currentImageIndex.value] || allImages.value[0])
+const currentMedia = computed(() => allMedia.value[currentMediaIndex.value] || allMedia.value[0])
+
+// SKU图片映射
+const skuImageMap = computed(() => {
+  if (!product.value?.skus) return {}
+  const map = {}
+  product.value.skus.forEach(sku => {
+    if (sku.specs && sku.image) {
+      Object.entries(sku.specs).forEach(([k, v]) => {
+        const key = `${k}::${v}`
+        if (!map[key]) map[key] = sku.image
+      })
+    }
+  })
+  return map
+})
+
+const getSkuImage = (specName, specValue) => {
+  return skuImageMap.value[`${specName}::${specValue}`] || ''
+}
 
 const specOptions = computed(() => {
   if (!product.value?.skus || !product.value.skus.length) return []
@@ -211,11 +253,11 @@ const handleZoom = (e) => {
   const rect = mainImgRef.value.getBoundingClientRect()
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
-  const lensSize = 100
+  const lensSize = 120
   const lensX = Math.max(0, Math.min(x - lensSize / 2, rect.width - lensSize))
   const lensY = Math.max(0, Math.min(y - lensSize / 2, rect.height - lensSize))
   lensStyle.value = { left: lensX + 'px', top: lensY + 'px', width: lensSize + 'px', height: lensSize + 'px' }
-  const zoomRatio = 2
+  const zoomRatio = 2.5
   resultStyle.value = { backgroundSize: rect.width * zoomRatio + 'px ' + rect.height * zoomRatio + 'px' }
   zoomImgStyle.value = { width: rect.width * zoomRatio + 'px', height: rect.height * zoomRatio + 'px', marginLeft: -lensX * zoomRatio + 'px', marginTop: -lensY * zoomRatio + 'px' }
 }
@@ -227,9 +269,7 @@ const fetchDetail = async () => {
   try {
     const res = await getProductDetail(route.params.id)
     product.value = res.data
-    // 模拟评价数据
     reviews.value = res.data.reviews || []
-    // 获取相关推荐
     const relatedRes = await getProductList({ category_id: product.value.category_id, limit: 5 })
     relatedProducts.value = (relatedRes.data?.list || relatedRes.data || []).filter(p => p.id != product.value.id).slice(0, 5)
   } catch (e) { console.error(e) } finally { loading.value = false }
@@ -269,13 +309,17 @@ onMounted(fetchDetail)
 .detail-images { position: relative; }
 .main-image { width: 100%; padding-top: 100%; position: relative; background: #fafafa; border-radius: 8px; overflow: hidden; cursor: crosshair; }
 .main-image img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; }
+.main-image .main-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
 .zoom-lens { position: absolute; border: 2px solid #e6a23c; background: rgba(230,162,60,0.1); pointer-events: none; }
 .zoom-result { position: absolute; top: 0; left: 105%; width: 100%; height: 100%; border: 1px solid #eee; border-radius: 8px; overflow: hidden; z-index: 100; background: #fff; }
 .zoom-result img { position: absolute; top: 0; left: 0; }
-.thumb-list { display: flex; gap: 10px; margin-top: 12px; }
-.thumb-item { width: 60px; height: 60px; border: 2px solid #eee; border-radius: 4px; overflow: hidden; cursor: pointer; flex-shrink: 0; }
+.thumb-list { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.thumb-item { width: 60px; height: 60px; border: 2px solid #eee; border-radius: 4px; overflow: hidden; cursor: pointer; flex-shrink: 0; position: relative; }
 .thumb-item.active { border-color: #e6a23c; }
 .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
+.thumb-video { position: relative; width: 100%; height: 100%; }
+.thumb-video img { width: 100%; height: 100%; object-fit: cover; }
+.thumb-video .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; background: rgba(0,0,0,0.5); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .detail-info { min-width: 0; }
 .product-name { font-size: 22px; color: #333; margin: 0 0 8px 0; line-height: 1.4; }
 .product-subtitle { font-size: 14px; color: #999; margin: 0 0 16px 0; }
@@ -290,9 +334,11 @@ onMounted(fetchDetail)
 .spec-row { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
 .spec-label { width: 60px; flex-shrink: 0; font-size: 14px; color: #666; padding-top: 6px; }
 .spec-values { display: flex; flex-wrap: wrap; gap: 10px; }
-.spec-value { padding: 6px 16px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.spec-value { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all 0.2s; background: #fff; }
 .spec-value:hover { border-color: #e6a23c; color: #e6a23c; }
 .spec-value.active { border-color: #e6a23c; color: #e6a23c; background: #fdf6ec; font-weight: bold; }
+.spec-img { width: 32px; height: 32px; object-fit: cover; border-radius: 3px; }
+.spec-text { line-height: 1; }
 .quantity-row { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
 .quantity-input { display: flex; align-items: center; }
 .quantity-input input { width: 60px; text-align: center; border: 1px solid #ddd; border-left: none; border-right: none; height: 32px; font-size: 14px; }

@@ -145,4 +145,30 @@ class DashboardController extends BaseController
             return $this->success(['list' => [], 'error' => $e->getMessage()]);
         }
     }
+
+    public function recentOrders(Request $request)
+    {
+        try {
+            $limit = min($request->limit ?: 10, 50);
+            $orders = DB::table('orders')
+                ->leftJoin('users', 'orders.user_id', '=', 'users.id')
+                ->select('orders.id', 'orders.order_no', 'orders.status', 'orders.pay_amount',
+                    'orders.total_amount', 'orders.created_at',
+                    'users.nickname as user_nickname', 'users.mobile as user_mobile')
+                ->orderByDesc('orders.created_at')
+                ->limit($limit)
+                ->get();
+
+            // 状态映射
+            $statusMap = [0 => '已取消', 1 => '待付款', 2 => '待发货', 3 => '待收货', 4 => '已完成', 5 => '已关闭', 6 => '退款中'];
+            foreach ($orders as $order) {
+                $order->status_text = $statusMap[$order->status] ?? '未知';
+            }
+
+            return $this->success(['list' => $orders]);
+        } catch (\Exception $e) {
+            return $this->success(['list' => [], 'error' => $e->getMessage()]);
+        }
+    }
+
 }

@@ -16,4 +16,16 @@ class WebSettingController extends BaseController {
         }
         return $this->success(null,'保存成功');
     }
+    public function getWebsite() {
+        $settings = DB::table('web_settings')->where('key', 'like', 'website_%')->pluck('value','key')->toArray();
+        return $this->success($settings);
+    }
+    public function getAgreement() {
+        $settings = DB::table('web_settings')->where('key', 'like', 'agreement_%')->pluck('value','key')->toArray();
+        return $this->success($settings);
+    }
+    public function getCopyright() {
+        $settings = DB::table('web_settings')->where('key', 'like', 'copyright_%')->pluck('value','key')->toArray();
+        return $this->success($settings);
+    }
 }
