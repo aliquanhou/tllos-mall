@@ -90,16 +90,29 @@ export default {
     shipping: 'Shipping'
   },
   cart: {
-    title: 'Shopping Cart',
+    title: 'My Cart',
     empty: 'Your cart is empty',
     goShopping: 'Go Shopping',
-    edit: 'Edit',
-    done: 'Done',
+    selectAll: 'Select All',
     selected: 'Selected',
     items: 'items',
+    delete: 'Delete',
+    confirmDelete: 'Are you sure to delete this item?',
+    deleteSuccess: 'Deleted successfully',
+    deleteFailed: 'Delete failed',
+    clearInvalid: 'Clear Invalid',
+    offShelf: 'Off Shelf',
+    outOfStock: 'Out of Stock',
+    unitPrice: 'Unit Price',
+    subtotal: 'Subtotal',
+    orderSummary: 'Order Summary',
+    itemCount: 'Item Count',
+    shipping: 'Shipping',
+    freeShipping: 'Free',
     total: 'Total',
     checkout: 'Checkout',
-    invalid: 'Invalid'
+    continueShopping: 'Continue Shopping',
+    selectItemsFirst: 'Please select items first'
   },
   order: {
     title: 'My Orders',

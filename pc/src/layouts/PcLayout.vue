@@ -341,7 +341,52 @@ watch(() => route.path, () => {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  gap: 20px;
+  gap: 16px;
+}
+/* 移动端顶部导航适配 */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 10px 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .header-left {
+    flex-shrink: 0;
+    gap: 6px;
+  }
+  .logo {
+    align-items: center;
+    gap: 2px;
+  }
+  .logo-text {
+    font-size: 22px;
+    white-space: nowrap;
+  }
+  .logo-sub {
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .header-center {
+    flex: 1;
+    min-width: 0;
+  }
+  .search-box {
+    padding: 0 4px 0 10px;
+  }
+  .search-box input {
+    font-size: 13px;
+    padding: 6px 0;
+    min-width: 0;
+  }
+  .search-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .header-right {
+    flex-shrink: 0;
+    gap: 8px;
+  }
 }
 .header-left {
   display: flex;
