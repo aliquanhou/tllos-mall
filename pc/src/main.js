@@ -6,6 +6,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
 import i18n from './locales'
+import './assets/design_system.css'
 import './assets/main.css'
 import './assets/responsive.css'
 
