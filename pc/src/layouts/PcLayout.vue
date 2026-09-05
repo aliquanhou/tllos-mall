@@ -1,228 +1,693 @@
 <template>
-  <div class="pc-layout">
-    <!-- 移动端Header -->
-    <div class="show-mobile"><MobileHeader /></div>
-    <!-- 桌面端Header -->
-    <div class="hide-mobile">
-      <!-- 促销条 -->
-      <div class="promo-bar">
-        <div class="container">
-          <span class="promo-text">🎉 限时特惠：全场满200减30，新用户注册即送100元优惠券！</span>
-          <a href="javascript:;" class="promo-link">立即查看 →</a>
-        </div>
+  <div class="pc-layout" :class="{ 'mobile-view': isMobile }">
+    <!-- 顶部公告栏 -->
+    <div class="top-notice" v-if="!isMobile">
+      <div class="notice-content">
+        <el-icon><Bell /></el-icon>
+        <span>{{ t('home.freeShipping') }} | {{ t('home.freeReturn') }} | {{ t('home.newUserCoupon') }}</span>
       </div>
-      <!-- 顶部工具栏 -->
-      <header class="pc-header">
-        <div class="header-top">
-          <div class="container">
-            <span class="welcome">欢迎来到TLLOS商城</span>
-            <div class="header-links">
-              <template v-if="!userStore.isLogin">
-                <router-link to="/login">登录</router-link>
-                <router-link to="/login?type=register" class="register-link">免费注册</router-link>
-              </template>
-              <template v-else>
-                <router-link to="/profile" class="user-link"><el-icon><User /></el-icon> {{ userStore.userInfo?.nickname || '用户中心' }}</router-link>
-                <router-link to="/orders">我的订单</router-link>
-                <router-link to="/collects">我的收藏</router-link>
-                <a href="javascript:;" @click="logout">退出</a>
-              </template>
-              <router-link to="/cart" class="cart-link"><el-badge :value="cartStore.count" :hidden="cartStore.count === 0"><el-icon><ShoppingCart /></el-icon> 购物车</el-badge></router-link>
-            </div>
-          </div>
-        </div>
-        <!-- Logo+搜索区 -->
-        <div class="header-main">
-          <div class="container">
-            <div class="logo" @click="goHome">
-              <h1>TLLOS<span class="logo-sub">商城</span></h1>
-              <p class="logo-slogan">品质生活 优选好物</p>
-            </div>
-            <div class="search-box">
-              <div class="search-tabs"><span class="tab active">商品</span><span class="tab">店铺</span></div>
-              <div class="search-input-wrap">
-                <el-input v-model="searchKeyword" placeholder="搜索商品" size="large" @keyup.enter="doSearch">
-                  <template #append><el-button type="warning" @click="doSearch"><el-icon><Search /></el-icon> 搜索</el-button></template>
-                </el-input>
-              </div>
-              <div class="hot-words"><span>热搜：</span><a href="javascript:;" @click="searchHot('男装')">男装</a><a href="javascript:;" @click="searchHot('手机')">手机</a><a href="javascript:;" @click="searchHot('零食')">零食</a><a href="javascript:;" @click="searchHot('美妆')">美妆</a></div>
-            </div>
-            <div class="header-service"><div class="service-item"><el-icon size="24"><Phone /></el-icon><div class="service-text"><span class="service-label">客服热线</span><span class="service-phone">400-888-8888</span></div></div></div>
-          </div>
-        </div>
-        <!-- 主导航 + Mega Menu -->
-        <nav class="main-nav">
-          <div class="container">
-            <div class="nav-all-category" @mouseenter="showAllCategory = true" @mouseleave="showAllCategory = false">
-              <el-icon><Menu /></el-icon> 全部商品分类
-              <!-- 全部分类Mega Panel -->
-              <div class="mega-panel all-category-panel" v-show="showAllCategory">
-                <div class="mega-col" v-for="cat in categories.slice(0, 8)" :key="cat.id">
-                  <h4 class="mega-title">{{ cat.name }}</h4>
-                  <a href="javascript:;" class="mega-link" v-for="i in 4" :key="i" @click="goCategory(cat.id)">{{ cat.name }}子类{{ i }}</a>
-                </div>
-                <div class="mega-banner"><div class="mega-banner-img">编辑推荐</div></div>
-              </div>
-            </div>
-            <router-link to="/home" class="nav-link active">首页</router-link>
-            <router-link to="/products" class="nav-link">全部商品</router-link>
-            <!-- 分类Mega Menu -->
-            <div class="nav-item" v-for="cat in categories.slice(0, 6)" :key="cat.id" @mouseenter="activeNav = cat.id" @mouseleave="activeNav = 0">
-              <router-link :to="{ path: '/products', query: { category_id: cat.id } }" class="nav-link">{{ cat.name }}</router-link>
-              <div class="mega-panel" v-show="activeNav === cat.id">
-                <div class="mega-col" v-for="i in 3" :key="i">
-                  <h4 class="mega-title">{{ cat.name }}分类{{ i }}</h4>
-                  <a href="javascript:;" class="mega-link" v-for="j in 5" :key="j" @click="goCategory(cat.id)">{{ cat.name }}子类{{ j }}</a>
-                </div>
-                <div class="mega-banner"><div class="mega-banner-img">{{ cat.name }}推荐</div></div>
-              </div>
-            </div>
-            <router-link to="/products" class="nav-link">限时特惠</router-link>
-            <router-link to="/orders" class="nav-link">我的订单</router-link>
-          </div>
-        </nav>
-      </header>
+      <div class="notice-right">
+        <el-dropdown @command="changeLocale">
+          <span class="locale-switcher">
+            <el-icon><Setting /></el-icon>
+            {{ locale === 'zh' ? '中文' : 'English' }}
+            <el-icon><ArrowDown /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="zh">中文</el-dropdown-item>
+              <el-dropdown-item command="en">English</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
     </div>
+
+    <!-- 主导航栏 -->
+    <header class="main-header">
+      <div class="header-container">
+        <!-- 左侧：菜单按钮(移动端) + Logo -->
+        <div class="header-left">
+          <el-button v-if="isMobile" text class="menu-btn" @click="showMobileMenu = true">
+            <el-icon :size="22"><Menu /></el-icon>
+          </el-button>
+          <router-link to="/" class="logo">
+            <span class="logo-text">TLLOS</span>
+            <span class="logo-sub">{{ t('home.mall') }}</span>
+          </router-link>
+        </div>
+
+        <!-- 中间：搜索框 -->
+        <div class="header-center">
+          <div class="search-box" @click="goSearch">
+            <el-icon><Search /></el-icon>
+            <input type="text" :placeholder="t('home.searchPlaceholder')" v-model="searchKeyword" @keyup.enter="doSearch" />
+            <button class="search-btn">{{ t('home.search') }}</button>
+          </div>
+          <div class="hot-keywords" v-if="!isMobile">
+            <span class="hot-label">{{ t('home.hotSearch') }}:</span>
+            <router-link to="/product/list?keyword=智能手表" class="hot-word">智能手表</router-link>
+            <router-link to="/product/list?keyword=箱包" class="hot-word">箱包</router-link>
+            <router-link to="/product/list?keyword=跨境好物" class="hot-word">跨境好物</router-link>
+          </div>
+        </div>
+
+        <!-- 右侧：用户功能 -->
+        <div class="header-right">
+          <router-link to="/user/profile" class="header-icon" v-if="!isMobile">
+            <el-icon :size="20"><User /></el-icon>
+            <span>{{ t('home.account') }}</span>
+          </router-link>
+          <router-link to="/cart" class="header-icon cart-icon">
+            <el-badge :value="cartCount" :hidden="cartCount === 0" class="cart-badge">
+              <el-icon :size="22"><ShoppingCart /></el-icon>
+            </el-badge>
+            <span v-if="!isMobile">{{ t('home.cart') }}</span>
+          </router-link>
+        </div>
+      </div>
+    </header>
+
+    <!-- 分类导航栏 -->
+    <nav class="category-nav" v-if="!isMobile">
+      <div class="category-container">
+        <div class="all-categories" @mouseenter="showAllCategories = true" @mouseleave="showAllCategories = false">
+          <el-icon><Grid /></el-icon>
+          <span>{{ t('home.allCategories') }}</span>
+          <!-- 全部分类下拉 -->
+          <div class="category-dropdown" v-if="showAllCategories">
+            <div class="category-item" v-for="cat in categories" :key="cat.id" @click="goCategory(cat.id)">
+              <span>{{ cat.name }}</span>
+              <el-icon><ArrowRight /></el-icon>
+            </div>
+          </div>
+        </div>
+        <div class="nav-links">
+          <router-link to="/" class="nav-link active">{{ t('home.home') }}</router-link>
+          <router-link to="/product/list" class="nav-link">{{ t('home.newArrivals') }}</router-link>
+          <router-link to="/product/list?sort=sales" class="nav-link">{{ t('home.bestSellers') }}</router-link>
+          <router-link to="/product/list?tag=flash_sale" class="nav-link flash-sale">{{ t('home.flashSale') }}</router-link>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 移动端分类横向滚动 -->
+    <nav class="mobile-category-nav" v-if="isMobile">
+      <div class="mobile-categories-scroll">
+        <router-link to="/" class="mobile-cat active">{{ t('home.home') }}</router-link>
+        <router-link to="/product/list" class="mobile-cat">{{ t('home.newArrivals') }}</router-link>
+        <router-link to="/product/list?sort=sales" class="mobile-cat">{{ t('home.bestSellers') }}</router-link>
+        <router-link to="/product/list?tag=flash_sale" class="mobile-cat">{{ t('home.flashSale') }}</router-link>
+        <router-link to="/category" class="mobile-cat">{{ t('home.allCategories') }}</router-link>
+      </div>
+    </nav>
+
     <!-- 主内容区 -->
-    <main class="pc-main"><router-view /></main>
-    <!-- 页脚 -->
-    <footer class="pc-footer hide-mobile">
-      <div class="footer-service">
-        <div class="container">
-          <div class="service-col"><el-icon size="28"><Van /></el-icon><div><h4>正品保障</h4><p>正品行货 放心购买</p></div></div>
-          <div class="service-col"><el-icon size="28"><Truck /></el-icon><div><h4>极速配送</h4><p>全国包邮 快速送达</p></div></div>
-          <div class="service-col"><el-icon size="28"><Refresh /></el-icon><div><h4>7天无理由</h4><p>退换无忧 售后保障</p></div></div>
-          <div class="service-col"><el-icon size="28"><Service /></el-icon><div><h4>在线客服</h4><p>7x24小时 贴心服务</p></div></div>
+    <main class="main-content">
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </main>
+
+    <!-- 移动端底部导航 -->
+    <nav class="mobile-bottom-nav" v-if="isMobile">
+      <router-link to="/" class="bottom-nav-item" :class="{ active: $route.path === '/' }">
+        <el-icon :size="22"><HomeFilled /></el-icon>
+        <span>{{ t('home.home') }}</span>
+      </router-link>
+      <router-link to="/category" class="bottom-nav-item">
+        <el-icon :size="22"><Grid /></el-icon>
+        <span>{{ t('home.category') }}</span>
+      </router-link>
+      <router-link to="/product/list" class="bottom-nav-item">
+        <el-icon :size="22"><TrendCharts /></el-icon>
+        <span>{{ t('home.newArrivals') }}</span>
+      </router-link>
+      <router-link to="/cart" class="bottom-nav-item">
+        <el-badge :value="cartCount" :hidden="cartCount === 0">
+          <el-icon :size="22"><ShoppingCart /></el-icon>
+        </el-badge>
+        <span>{{ t('home.cart') }}</span>
+      </router-link>
+      <router-link to="/user/profile" class="bottom-nav-item">
+        <el-icon :size="22"><User /></el-icon>
+        <span>{{ t('home.me') }}</span>
+      </router-link>
+    </nav>
+
+    <!-- PC端页脚 -->
+    <footer class="pc-footer" v-if="!isMobile">
+      <div class="footer-container">
+        <div class="footer-section">
+          <h4>{{ t('home.shopWithConfidence') }}</h4>
+          <ul>
+            <li>{{ t('home.freeShipping') }}</li>
+            <li>{{ t('home.freeReturn') }}</li>
+            <li>{{ t('home.securePayment') }}</li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>{{ t('home.customerService') }}</h4>
+          <ul>
+            <li><router-link to="/user/profile">{{ t('home.myAccount') }}</router-link></li>
+            <li><router-link to="/order/list">{{ t('home.myOrders') }}</router-link></li>
+            <li><router-link to="/cart">{{ t('home.cart') }}</router-link></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>{{ t('home.aboutUs') }}</h4>
+          <ul>
+            <li><router-link to="/about">{{ t('home.aboutCompany') }}</router-link></li>
+            <li><router-link to="/contact">{{ t('home.contactUs') }}</router-link></li>
+            <li><router-link to="/privacy">{{ t('home.privacyPolicy') }}</router-link></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>{{ t('home.followUs') }}</h4>
+          <div class="social-icons">
+            <el-icon :size="24"><ChatDotRound /></el-icon>
+            <el-icon :size="24"><Share /></el-icon>
+            <el-icon :size="24"><Message /></el-icon>
+          </div>
         </div>
       </div>
-      <div class="footer-links">
-        <div class="container">
-          <div class="footer-col"><h4>购物指南</h4><a href="javascript:;">购物流程</a><a href="javascript:;">会员介绍</a><a href="javascript:;">常见问题</a><a href="javascript:;">联系客服</a></div>
-          <div class="footer-col"><h4>配送方式</h4><a href="javascript:;">上门自提</a><a href="javascript:;">211限时达</a><a href="javascript:;">配送服务查询</a><a href="javascript:;">海外配送</a></div>
-          <div class="footer-col"><h4>支付方式</h4><a href="javascript:;">货到付款</a><a href="javascript:;">在线支付</a><a href="javascript:;">分期付款</a><a href="javascript:;">公司转账</a></div>
-          <div class="footer-col"><h4>售后服务</h4><a href="javascript:;">售后政策</a><a href="javascript:;">价格保护</a><a href="javascript:;">退款说明</a><a href="javascript:;">返修/退换货</a></div>
-          <div class="footer-col"><h4>关于我们</h4><a href="javascript:;">公司简介</a><a href="javascript:;">联系我们</a><a href="javascript:;">人才招聘</a><a href="javascript:;">商家入驻</a></div>
-        </div>
+      <div class="footer-bottom">
+        <p>© 2026 TLLOS Mall. {{ t('home.allRightsReserved') }} | ICP备案号：粤ICP备XXXXXXXX号</p>
       </div>
-      <div class="footer-bottom"><div class="container"><p>© 2026 TLLOS商城 版权所有 | <a href="https://beian.miit.gov.cn" target="_blank" style="color:#999;text-decoration:none;">ICP备案号：粤ICP备2026000000号</a></p></div></div>
     </footer>
+
+    <!-- 移动端侧边菜单 -->
+    <el-drawer v-model="showMobileMenu" direction="ltr" size="80%" :with-header="false" class="mobile-menu-drawer">
+      <div class="mobile-menu">
+        <div class="menu-header">
+          <span class="menu-logo">TLLOS</span>
+          <el-button text @click="showMobileMenu = false"><el-icon :size="22"><Close /></el-icon></el-button>
+        </div>
+        <div class="menu-user" @click="goUserCenter">
+          <el-avatar :size="48" icon="User" />
+          <span>{{ t('home.loginRegister') }}</span>
+        </div>
+        <div class="menu-categories">
+          <div class="menu-title">{{ t('home.allCategories') }}</div>
+          <div class="menu-cat-item" v-for="cat in categories" :key="cat.id" @click="goCategory(cat.id); showMobileMenu = false">
+            <span>{{ cat.name }}</span>
+            <el-icon><ArrowRight /></el-icon>
+          </div>
+        </div>
+        <div class="menu-links">
+          <router-link to="/" @click="showMobileMenu = false">{{ t('home.home') }}</router-link>
+          <router-link to="/product/list" @click="showMobileMenu = false">{{ t('home.newArrivals') }}</router-link>
+          <router-link to="/order/list" @click="showMobileMenu = false">{{ t('home.myOrders') }}</router-link>
+          <router-link to="/user/profile" @click="showMobileMenu = false">{{ t('home.myAccount') }}</router-link>
+        </div>
+        <div class="menu-locale">
+          <el-radio-group v-model="locale" size="small" @change="changeLocale">
+            <el-radio-button value="zh">中文</el-radio-button>
+            <el-radio-button value="en">English</el-radio-button>
+          </el-radio-group>
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { useCartStore } from '@/stores/cart'
-import { ElMessage } from 'element-plus'
-import MobileHeader from '@/components/MobileHeader.vue'
-import { getCategories } from '@/api/product'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import {
+  Menu, Search, User, ShoppingCart, Grid, HomeFilled, TrendCharts,
+  Bell, Setting, ArrowDown, ArrowRight, Close, ChatDotRound, Share, Message
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
-const userStore = useUserStore()
-const cartStore = useCartStore()
-const searchKeyword = ref('')
-const categories = ref([])
-const activeNav = ref(0)
-const showAllCategory = ref(false)
+const route = useRoute()
+const { t, locale } = useI18n()
 
-const fetchCategories = async () => {
-  try {
-    const res = await getCategories()
-    categories.value = res.data?.list || res.data || []
-  } catch (e) { console.error(e) }
+const isMobile = ref(false)
+const showMobileMenu = ref(false)
+const showAllCategories = ref(false)
+const searchKeyword = ref('')
+const cartCount = ref(0)
+const categories = ref([
+  { id: 1, name: '智能手表' },
+  { id: 2, name: '箱包配饰' },
+  { id: 3, name: '数码电子' },
+  { id: 4, name: '家居生活' },
+  { id: 5, name: '美妆个护' },
+  { id: 6, name: '运动户外' },
+  { id: 7, name: '母婴玩具' },
+  { id: 8, name: '更多分类' }
+])
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
 }
 
-const goHome = () => router.push('/home')
-const goCategory = (id) => router.push({ path: '/products', query: { category_id: id } })
-const doSearch = () => { if (searchKeyword.value) router.push({ path: '/products', query: { keyword: searchKeyword.value } }) }
-const searchHot = (kw) => { searchKeyword.value = kw; doSearch() }
-const logout = () => { userStore.logout(); ElMessage.success('已退出登录'); router.push('/home') }
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+  loadCartCount()
+})
 
-onMounted(() => { fetchCategories() })
+const loadCartCount = () => {
+  const cart = JSON.parse(localStorage.getItem('tllos_cart') || '[]')
+  cartCount.value = cart.reduce((sum, item) => sum + item.quantity, 0)
+}
+
+const changeLocale = (lang) => {
+  locale.value = lang
+  localStorage.setItem('tllos_locale', lang)
+}
+
+const goSearch = () => {
+  router.push('/product/list?keyword=' + encodeURIComponent(searchKeyword.value))
+}
+
+const doSearch = () => {
+  goSearch()
+}
+
+const goCategory = (id) => {
+  router.push('/product/list?category=' + id)
+}
+
+const goUserCenter = () => {
+  showMobileMenu.value = false
+  router.push('/user/profile')
+}
+
+watch(() => route.path, () => {
+  showMobileMenu.value = false
+})
 </script>
 
 <style scoped>
-.pc-layout { min-height: 100vh; display: flex; flex-direction: column; background: #f5f5f5; }
-.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-.promo-bar { background: linear-gradient(90deg, #f56c6c, #e6a23c); color: #fff; padding: 8px 0; font-size: 13px; }
-.promo-bar .container { display: flex; justify-content: space-between; align-items: center; }
-.promo-link { color: #fff; text-decoration: none; font-weight: bold; }
-.pc-header { background: #fff; }
-.header-top { border-bottom: 1px solid #f0f0f0; padding: 8px 0; font-size: 12px; color: #999; }
-.header-top .container { display: flex; justify-content: space-between; align-items: center; }
-.header-links { display: flex; gap: 16px; align-items: center; }
-.header-links a { color: #666; text-decoration: none; }
-.header-links a:hover { color: #e6a23c; }
-.register-link { color: #e6a23c !important; }
-.user-link { display: flex; align-items: center; gap: 4px; }
-.cart-link { display: flex; align-items: center; gap: 4px; }
-.header-main { padding: 20px 0; }
-.header-main .container { display: flex; align-items: center; gap: 40px; }
-.logo { cursor: pointer; }
-.logo h1 { font-size: 32px; color: #e6a23c; margin: 0; font-weight: bold; }
-.logo-sub { color: #333; font-size: 24px; }
-.logo-slogan { font-size: 12px; color: #999; margin: 4px 0 0 0; }
-.search-box { flex: 1; max-width: 500px; }
-.search-tabs { display: flex; gap: 0; margin-bottom: -1px; }
-.search-tabs .tab { padding: 4px 16px; font-size: 12px; cursor: pointer; border: 1px solid #ddd; border-bottom: none; background: #f5f5f5; color: #666; }
-.search-tabs .tab.active { background: #fff; color: #e6a23c; border-color: #e6a23c; }
-.hot-words { margin-top: 6px; font-size: 12px; color: #999; }
-.hot-words a { color: #999; margin-right: 12px; text-decoration: none; }
-.hot-words a:hover { color: #e6a23c; }
-.header-service { display: flex; align-items: center; }
-.service-item { display: flex; align-items: center; gap: 8px; color: #e6a23c; }
-.service-text { display: flex; flex-direction: column; }
-.service-label { font-size: 11px; color: #999; }
-.service-phone { font-size: 16px; font-weight: bold; color: #333; }
-
-/* 主导航 + Mega Menu */
-.main-nav { background: #e6a23c; position: relative; }
-.main-nav .container { display: flex; align-items: center; }
-.nav-all-category { background: #d4922a; color: #fff; padding: 14px 24px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; position: relative; min-width: 200px; }
-.nav-link { color: #fff; text-decoration: none; padding: 14px 20px; font-size: 15px; display: inline-block; transition: background 0.2s; }
-.nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.15); }
-.nav-item { position: relative; }
-
-/* Mega Panel */
-.mega-panel { position: absolute; top: 100%; left: 0; background: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.12); border-radius: 0 0 8px 8px; padding: 20px; display: flex; gap: 24px; z-index: 1000; min-width: 600px; }
-.all-category-panel { left: 0; min-width: 800px; }
-.mega-col { flex: 1; min-width: 120px; }
-.mega-title { font-size: 14px; color: #333; font-weight: bold; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
-.mega-link { display: block; font-size: 13px; color: #666; padding: 5px 0; text-decoration: none; }
-.mega-link:hover { color: #e6a23c; }
-.mega-banner { width: 180px; flex-shrink: 0; }
-.mega-banner-img { width: 100%; height: 200px; background: linear-gradient(135deg, #fdf6ec, #faecd8); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #e6a23c; font-size: 14px; font-weight: bold; }
-
-.pc-main { flex: 1; }
-.pc-footer { background: #fff; border-top: 1px solid #eee; margin-top: 40px; }
-.footer-service { border-bottom: 1px solid #f0f0f0; padding: 30px 0; }
-.footer-service .container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-.service-col { display: flex; align-items: center; gap: 12px; color: #e6a23c; }
-.service-col h4 { margin: 0; font-size: 15px; color: #333; }
-.service-col p { margin: 4px 0 0 0; font-size: 12px; color: #999; }
-.footer-links { padding: 30px 0; }
-.footer-links .container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 30px; }
-.footer-col h4 { font-size: 15px; color: #333; margin: 0 0 16px 0; }
-.footer-col a { display: block; font-size: 13px; color: #666; padding: 5px 0; text-decoration: none; }
-.footer-col a:hover { color: #e6a23c; }
-.footer-bottom { background: #fafafa; padding: 20px 0; text-align: center; }
-.footer-bottom p { margin: 0; font-size: 12px; color: #999; }
-
-/* ========== 移动端适配 ========== */
-.show-mobile { display: none; }
-.hide-mobile { display: block; }
-
-@media (max-width: 768px) {
-  .show-mobile { display: block; }
-  .hide-mobile { display: none !important; }
-  .pc-layout { background: #f5f5f5; }
-  .container { max-width: 100%; padding: 0 12px; }
-  .pc-main { padding-bottom: 60px; }
-  .pc-footer { display: none !important; }
+.pc-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
 }
 
-@media (max-width: 480px) {
-  .container { padding: 0 8px; }
+/* 顶部公告栏 */
+.top-notice {
+  background: linear-gradient(90deg, #ff6b00, #ff8c33);
+  color: #fff;
+  font-size: 12px;
+  padding: 6px 0;
+}
+.notice-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+}
+.notice-right {
+  margin-left: auto;
+}
+.locale-switcher {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 主导航栏 */
+.main-header {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 20px;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.menu-btn {
+  padding: 4px;
+}
+.logo {
+  text-decoration: none;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.logo-text {
+  font-size: 28px;
+  font-weight: 900;
+  color: #ff6b00;
+  letter-spacing: -1px;
+}
+.logo-sub {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+.header-center {
+  flex: 1;
+  max-width: 500px;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  border: 2px solid #ff6b00;
+  border-radius: 24px;
+  padding: 0 4px 0 16px;
+  background: #fff;
+  cursor: text;
+}
+.search-box .el-icon {
+  color: #999;
+  margin-right: 8px;
+}
+.search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  padding: 8px 0;
+}
+.search-btn {
+  background: #ff6b00;
+  color: #fff;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+.hot-keywords {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.hot-label {
+  color: #999;
+}
+.hot-word {
+  color: #666;
+  text-decoration: none;
+}
+.hot-word:hover {
+  color: #ff6b00;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.header-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #333;
+  font-size: 12px;
+  gap: 2px;
+}
+.header-icon:hover {
+  color: #ff6b00;
+}
+.cart-badge {
+  --el-badge-bg-color: #ff6b00;
+}
+
+/* 分类导航栏 */
+.category-nav {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+.category-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  height: 44px;
+}
+.all-categories {
+  background: #ff6b00;
+  color: #fff;
+  padding: 0 20px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  position: relative;
+}
+.category-dropdown {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  width: 200px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  z-index: 200;
+}
+.category-item {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #333;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+}
+.category-item:hover {
+  background: #fff5f0;
+  color: #ff6b00;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-left: 32px;
+}
+.nav-link {
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 0;
+}
+.nav-link:hover, .nav-link.active {
+  color: #ff6b00;
+}
+.flash-sale {
+  color: #ff4757;
+  font-weight: 600;
+}
+
+/* 移动端分类横向滚动 */
+.mobile-category-nav {
+  background: #fff;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+.mobile-categories-scroll {
+  display: flex;
+  overflow-x: auto;
+  padding: 0 12px;
+  gap: 16px;
+  scrollbar-width: none;
+}
+.mobile-categories-scroll::-webkit-scrollbar {
+  display: none;
+}
+.mobile-cat {
+  white-space: nowrap;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 6px 0;
+}
+.mobile-cat.active {
+  color: #ff6b00;
+  font-weight: 600;
+  border-bottom: 2px solid #ff6b00;
+}
+
+/* 主内容区 */
+.main-content {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 20px;
+}
+.mobile-view .main-content {
+  padding: 12px;
+  padding-bottom: 70px;
+}
+
+/* 移动端底部导航 */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  box-shadow: 0 -2px 8px rgba(0,0,0,.06);
+  z-index: 100;
+}
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #666;
+  font-size: 11px;
+  gap: 2px;
+  padding: 4px 8px;
+}
+.bottom-nav-item.active {
+  color: #ff6b00;
+}
+
+/* PC端页脚 */
+.pc-footer {
+  background: #fff;
+  border-top: 1px solid #eee;
+  margin-top: 40px;
+}
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+}
+.footer-section h4 {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: #333;
+}
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.footer-section li {
+  margin-bottom: 10px;
+  color: #666;
+  font-size: 13px;
+}
+.footer-section a {
+  color: #666;
+  text-decoration: none;
+}
+.footer-section a:hover {
+  color: #ff6b00;
+}
+.social-icons {
+  display: flex;
+  gap: 16px;
+  color: #666;
+}
+.footer-bottom {
+  border-top: 1px solid #eee;
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+}
+
+/* 移动端侧边菜单 */
+.mobile-menu-drawer :deep(.el-drawer__body) {
+  padding: 0;
+}
+.mobile-menu {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #ff6b00;
+  color: #fff;
+}
+.menu-logo {
+  font-size: 24px;
+  font-weight: 900;
+}
+.menu-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: #fff5f0;
+  cursor: pointer;
+}
+.menu-categories {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+.menu-title {
+  padding: 0 20px 12px;
+  font-weight: 600;
+  color: #333;
+}
+.menu-cat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  color: #333;
+  cursor: pointer;
+}
+.menu-cat-item:hover {
+  background: #f5f5f5;
+}
+.menu-links {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+  gap: 12px;
+}
+.menu-links a {
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+}
+.menu-locale {
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+}
+
+/* 过渡动画 */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .2s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>

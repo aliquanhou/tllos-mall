@@ -1,335 +1,854 @@
 <template>
   <div class="home-page">
-    <!-- 主Banner区：左右分栏 -->
+    <!-- 顶部Banner轮播 -->
     <div class="banner-section">
-      <div class="container">
-        <div class="banner-wrapper">
-          <!-- 左侧：促销信息 -->
-          <div class="banner-left">
-            <div class="countdown">
-              <div class="countdown-item"><span class="num">{{ days }}</span><span class="label">天</span></div>
-              <div class="countdown-item"><span class="num">{{ hours }}</span><span class="label">时</span></div>
-              <div class="countdown-item"><span class="num">{{ minutes }}</span><span class="label">分</span></div>
-              <div class="countdown-item"><span class="num">{{ seconds }}</span><span class="label">秒</span></div>
-            </div>
-            <div class="promo-tags">
-              <span class="tag tag-online">线上专享</span>
-              <span class="tag tag-date">限时48小时</span>
-            </div>
-            <div class="promo-title">限时特惠</div>
-            <div class="promo-subtitle">全场低至</div>
-            <div class="promo-discount">5折起</div>
-            <el-button type="warning" size="large" class="shop-all-btn" @click="goProducts">立即抢购</el-button>
-          </div>
-          <!-- 右侧：商品展示 -->
-          <div class="banner-right" @click="goDetail(1)">
-            <div class="banner-product-img">
-              <div class="product-placeholder">
-                <el-icon size="80"><Goods /></el-icon>
-                <p>精选男装</p>
-              </div>
-            </div>
-            <div class="banner-product-info">
-              <h3>品质男装</h3>
-              <p class="start-price">起步价</p>
-              <p class="price">¥99<span class="price-unit">起</span></p>
-              <p class="original-price">原价 ¥299 起</p>
-              <span class="shop-now">立即购买 →</span>
+      <el-carousel :interval="4000" arrow="never" height="100%" class="main-banner">
+        <el-carousel-item v-for="(banner, index) in banners" :key="index">
+          <div class="banner-item" :style="{ backgroundImage: 'url(' + banner.image + ')' }">
+            <div class="banner-overlay">
+              <div class="banner-tag">{{ banner.tag }}</div>
+              <h2 class="banner-title">{{ banner.title }}</h2>
+              <p class="banner-subtitle">{{ banner.subtitle }}</p>
+              <el-button class="banner-btn" @click="goProductList">{{ banner.btnText }}</el-button>
             </div>
           </div>
+        </el-carousel-item>
+      </el-carousel>
+      <!-- 悬浮商品卡片 -->
+      <div class="floating-products" v-if="!isMobile">
+        <div class="float-product-card" v-for="(product, i) in floatingProducts" :key="i" @click="goProductDetail(product.id)">
+          <div class="float-product-img" :style="{ backgroundImage: 'url(' + product.image + ')' }"></div>
+          <div class="float-product-price">¥{{ product.price }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 服务承诺栏 -->
+    <div class="service-bar">
+      <div class="service-item">
+        <el-icon :size="24" color="#ff6b00"><Goods /></el-icon>
+        <div class="service-text">
+          <span class="service-title">{{ t('home.freeShipping') }}</span>
+          <span class="service-desc">{{ t('home.freeShippingDesc') }}</span>
+        </div>
+      </div>
+      <div class="service-divider"></div>
+      <div class="service-item">
+        <el-icon :size="24" color="#ff6b00"><RefreshLeft /></el-icon>
+        <div class="service-text">
+          <span class="service-title">{{ t('home.freeReturn') }}</span>
+          <span class="service-desc">{{ t('home.freeReturnDesc') }}</span>
+        </div>
+      </div>
+      <div class="service-divider" v-if="!isMobile"></div>
+      <div class="service-item" v-if="!isMobile">
+        <el-icon :size="24" color="#ff6b00"><Lock /></el-icon>
+        <div class="service-text">
+          <span class="service-title">{{ t('home.securePayment') }}</span>
+          <span class="service-desc">{{ t('home.securePaymentDesc') }}</span>
+        </div>
+      </div>
+      <div class="service-divider" v-if="!isMobile"></div>
+      <div class="service-item" v-if="!isMobile">
+        <el-icon :size="24" color="#ff6b00"><Service /></el-icon>
+        <div class="service-text">
+          <span class="service-title">{{ t('home.support247') }}</span>
+          <span class="service-desc">{{ t('home.support247Desc') }}</span>
         </div>
       </div>
     </div>
 
     <!-- 分类导航 -->
-    <div class="category-section" v-if="categories.length">
-      <div class="container">
-        <div class="category-grid">
-          <div class="category-item" v-for="cat in categories.slice(0, 10)" :key="cat.id" @click="goCategory(cat.id)">
-            <div class="category-icon"><el-icon size="28"><CollectionTag /></el-icon></div>
-            <span class="category-name">{{ cat.name }}</span>
+    <div class="category-section">
+      <div class="section-header">
+        <h3 class="section-title">{{ t('home.shopByCategory') }}</h3>
+      </div>
+      <div class="category-grid">
+        <div class="category-item" v-for="cat in categories" :key="cat.id" @click="goCategory(cat.id)">
+          <div class="category-icon" :style="{ backgroundImage: 'url(' + cat.icon + ')' }"></div>
+          <span class="category-name">{{ cat.name }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 限时秒杀 -->
+    <div class="flash-sale-section">
+      <div class="section-header flash-header">
+        <div class="flash-title">
+          <el-icon :size="20"><Star /></el-icon>
+          <span>{{ t('home.flashSale') }}</span>
+        </div>
+        <div class="flash-countdown">
+          <span class="countdown-label">{{ t('home.endsIn') }}</span>
+          <span class="countdown-time">{{ countdown }}</span>
+        </div>
+        <router-link to="/product/list?tag=flash_sale" class="view-all">{{ t('home.viewAll') }} ></router-link>
+      </div>
+      <div class="flash-products">
+        <div class="flash-product-card" v-for="product in flashProducts" :key="product.id" @click="goProductDetail(product.id)">
+          <div class="flash-product-img" :style="{ backgroundImage: 'url(' + product.image + ')' }">
+            <div class="flash-discount">-{{ product.discount }}%</div>
+          </div>
+          <div class="flash-product-info">
+            <div class="flash-product-name">{{ product.name }}</div>
+            <div class="flash-product-price">
+              <span class="current-price">¥{{ product.price }}</span>
+              <span class="original-price">¥{{ product.originalPrice }}</span>
+            </div>
+            <div class="flash-progress">
+              <div class="progress-bar" :style="{ width: product.soldPercent + '%' }"></div>
+              <span class="sold-text">{{ t('home.sold') }} {{ product.soldPercent }}%</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 第二Banner区：左右分栏 -->
-    <div class="second-banner">
-      <div class="container">
-        <div class="second-banner-wrapper">
-          <div class="second-banner-left" @click="goProducts">
-            <div class="second-banner-img">
-              <el-icon size="60"><Tshirt /></el-icon>
+    <!-- 新品推荐 -->
+    <div class="new-arrivals-section">
+      <div class="section-header">
+        <h3 class="section-title">{{ t('home.newArrivals') }}</h3>
+        <router-link to="/product/list?sort=new" class="view-all">{{ t('home.viewAll') }} ></router-link>
+      </div>
+      <div class="product-grid">
+        <div class="product-card" v-for="product in newProducts" :key="product.id" @click="goProductDetail(product.id)">
+          <div class="product-img" :style="{ backgroundImage: 'url(' + product.image + ')' }">
+            <div class="product-tags" v-if="product.tags">
+              <span class="product-tag" v-for="tag in product.tags" :key="tag">{{ tag }}</span>
+            </div>
+            <div class="product-actions">
+              <el-button circle size="small" class="action-btn" @click.stop="addToCart(product)">
+                <el-icon><ShoppingCart /></el-icon>
+              </el-button>
+              <el-button circle size="small" class="action-btn" @click.stop="toggleFavorite(product)">
+                <el-icon :color="product.favorite ? '#ff6b00' : ''"><Star /></el-icon>
+              </el-button>
             </div>
           </div>
-          <div class="second-banner-right">
-            <h3>新品上市</h3>
-            <p class="start-price">起步价</p>
-            <p class="price">¥149<span class="price-unit">起</span></p>
-            <p class="original-price">原价 ¥399 起</p>
-            <el-button type="primary" size="large" @click="goProducts">查看详情</el-button>
+          <div class="product-info">
+            <div class="product-name">{{ product.name }}</div>
+            <div class="product-price-row">
+              <span class="product-price">¥{{ product.price }}</span>
+              <span v-if="product.originalPrice" class="product-original">¥{{ product.originalPrice }}</span>
+            </div>
+            <div class="product-meta">
+              <span v-if="product.sales" class="product-sales">{{ t('home.sold') }} {{ product.sales }}</span>
+              <span v-if="product.freeShipping" class="free-shipping-tag">{{ t('home.freeShip') }}</span>
+            </div>
           </div>
+        </div>
+      </div>
+      <div class="load-more">
+        <el-button type="primary" plain @click="loadMoreProducts">{{ t('home.loadMore') }}</el-button>
+      </div>
+    </div>
+
+    <!-- 品牌专区 -->
+    <div class="brand-section" v-if="!isMobile">
+      <div class="section-header">
+        <h3 class="section-title">{{ t('home.brandZone') }}</h3>
+      </div>
+      <div class="brand-grid">
+        <div class="brand-card" v-for="brand in brands" :key="brand.id">
+          <div class="brand-logo" :style="{ backgroundImage: 'url(' + brand.logo + ')' }"></div>
+          <span class="brand-name">{{ brand.name }}</span>
         </div>
       </div>
     </div>
 
-    <!-- 热门推荐商品 -->
-    <div class="product-section">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">🔥 热门推荐</h2>
-          <a href="javascript:;" class="more-link" @click="goProducts">查看更多 →</a>
+    <!-- 下载APP提示（移动端） -->
+    <div class="app-promo" v-if="isMobile">
+      <div class="app-promo-content">
+        <div class="app-icon">
+          <el-icon :size="32"><Iphone /></el-icon>
         </div>
-        <div class="product-grid" v-if="hotProducts.length">
-          <div class="product-card" v-for="p in hotProducts.slice(0, 10)" :key="p.id" @click="goDetail(p.id)">
-            <div class="product-tag" v-if="p.sales > 50">热销</div>
-            <div class="product-image">
-              <img :src="p.main_image || '/pc/assets/placeholder.png'" :alt="p.name" @error="imgError($event)" />
-            </div>
-            <div class="product-info">
-              <div class="product-name">{{ p.name }}</div>
-              <div class="product-bottom">
-                <span class="product-price">¥{{ p.price }}</span>
-                <span class="product-sales">已售{{ p.sales || 0 }}</span>
-              </div>
-            </div>
-          </div>
+        <div class="app-text">
+          <span class="app-title">{{ t('home.downloadApp') }}</span>
+          <span class="app-desc">{{ t('home.appExclusive') }}</span>
         </div>
-        <div class="empty-tip" v-else>暂无商品</div>
-      </div>
-    </div>
-
-    <!-- 新品上市 -->
-    <div class="product-section">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">✨ 新品上市</h2>
-          <a href="javascript:;" class="more-link" @click="goProducts">查看更多 →</a>
-        </div>
-        <div class="product-grid" v-if="newProducts.length">
-          <div class="product-card" v-for="p in newProducts.slice(0, 10)" :key="p.id" @click="goDetail(p.id)">
-            <div class="product-tag tag-new">新品</div>
-            <div class="product-image">
-              <img :src="p.main_image || '/pc/assets/placeholder.png'" :alt="p.name" @error="imgError($event)" />
-            </div>
-            <div class="product-info">
-              <div class="product-name">{{ p.name }}</div>
-              <div class="product-bottom">
-                <span class="product-price">¥{{ p.price }}</span>
-                <span class="product-sales">已售{{ p.sales || 0 }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="empty-tip" v-else>暂无商品</div>
-      </div>
-    </div>
-
-    <!-- 为你推荐 -->
-    <div class="product-section">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">🛍️ 为你推荐</h2>
-        </div>
-        <div class="product-grid" v-if="recommendProducts.length">
-          <div class="product-card" v-for="p in recommendProducts" :key="p.id" @click="goDetail(p.id)">
-            <div class="product-image">
-              <img :src="p.main_image || '/pc/assets/placeholder.png'" :alt="p.name" @error="imgError($event)" />
-            </div>
-            <div class="product-info">
-              <div class="product-name">{{ p.name }}</div>
-              <div class="product-bottom">
-                <span class="product-price">¥{{ p.price }}</span>
-                <span class="product-sales">已售{{ p.sales || 0 }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="empty-tip" v-else>暂无商品</div>
+        <el-button type="primary" size="small" class="app-btn">{{ t('home.download') }}</el-button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { getHomeData } from '@/api/home'
+import { useI18n } from 'vue-i18n'
+import { ElMessage } from 'element-plus'
+import {
+  Goods, RefreshLeft, Lock, Service, Star,
+  ShoppingCart, Iphone
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
-const banners = ref([])
-const categories = ref([])
-const hotProducts = ref([])
-const newProducts = ref([])
-const recommendProducts = ref([])
+const { t } = useI18n()
 
-// 倒计时
-const days = ref('00')
-const hours = ref('00')
-const minutes = ref('00')
-const seconds = ref('00')
-let countdownTimer = null
+const isMobile = ref(false)
+const countdown = ref('02:30:45')
+
+const banners = ref([
+  {
+    image: 'https://picsum.photos/1200/500?random=1',
+    tag: 'NEW SEASON',
+    title: '秋冬新品上市',
+    subtitle: '全场低至5折 限时特惠',
+    btnText: '立即选购'
+  },
+  {
+    image: 'https://picsum.photos/1200/500?random=2',
+    tag: 'FLASH SALE',
+    title: '限时秒杀',
+    subtitle: '智能手表低至¥99 数量有限',
+    btnText: '马上抢购'
+  },
+  {
+    image: 'https://picsum.photos/1200/500?random=3',
+    tag: 'CROSS BORDER',
+    title: '跨境精选',
+    subtitle: '欧盟认证品质 全球直邮',
+    btnText: '探索更多'
+  }
+])
+
+const floatingProducts = ref([
+  { id: 1, image: 'https://picsum.photos/200/200?random=10', price: '271' },
+  { id: 2, image: 'https://picsum.photos/200/200?random=11', price: '603' }
+])
+
+const categories = ref([
+  { id: 1, name: '智能手表', icon: 'https://picsum.photos/100/100?random=20' },
+  { id: 2, name: '箱包配饰', icon: 'https://picsum.photos/100/100?random=21' },
+  { id: 3, name: '数码电子', icon: 'https://picsum.photos/100/100?random=22' },
+  { id: 4, name: '家居生活', icon: 'https://picsum.photos/100/100?random=23' },
+  { id: 5, name: '美妆个护', icon: 'https://picsum.photos/100/100?random=24' },
+  { id: 6, name: '运动户外', icon: 'https://picsum.photos/100/100?random=25' },
+  { id: 7, name: '母婴玩具', icon: 'https://picsum.photos/100/100?random=26' },
+  { id: 8, name: '服装鞋包', icon: 'https://picsum.photos/100/100?random=27' },
+  { id: 9, name: '食品保健', icon: 'https://picsum.photos/100/100?random=28' },
+  { id: 10, name: '更多分类', icon: 'https://picsum.photos/100/100?random=29' }
+])
+
+const flashProducts = ref([
+  { id: 101, name: '智能手表多功能运动版', image: 'https://picsum.photos/300/300?random=30', price: '99', originalPrice: '299', discount: 67, soldPercent: 78 },
+  { id: 102, name: '时尚双肩包大容量', image: 'https://picsum.photos/300/300?random=31', price: '129', originalPrice: '399', discount: 68, soldPercent: 65 },
+  { id: 103, name: '蓝牙耳机降噪版', image: 'https://picsum.photos/300/300?random=32', price: '199', originalPrice: '499', discount: 60, soldPercent: 89 },
+  { id: 104, name: '智能手环心率监测', image: 'https://picsum.photos/300/300?random=33', price: '79', originalPrice: '199', discount: 60, soldPercent: 92 }
+])
+
+const newProducts = ref([
+  { id: 201, name: '智能手表蓝牙通话版 心率监测 运动防水', image: 'https://picsum.photos/400/400?random=40', price: '299', originalPrice: '599', sales: '2.3k', freeShipping: true, tags: ['新品', '跨境'], favorite: false },
+  { id: 202, name: '时尚女士手提包 真皮大容量 通勤百搭', image: 'https://picsum.photos/400/400?random=41', price: '399', originalPrice: '799', sales: '1.8k', freeShipping: true, tags: ['热销'], favorite: false },
+  { id: 203, name: '男士双肩包 商务休闲 防水耐磨', image: 'https://picsum.photos/400/400?random=42', price: '199', originalPrice: '399', sales: '3.1k', freeShipping: true, tags: ['爆款'], favorite: false },
+  { id: 204, name: '智能手表运动版 GPS定位 血氧监测', image: 'https://picsum.photos/400/400?random=43', price: '499', originalPrice: '899', sales: '956', freeShipping: true, tags: ['新品', '欧盟认证'], favorite: false },
+  { id: 205, name: '钱包男士短款 真皮多卡位 简约时尚', image: 'https://picsum.photos/400/400?random=44', price: '129', originalPrice: '259', sales: '5.6k', freeShipping: true, tags: ['热销'], favorite: false },
+  { id: 206, name: '行李箱24寸 万向轮 密码锁 大容量', image: 'https://picsum.photos/400/400?random=45', price: '349', originalPrice: '699', sales: '1.2k', freeShipping: true, tags: ['跨境'], favorite: false },
+  { id: 207, name: '智能手表儿童版 定位通话 防水防摔', image: 'https://picsum.photos/400/400?random=46', price: '259', originalPrice: '459', sales: '876', freeShipping: true, tags: ['新品'], favorite: false },
+  { id: 208, name: '帆布包女 单肩斜挎 文艺简约 大容量', image: 'https://picsum.photos/400/400?random=47', price: '89', originalPrice: '169', sales: '4.2k', freeShipping: true, tags: ['爆款'], favorite: false }
+])
+
+const brands = ref([
+  { id: 1, name: '品牌A', logo: 'https://picsum.photos/160/80?random=50' },
+  { id: 2, name: '品牌B', logo: 'https://picsum.photos/160/80?random=51' },
+  { id: 3, name: '品牌C', logo: 'https://picsum.photos/160/80?random=52' },
+  { id: 4, name: '品牌D', logo: 'https://picsum.photos/160/80?random=53' },
+  { id: 5, name: '品牌E', logo: 'https://picsum.photos/160/80?random=54' },
+  { id: 6, name: '品牌F', logo: 'https://picsum.photos/160/80?random=55' }
+])
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
 
 const startCountdown = () => {
-  const target = Date.now() + 48 * 60 * 60 * 1000
-  const update = () => {
-    const diff = Math.max(0, target - Date.now())
-    const d = Math.floor(diff / 86400000)
-    const h = Math.floor((diff % 86400000) / 3600000)
-    const m = Math.floor((diff % 3600000) / 60000)
-    const s = Math.floor((diff % 60000) / 1000)
-    days.value = String(d).padStart(2, '0')
-    hours.value = String(h).padStart(2, '0')
-    minutes.value = String(m).padStart(2, '0')
-    seconds.value = String(s).padStart(2, '0')
-  }
-  update()
-  countdownTimer = setInterval(update, 1000)
+  let totalSeconds = 2 * 3600 + 30 * 60 + 45
+  setInterval(() => {
+    totalSeconds--
+    if (totalSeconds <= 0) totalSeconds = 24 * 3600
+    const h = Math.floor(totalSeconds / 3600)
+    const m = Math.floor((totalSeconds % 3600) / 60)
+    const s = totalSeconds % 60
+    countdown.value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }, 1000)
 }
 
-const fetchHome = async () => {
-  try {
-    const res = await getHomeData()
-    banners.value = res.data.banners || []
-    categories.value = res.data.categories || []
-    hotProducts.value = res.data.hot_products || []
-    newProducts.value = res.data.new_products || []
-    recommendProducts.value = res.data.recommend_products || []
-  } catch (e) { console.error(e) }
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+  startCountdown()
+})
+
+const goProductList = () => {
+  router.push('/product/list')
 }
 
-const goDetail = id => router.push(`/product/${id}`)
-const goCategory = id => router.push({ path: '/products', query: { category_id: id } })
-const goProducts = () => router.push('/products')
-const imgError = (e) => { e.target.style.display = 'none' }
+const goProductDetail = (id) => {
+  router.push('/product/' + id)
+}
 
-onMounted(() => { fetchHome(); startCountdown() })
-onUnmounted(() => { if (countdownTimer) clearInterval(countdownTimer) })
+const goCategory = (id) => {
+  router.push('/product/list?category=' + id)
+}
+
+const addToCart = (product) => {
+  ElMessage.success(t('home.addedToCart'))
+}
+
+const toggleFavorite = (product) => {
+  product.favorite = !product.favorite
+  ElMessage.success(product.favorite ? t('home.favorited') : t('home.unfavorited'))
+}
+
+const loadMoreProducts = () => {
+  ElMessage.info(t('home.loadingMore'))
+}
 </script>
 
 <style scoped>
-.home-page { background: #f5f5f5; padding-bottom: 40px; }
-.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-
-/* 主Banner */
-.banner-section { padding: 20px 0; }
-.banner-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-radius: 8px; overflow: hidden; height: 360px; }
-.banner-left { background: linear-gradient(135deg, #fff8e6, #ffe4b5); padding: 30px; display: flex; flex-direction: column; justify-content: center; }
-.countdown { display: flex; gap: 12px; margin-bottom: 20px; }
-.countdown-item { display: flex; flex-direction: column; align-items: center; }
-.countdown-item .num { background: #e6a23c; color: #fff; font-size: 24px; font-weight: bold; padding: 6px 10px; border-radius: 4px; min-width: 40px; text-align: center; }
-.countdown-item .label { font-size: 12px; color: #999; margin-top: 4px; }
-.promo-tags { display: flex; gap: 10px; margin-bottom: 12px; }
-.tag { padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-.tag-online { background: #e6a23c; color: #fff; }
-.tag-date { background: #fff; color: #e6a23c; border: 1px solid #e6a23c; }
-.promo-title { font-size: 28px; font-weight: bold; color: #333; margin-bottom: 8px; }
-.promo-subtitle { font-size: 16px; color: #666; margin-bottom: 8px; }
-.promo-discount { font-size: 48px; font-weight: bold; color: #f56c6c; margin-bottom: 20px; }
-.shop-all-btn { width: 160px; }
-
-.banner-right { background: #2c3e50; display: flex; align-items: center; padding: 30px; cursor: pointer; position: relative; }
-.banner-product-img { flex: 1; display: flex; align-items: center; justify-content: center; }
-.product-placeholder { text-align: center; color: rgba(255,255,255,0.3); }
-.product-placeholder p { margin-top: 10px; font-size: 14px; }
-.banner-product-info { color: #fff; text-align: center; }
-.banner-product-info h3 { font-size: 20px; margin-bottom: 10px; }
-.start-price { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
-.price { font-size: 36px; font-weight: bold; color: #e6a23c; margin: 0; }
-.price-unit { font-size: 16px; }
-.original-price { font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: line-through; margin: 8px 0; }
-.shop-now { display: inline-block; background: #e6a23c; color: #fff; padding: 8px 20px; border-radius: 4px; font-size: 14px; margin-top: 10px; }
-
-/* 分类导航 */
-.category-section { background: #fff; padding: 20px 0; margin-bottom: 20px; }
-.category-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; }
-.category-item { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 15px 5px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
-.category-item:hover { background: #f5f7fa; }
-.category-icon { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #fdf6ec, #faecd8); color: #e6a23c; display: flex; align-items: center; justify-content: center; }
-.category-name { font-size: 13px; color: #333; }
-
-/* 第二Banner */
-.second-banner { margin-bottom: 20px; }
-.second-banner-wrapper { display: grid; grid-template-columns: 2fr 1fr; border-radius: 8px; overflow: hidden; height: 200px; }
-.second-banner-left { background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); cursor: pointer; }
-.second-banner-right { background: #1a1a2e; color: #fff; padding: 25px; display: flex; flex-direction: column; justify-content: center; }
-.second-banner-right h3 { font-size: 22px; margin: 0 0 8px 0; }
-
-/* 商品区 */
-.product-section { background: #fff; padding: 25px 0; margin-bottom: 20px; border-radius: 8px; }
-.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.section-title { font-size: 20px; font-weight: bold; color: #333; margin: 0; }
-.more-link { color: #999; font-size: 14px; text-decoration: none; cursor: pointer; }
-.more-link:hover { color: #e6a23c; }
-.product-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
-.product-card { border: 1px solid #eee; border-radius: 8px; overflow: hidden; background: #fff; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
-.product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-.product-tag { position: absolute; top: 10px; left: 10px; background: #f56c6c; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; z-index: 1; }
-.product-tag.tag-new { background: #67c23a; }
-.product-image { width: 100%; height: 180px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; }
-.product-image img { width: 100%; height: 100%; object-fit: cover; }
-.product-info { padding: 12px; }
-.product-name { font-size: 13px; color: #333; line-height: 1.4; height: 36px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.product-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-.product-price { font-size: 16px; color: #f56c6c; font-weight: bold; }
-.product-sales { font-size: 11px; color: #999; }
-.empty-tip { text-align: center; padding: 40px; color: #999; }
-
-/* ========== 移动端适配 ========== */
-@media (max-width: 768px) {
-  .home-page { padding-bottom: 20px; }
-  .container { max-width: 100%; padding: 0 12px; }
-  .banner-section { padding: 10px 0; }
-  .banner-wrapper { grid-template-columns: 1fr; height: auto; border-radius: 6px; }
-  .banner-left { padding: 20px; }
-  .countdown { gap: 8px; margin-bottom: 12px; }
-  .countdown-item .num { font-size: 18px; padding: 4px 8px; min-width: 32px; }
-  .countdown-item .label { font-size: 10px; }
-  .promo-tags { gap: 6px; margin-bottom: 8px; }
-  .tag { padding: 3px 8px; font-size: 11px; }
-  .promo-title { font-size: 20px; margin-bottom: 6px; }
-  .promo-subtitle { font-size: 13px; margin-bottom: 6px; }
-  .promo-discount { font-size: 32px; margin-bottom: 12px; }
-  .shop-all-btn { width: 120px; font-size: 13px !important; }
-  .banner-right { padding: 20px; flex-direction: column; gap: 12px; }
-  .banner-product-info h3 { font-size: 16px; margin-bottom: 8px; }
-  .price { font-size: 28px; }
-  .price-unit { font-size: 14px; }
-  .original-price { font-size: 12px; margin: 6px 0; }
-  .shop-now { padding: 6px 16px; font-size: 13px; margin-top: 8px; }
-  .category-section { padding: 15px 0; margin-bottom: 10px; }
-  .category-grid { grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .category-item { padding: 10px 3px; gap: 6px; }
-  .category-icon { width: 40px; height: 40px; }
-  .category-name { font-size: 11px; }
-  .second-banner { margin-bottom: 10px; }
-  .second-banner-wrapper { grid-template-columns: 1fr; height: auto; border-radius: 6px; }
-  .second-banner-left { min-height: 120px; }
-  .second-banner-right { padding: 18px; }
-  .second-banner-right h3 { font-size: 18px; }
-  .product-section { padding: 15px 0; margin-bottom: 10px; border-radius: 6px; }
-  .section-header { margin-bottom: 12px; }
-  .section-title { font-size: 16px; }
-  .more-link { font-size: 12px; }
-  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .product-card { border-radius: 6px; }
-  .product-card:hover { transform: none; }
-  .product-tag { top: 6px; left: 6px; padding: 2px 6px; font-size: 10px; }
-  .product-image { height: 140px; }
-  .product-info { padding: 8px; }
-  .product-name { font-size: 12px; height: 32px; }
-  .product-bottom { margin-top: 8px; }
-  .product-price { font-size: 14px; }
-  .product-sales { font-size: 10px; }
-  .empty-tip { padding: 30px 16px; font-size: 13px; }
+.home-page {
+  background: #f5f5f5;
 }
 
-@media (max-width: 480px) {
-  .container { padding: 0 8px; }
-  .category-grid { grid-template-columns: repeat(4, 1fr); }
-  .product-grid { gap: 8px; }
-  .product-image { height: 120px; }
-  .promo-title { font-size: 18px; }
-  .promo-discount { font-size: 28px; }
+/* Banner区域 */
+.banner-section {
+  position: relative;
+  margin: -16px -20px 16px;
+  background: linear-gradient(135deg, #ff6b00, #ff8c33);
+}
+.mobile-view .banner-section {
+  margin: -12px -12px 12px;
+}
+.main-banner {
+  height: 420px;
+}
+.mobile-view .main-banner {
+  height: 200px;
+}
+.banner-item {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.banner-overlay {
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  max-width: 400px;
+}
+.mobile-view .banner-overlay {
+  left: 20px;
+  max-width: 200px;
+}
+.banner-tag {
+  display: inline-block;
+  background: rgba(255,255,255,.2);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+.banner-title {
+  font-size: 42px;
+  font-weight: 900;
+  margin: 0 0 8px;
+  text-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.mobile-view .banner-title {
+  font-size: 22px;
+}
+.banner-subtitle {
+  font-size: 18px;
+  margin: 0 0 20px;
+  opacity: .9;
+}
+.mobile-view .banner-subtitle {
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.banner-btn {
+  background: #fff;
+  color: #ff6b00;
+  border: none;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 24px;
+}
+.mobile-view .banner-btn {
+  padding: 8px 20px;
+  font-size: 13px;
+}
+.floating-products {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 16px;
+}
+.float-product-card {
+  width: 160px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  transition: transform .3s;
+}
+.float-product-card:hover {
+  transform: translateY(-4px);
+}
+.float-product-img {
+  width: 100%;
+  padding-top: 100%;
+  background-size: cover;
+  background-position: center;
+}
+.float-product-price {
+  text-align: center;
+  padding: 8px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ff6b00;
+}
+
+/* 服务承诺栏 */
+.service-bar {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.service-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.service-text {
+  display: flex;
+  flex-direction: column;
+}
+.service-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+.service-desc {
+  font-size: 12px;
+  color: #999;
+}
+.service-divider {
+  width: 1px;
+  height: 40px;
+  background: #eee;
+}
+
+/* 通用区块 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+.mobile-view .section-title {
+  font-size: 16px;
+}
+.view-all {
+  color: #999;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* 分类导航 */
+.category-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+.mobile-view .category-grid {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+.category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.category-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #f5f5f5;
+}
+.mobile-view .category-icon {
+  width: 52px;
+  height: 52px;
+}
+.category-name {
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+}
+.mobile-view .category-name {
+  font-size: 11px;
+}
+
+/* 限时秒杀 */
+.flash-sale-section {
+  background: linear-gradient(135deg, #fff5f0, #fff);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.flash-header {
+  margin-bottom: 16px;
+}
+.flash-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff4757;
+}
+.mobile-view .flash-title {
+  font-size: 16px;
+}
+.flash-countdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.countdown-label {
+  font-size: 13px;
+  color: #666;
+}
+.countdown-time {
+  background: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: monospace;
+}
+.flash-products {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.mobile-view .flash-products {
+  grid-template-columns: repeat(2, 1fr);
+}
+.flash-product-card {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .3s;
+}
+.flash-product-card:hover {
+  transform: translateY(-2px);
+}
+.flash-product-img {
+  width: 100%;
+  padding-top: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.flash-discount {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #ff4757;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.flash-product-info {
+  padding: 10px;
+}
+.flash-product-name {
+  font-size: 13px;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-bottom: 6px;
+  height: 36px;
+}
+.flash-product-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.current-price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff4757;
+}
+.original-price {
+  font-size: 12px;
+  color: #999;
+  text-decoration: line-through;
+}
+.flash-progress {
+  position: relative;
+  height: 16px;
+  background: #ffe4e1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b00, #ff4757);
+  border-radius: 8px;
+}
+.sold-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 商品网格 */
+.new-arrivals-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.mobile-view .product-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.product-card {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all .3s;
+  border: 1px solid #f5f5f5;
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+}
+.product-img {
+  width: 100%;
+  padding-top: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.product-tags {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.product-tag {
+  background: #ff6b00;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.product-actions {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.product-card:hover .product-actions {
+  opacity: 1;
+}
+.action-btn {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.product-info {
+  padding: 12px;
+}
+.product-name {
+  font-size: 14px;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  min-height: 40px;
+}
+.mobile-view .product-name {
+  font-size: 12px;
+  min-height: 34px;
+}
+.product-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.product-price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff6b00;
+}
+.mobile-view .product-price {
+  font-size: 16px;
+}
+.product-original {
+  font-size: 12px;
+  color: #999;
+  text-decoration: line-through;
+}
+.product-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #999;
+}
+.free-shipping-tag {
+  background: #f0f9eb;
+  color: #67c23a;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+}
+.load-more {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* 品牌专区 */
+.brand-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+.brand-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #f5f5f5;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .3s;
+}
+.brand-card:hover {
+  border-color: #ff6b00;
+  box-shadow: 0 4px 12px rgba(255,107,0,.1);
+}
+.brand-logo {
+  width: 100%;
+  height: 50px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.brand-name {
+  font-size: 13px;
+  color: #333;
+}
+
+/* APP推广（移动端） */
+.app-promo {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.app-promo-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255,255,255,.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.app-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+.app-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+.app-desc {
+  font-size: 11px;
+  opacity: .8;
+}
+.app-btn {
+  background: #fff;
+  color: #667eea;
+  border: none;
+  font-weight: 600;
 }
 </style>
