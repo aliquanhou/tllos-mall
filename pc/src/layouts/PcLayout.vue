@@ -285,11 +285,21 @@ watch(() => route.path, () => {
 </script>
 
 <style scoped>
+/* 全局溢出保护：禁止横向滚动 */
+:deep(html), :deep(body) {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+:deep(*) {
+  box-sizing: border-box;
+}
 .pc-layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: #f5f5f5;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* 顶部公告栏 */

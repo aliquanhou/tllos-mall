@@ -306,8 +306,11 @@ const loadMoreProducts = () => {
 </script>
 
 <style scoped>
+/* 全局溢出保护 */
 .home-page {
   background: #f5f5f5;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* Banner区域 */
@@ -315,9 +318,12 @@ const loadMoreProducts = () => {
   position: relative;
   margin: -16px -20px 16px;
   background: linear-gradient(135deg, #ff6b00, #ff8c33);
+  overflow: hidden;
+  max-width: calc(100% + 40px);
 }
 .mobile-view .banner-section {
   margin: -12px -12px 12px;
+  max-width: calc(100% + 24px);
 }
 .main-banner {
   height: 420px;
@@ -427,6 +433,13 @@ const loadMoreProducts = () => {
   display: flex;
   align-items: center;
   justify-content: space-around;
+  max-width: 100%;
+  overflow: hidden;
+}
+.mobile-view .service-bar {
+  padding: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .service-item {
   display: flex;
@@ -472,6 +485,16 @@ const loadMoreProducts = () => {
   color: #999;
   text-decoration: none;
   font-size: 14px;
+}
+
+/* 通用区块溢出保护 */
+.category-section,
+.flash-sale-section,
+.new-arrivals-section,
+.brand-section,
+.app-promo {
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* 分类导航 */
