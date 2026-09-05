@@ -5,3 +5,192 @@ a { text-decoration: none; color: inherit; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: #c0c4cc; border-radius: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ========== 后台管理全局移动端适配 ========== */
+@media (max-width: 768px) {
+  /* 全局字体和间距 */
+  body { font-size: 13px; }
+  
+  /* 内容区域适配 */
+  .app-main, .main-content, .content-wrapper {
+    padding: 10px !important;
+    margin: 0 !important;
+  }
+  
+  /* 卡片适配 */
+  .el-card {
+    margin-bottom: 10px !important;
+  }
+  .el-card__body {
+    padding: 12px !important;
+  }
+  .el-card__header {
+    padding: 10px 12px !important;
+  }
+  
+  /* 表格横向滚动 */
+  .el-table {
+    font-size: 12px !important;
+  }
+  .el-table th, .el-table td {
+    padding: 8px 6px !important;
+  }
+  .el-table .cell {
+    font-size: 12px !important;
+  }
+  .table-wrapper, .el-table--scrollable-x .el-table__body-wrapper {
+    overflow-x: auto !important;
+  }
+  
+  /* 表单适配 */
+  .el-form-item {
+    margin-bottom: 14px !important;
+  }
+  .el-form-item__label {
+    font-size: 13px !important;
+    padding-bottom: 4px !important;
+  }
+  .el-input, .el-select, .el-textarea {
+    font-size: 13px !important;
+  }
+  .el-input__inner {
+    height: 34px !important;
+    font-size: 13px !important;
+  }
+  .el-textarea__inner {
+    font-size: 13px !important;
+  }
+  
+  /* 按钮适配 */
+  .el-button {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+  .el-button--small {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+  }
+  .el-button--mini {
+    font-size: 11px !important;
+    padding: 5px 8px !important;
+  }
+  
+  /* 对话框适配 */
+  .el-dialog {
+    width: 95% !important;
+    margin-top: 5vh !important;
+  }
+  .el-dialog__body {
+    padding: 15px !important;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .el-dialog__header {
+    padding: 12px 15px !important;
+  }
+  .el-dialog__title {
+    font-size: 15px !important;
+  }
+  .el-dialog__footer {
+    padding: 10px 15px !important;
+  }
+  
+  /* 分页适配 */
+  .el-pagination {
+    font-size: 12px !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+  .el-pagination button, .el-pagination span:not([class*=suffix]) {
+    font-size: 12px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+  }
+  
+  /* 标签页适配 */
+  .el-tabs__item {
+    font-size: 13px !important;
+    padding: 0 12px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+  }
+  
+  /* 下拉菜单适配 */
+  .el-dropdown-menu {
+    font-size: 12px !important;
+  }
+  .el-dropdown-menu__item {
+    padding: 8px 14px !important;
+    font-size: 12px !important;
+  }
+  
+  /* 消息提示适配 */
+  .el-message {
+    font-size: 13px !important;
+    min-width: 200px !important;
+  }
+  
+  /* 面包屑适配 */
+  .el-breadcrumb {
+    font-size: 12px !important;
+  }
+  .el-breadcrumb__item {
+    font-size: 12px !important;
+  }
+  
+  /* 搜索表单区域适配 */
+  .search-form, .filter-bar, .toolbar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+  .search-form .el-form-item, .filter-bar .el-form-item {
+    margin-bottom: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* 统计卡片适配 */
+  .stat-card, .overview-card, .dashboard-card {
+    padding: 12px !important;
+  }
+  .stat-value, .overview-value {
+    font-size: 18px !important;
+  }
+  .stat-label, .overview-label {
+    font-size: 12px !important;
+  }
+  
+  /* 网格布局适配 */
+  .grid-2, .grid-3, .grid-4, .grid-5, .grid-6 {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  
+  /* 图片上传适配 */
+  .el-upload--picture-card, .el-upload-list--picture-card .el-upload-list__item {
+    width: 80px !important;
+    height: 80px !important;
+  }
+  
+  /* 步骤条适配 */
+  .el-step__title {
+    font-size: 12px !important;
+  }
+  .el-step__description {
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body { font-size: 12px; }
+  
+  .el-card__body { padding: 10px !important; }
+  .el-table { font-size: 11px !important; }
+  .el-table th, .el-table td { padding: 6px 4px !important; }
+  .el-table .cell { font-size: 11px !important; }
+  .el-button { font-size: 11px !important; padding: 7px 10px !important; }
+  .el-input__inner { height: 32px !important; font-size: 12px !important; }
+  .el-dialog { width: 98% !important; }
+  .stat-value, .overview-value { font-size: 16px !important; }
+}

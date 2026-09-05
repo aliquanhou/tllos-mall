@@ -796,7 +796,22 @@ Route::prefix('admin/decorate')->middleware('auth:sanctum')->group(function () {
 
         Route::get('/category-ads', [App\Modules\Decorate\Controllers\DecorateController::class, 'categoryAds']);
 
+    // 装修页面模板（全局配置管理）
+    Route::get('/page-templates', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'index']);
+    Route::post('/page-templates', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'store']);
+    Route::get('/page-templates/{id}', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'show']);
+    Route::put('/page-templates/{id}/draft', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'saveDraft']);
+    Route::post('/page-templates/{id}/publish', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'publish']);
+    Route::get('/page-templates/{id}/versions', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'versions']);
+    Route::post('/page-templates/{id}/rollback', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'rollback']);
+    Route::get('/page-templates/{id}/export', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'export']);
+    Route::post('/page-templates/import', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'import']);
+    Route::delete('/page-templates/{id}', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'destroy']);
+
 });
+
+// 前台装修页面渲染（无需登录）
+Route::get('/page-templates/{slug}/render', [App\Modules\Decorate\Controllers\PageTemplateController::class, 'render']);
 
 
 

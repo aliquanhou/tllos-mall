@@ -108,4 +108,33 @@ onMounted(fetchList)
 .collect-card:hover .cancel-btn { opacity: 1; }
 .empty-collect { background: #fff; border-radius: 8px; padding: 60px 20px; text-align: center; }
 .empty-collect p { color: #999; margin: 16px 0; }
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 768px) {
+  .collect-page { padding: 10px 0; min-height: calc(100vh - 120px); }
+  .container { max-width: 100%; padding: 0 12px; }
+  .page-header { flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .page-title { font-size: 16px; }
+  .header-actions { flex-wrap: wrap; gap: 8px; }
+  
+  /* 收藏商品网格改2列 */
+  .collect-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .collect-card { border-radius: 6px; overflow: hidden; }
+  .product-image { height: 140px; }
+  .product-info { padding: 8px; }
+  .product-name { font-size: 12px; height: 32px; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .product-price { font-size: 14px; color: #f56c6c; font-weight: bold; }
+  .product-actions { padding: 8px; gap: 6px; border-top: 1px solid #f5f5f5; }
+  .product-actions .el-button { font-size: 12px !important; padding: 6px 10px !important; }
+  
+  .pagination-wrap { margin-top: 10px; overflow-x: auto; }
+  .empty-collect { padding: 40px 16px; border-radius: 6px; text-align: center; }
+  .empty-collect p { font-size: 13px; margin: 12px 0; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+  .collect-grid { gap: 8px; }
+  .product-image { height: 120px; }
+}
 </style>

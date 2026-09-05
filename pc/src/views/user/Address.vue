@@ -121,4 +121,31 @@ const resetForm = () => { editingId.value = null; addressForm.receiver_name = ''
 .address-actions { display: flex; gap: 16px; padding-top: 12px; border-top: 1px solid #f5f5f5; }
 .empty-address { background: #fff; border-radius: 8px; padding: 60px 20px; text-align: center; }
 .empty-address p { color: #999; margin: 16px 0; }
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 768px) {
+  .address-page { padding: 10px 0; min-height: calc(100vh - 120px); }
+  .container { max-width: 100%; padding: 0 12px; }
+  .page-header { flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .page-title { font-size: 16px; }
+  .add-btn { font-size: 13px !important; padding: 8px 14px !important; }
+  
+  /* 地址列表改单列 */
+  .address-list { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .address-card { padding: 12px; border-radius: 6px; }
+  .address-name { font-size: 14px; font-weight: bold; }
+  .address-phone { font-size: 13px; }
+  .default-tag { font-size: 10px; padding: 1px 6px; }
+  .address-detail { font-size: 12px; line-height: 1.5; margin-top: 6px; }
+  .address-actions { gap: 8px; flex-wrap: wrap; padding-top: 10px; margin-top: 10px; border-top: 1px solid #f5f5f5; }
+  .address-actions .el-button { font-size: 12px !important; padding: 6px 12px !important; }
+  
+  .empty-address { padding: 40px 16px; border-radius: 6px; }
+  .empty-address p { font-size: 13px; margin: 12px 0; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+  .address-card { padding: 10px; }
+}
 </style>

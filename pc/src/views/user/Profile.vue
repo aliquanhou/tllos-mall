@@ -222,4 +222,66 @@ onMounted(fetchUserInfo)
 .points-balance, .balance-amount { font-size: 32px; color: #e6a23c; font-weight: bold; }
 .points-balance span { font-size: 14px; color: #999; font-weight: normal; }
 .points-desc { font-size: 13px; color: #999; }
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 768px) {
+  .profile-page { padding: 10px 0; min-height: calc(100vh - 120px); }
+  .container { max-width: 100%; padding: 0 12px; }
+  
+  /* 两栏布局改为单列 */
+  .profile-wrapper { flex-direction: column; gap: 10px; }
+  .profile-sidebar { width: 100%; flex-shrink: 1; }
+  .profile-content { width: 100%; flex: none; }
+  
+  /* 用户卡片 */
+  .user-card { padding: 16px; margin-bottom: 10px; border-radius: 6px; }
+  .user-card .el-avatar { width: 56px !important; height: 56px !important; }
+  .user-name { font-size: 15px; margin-top: 8px; }
+  .user-level { font-size: 11px; padding: 2px 8px; margin-top: 6px; }
+  
+  /* 菜单改为横向滚动 */
+  .menu-list { border-radius: 6px; padding: 4px 0; overflow-x: auto; }
+  .menu-group { padding: 4px 0; border-bottom: none; display: flex; gap: 4px; padding: 4px 8px; }
+  .group-title { display: none; }
+  .menu-item { padding: 8px 10px; font-size: 12px; white-space: nowrap; border-radius: 4px; gap: 4px; }
+  .menu-item.active { border-right: none; border-bottom: 2px solid #e6a23c; background: #fdf6ec; }
+  .menu-item .el-icon { font-size: 16px; }
+  .menu-item.logout { color: #f56c6c; }
+  
+  /* 统计卡片 */
+  .stats-card { padding: 14px; margin-bottom: 10px; border-radius: 6px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-item { gap: 8px; padding: 6px; }
+  .stat-icon { width: 36px; height: 36px; font-size: 18px; border-radius: 6px; }
+  .stat-value { font-size: 18px; }
+  .stat-label { font-size: 11px; }
+  
+  /* 快捷订单 */
+  .quick-orders { padding: 14px; margin-bottom: 10px; border-radius: 6px; }
+  .section-title { font-size: 15px; margin-bottom: 10px; }
+  .order-tabs { flex-wrap: wrap; gap: 4px; justify-content: flex-start; }
+  .order-tab { padding: 10px 8px; gap: 4px; flex: 1; min-width: 60px; }
+  .order-tab .el-icon { font-size: 20px; }
+  .order-tab span { font-size: 11px; }
+  
+  /* 内容卡片 */
+  .content-card { padding: 14px; margin-bottom: 10px; border-radius: 6px; }
+  .sub-title { font-size: 13px; margin: 14px 0 8px 0; }
+  
+  /* 积分/余额概览 */
+  .points-overview, .balance-overview { padding: 16px; margin-bottom: 10px; border-radius: 6px; flex-direction: column; gap: 8px; text-align: center; }
+  .points-balance, .balance-amount { font-size: 24px; }
+  .points-balance span { font-size: 12px; }
+  .points-desc { font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+  .stats-grid { gap: 8px; }
+  .stat-value { font-size: 16px; }
+  .user-card { padding: 12px; }
+  .menu-item { padding: 6px 8px; font-size: 11px; }
+  .order-tab { min-width: 50px; padding: 8px 4px; }
+  .order-tab span { font-size: 10px; }
+}
 </style>

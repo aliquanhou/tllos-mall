@@ -146,4 +146,56 @@ onMounted(fetchOrder)
 .total-row.discount { color: #67c23a; }
 .total-row.final { font-size: 16px; color: #333; padding-top: 8px; }
 .pay-amount { font-size: 24px; color: #f56c6c; font-weight: bold; }
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 768px) {
+  .order-detail-page { padding: 10px 0; min-height: calc(100vh - 120px); }
+  .container { max-width: 100%; padding: 0 12px; }
+  .page-header { flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .page-header h2 { font-size: 18px; }
+  
+  /* 状态卡片 */
+  .status-card { padding: 16px; margin-bottom: 10px; border-radius: 6px; flex-wrap: wrap; gap: 12px; }
+  .status-info { gap: 12px; }
+  .status-info h3 { font-size: 16px; }
+  .status-info p { font-size: 12px; }
+  .status-actions { gap: 8px; flex-wrap: wrap; }
+  .status-actions .el-button { font-size: 12px !important; padding: 6px 12px !important; }
+  
+  /* 信息卡片 */
+  .info-card { padding: 14px; margin-bottom: 10px; border-radius: 6px; }
+  .info-card h3 { font-size: 15px; margin-bottom: 10px; padding-bottom: 8px; }
+  .logistics-row, .address-row, .meta-row { font-size: 13px; padding: 4px 0; flex-wrap: wrap; gap: 4px; }
+  .receiver { font-size: 14px; }
+  .mobile { font-size: 13px; }
+  .address-detail { font-size: 13px; margin-top: 6px; line-height: 1.5; }
+  
+  /* 订单商品 - grid改flex卡片 */
+  .order-item {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
+    align-items: flex-start;
+  }
+  .item-image { width: 60px; height: 60px; flex-shrink: 0; border-radius: 4px; }
+  .item-name { font-size: 13px; margin-bottom: 2px; }
+  .item-spec { font-size: 11px; color: #999; }
+  .item-price { font-size: 12px; color: #666; text-align: left; }
+  .item-quantity { font-size: 12px; color: #999; text-align: left; }
+  .item-subtotal { font-size: 14px; text-align: left; }
+  
+  /* 订单总计 */
+  .order-total { margin-top: 10px; padding-top: 10px; }
+  .total-row { justify-content: space-between; gap: 8px; font-size: 13px; padding: 3px 0; }
+  .total-row.final { font-size: 14px; padding-top: 6px; }
+  .pay-amount { font-size: 20px; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+  .item-image { width: 50px; height: 50px; }
+  .item-name { font-size: 12px; }
+  .page-header h2 { font-size: 16px; }
+}
 </style>

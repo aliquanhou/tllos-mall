@@ -144,4 +144,66 @@ onMounted(fetchData)
 .summary-total { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-top: 1px solid #f0f0f0; margin-top: 8px; }
 .total-price { font-size: 24px !important; color: #f56c6c !important; font-weight: bold; }
 .submit-btn { width: 100%; margin-top: 16px; background: #f56c6c; border-color: #f56c6c; }
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 768px) {
+  .checkout-page { padding: 10px 0; min-height: calc(100vh - 120px); }
+  .container { max-width: 100%; padding: 0 12px; }
+  .page-title { font-size: 18px; margin-bottom: 12px; }
+  
+  /* 两栏改单列 */
+  .checkout-wrapper { flex-direction: column; gap: 10px; }
+  .checkout-left { width: 100%; }
+  .checkout-right { width: 100%; position: static; }
+  
+  .checkout-section { padding: 14px; border-radius: 6px; margin-bottom: 10px; }
+  .section-title { font-size: 15px; margin-bottom: 10px; padding-bottom: 8px; }
+  
+  /* 地址列表改单列 */
+  .address-list { grid-template-columns: 1fr; gap: 8px; }
+  .address-card { padding: 12px; border-radius: 6px; }
+  .address-info { gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .receiver { font-size: 14px; }
+  .mobile { font-size: 12px; }
+  .default-tag { font-size: 10px; padding: 1px 6px; }
+  .address-detail { font-size: 12px; line-height: 1.5; }
+  .no-address { padding: 16px; font-size: 13px; }
+  
+  /* 订单商品改flex卡片布局 */
+  .order-item {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
+    align-items: flex-start;
+  }
+  .item-image { width: 60px; height: 60px; flex-shrink: 0; border-radius: 4px; }
+  .item-name { font-size: 13px; margin-bottom: 2px; }
+  .item-spec { font-size: 11px; }
+  .item-price { font-size: 12px; color: #666; text-align: left; }
+  .item-price::before { content: "单价: "; color: #999; }
+  .item-quantity { font-size: 12px; color: #666; text-align: left; }
+  .item-quantity::before { content: "数量: "; color: #999; }
+  .item-subtotal { font-size: 14px; text-align: left; }
+  .item-subtotal::before { content: "小计: "; color: #999; font-size: 12px; font-weight: normal; }
+  
+  /* 支付方式 */
+  .payment-methods { flex-wrap: wrap; gap: 8px; }
+  .payment-method { padding: 8px 14px; font-size: 13px; border-radius: 6px; }
+  
+  /* 订单摘要 */
+  .order-summary { padding: 14px; border-radius: 6px; }
+  .order-summary h3 { font-size: 15px; margin-bottom: 10px; padding-bottom: 8px; }
+  .summary-row { font-size: 13px; margin-bottom: 8px; }
+  .summary-total { padding: 12px 0; margin-top: 6px; }
+  .total-price { font-size: 20px !important; }
+  .submit-btn { margin-top: 12px; font-size: 14px !important; padding: 10px !important; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+  .item-image { width: 50px; height: 50px; }
+  .item-name { font-size: 12px; }
+  .page-title { font-size: 16px; }
+}
 </style>

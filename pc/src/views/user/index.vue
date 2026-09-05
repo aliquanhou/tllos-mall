@@ -105,4 +105,40 @@ const handleLogout = async () => {
 .menu-arrow { color: var(--text-secondary); font-size: 14px; }
 .logout-section { padding: 20px 10px; }
 .logout-btn { width: 100%; padding: 12px; background: #fff; border: 1px solid var(--border); border-radius: 8px; color: var(--danger); font-size: 14px; cursor: pointer; }
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 768px) {
+  .user-page { padding: 10px 0; min-height: calc(100vh - 120px); }
+  .container { max-width: 100%; padding: 0 12px; }
+  
+  /* 用户头部 */
+  .user-header { flex-direction: column; text-align: center; gap: 10px; padding: 16px; }
+  .avatar { width: 60px; height: 60px; }
+  .user-detail .nickname { font-size: 16px; }
+  .user-detail .mobile { font-size: 13px; }
+  
+  /* 订单Tab */
+  .order-section { padding: 12px; border-radius: 6px; margin-bottom: 10px; }
+  .section-title { font-size: 15px; margin-bottom: 10px; }
+  .order-tabs { flex-wrap: wrap; gap: 4px; }
+  .order-tab { flex: 1; min-width: 60px; padding: 10px 4px; }
+  .order-tab .order-icon { font-size: 20px; }
+  .order-tab span { font-size: 11px; }
+  
+  /* 菜单 */
+  .menu-section { padding: 12px; border-radius: 6px; margin-bottom: 10px; }
+  .menu-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .menu-item { padding: 10px 4px; font-size: 12px; text-align: center; border-radius: 6px; }
+  .menu-item .menu-icon { display: block; margin: 0 auto 4px; font-size: 18px; }
+  
+  /* 退出按钮 */
+  .logout-section { margin-bottom: 20px; }
+  .logout-btn { padding: 10px; font-size: 13px; border-radius: 6px; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+  .menu-list { grid-template-columns: repeat(2, 1fr); }
+  .avatar { width: 50px; height: 50px; }
+}
 </style>

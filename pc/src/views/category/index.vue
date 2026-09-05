@@ -100,4 +100,31 @@ onMounted(() => { fetchCategories(); fetchProducts() })
 .empty-category { background: #fff; border-radius: 8px; padding: 60px 20px; text-align: center; }
 .empty-category p { color: #999; margin: 16px 0; }
 .pagination-wrap { display: flex; justify-content: center; }
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 768px) {
+  .category-page { padding: 10px 0; min-height: calc(100vh - 120px); }
+  .container { max-width: 100%; padding: 0 12px; }
+  .category-wrapper { flex-direction: column; gap: 10px; }
+  .category-sidebar { width: 100%; position: static; padding: 12px; border-radius: 6px; }
+  .category-sidebar h3 { font-size: 14px; margin-bottom: 10px; padding-bottom: 8px; }
+  .category-tree { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px; }
+  .category-item { padding: 8px 12px; margin-bottom: 0; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+  .category-item .arrow { display: none; }
+  .category-content { width: 100%; }
+  .content-header { padding: 12px; margin-bottom: 10px; border-radius: 6px; flex-wrap: wrap; gap: 8px; }
+  .content-header h2 { font-size: 15px; }
+  .sort-bar { gap: 12px; flex-wrap: wrap; }
+  .sort-item { font-size: 12px; padding: 3px 6px; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+  .empty-category { padding: 40px 16px; border-radius: 6px; }
+  .empty-category p { font-size: 13px; margin: 12px 0; }
+  .pagination-wrap { overflow-x: auto; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+  .product-grid { gap: 8px; }
+  .category-item { padding: 6px 10px; font-size: 12px; }
+}
 </style>

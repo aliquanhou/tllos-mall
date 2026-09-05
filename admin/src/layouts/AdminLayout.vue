@@ -1,70 +1,97 @@
 <template>
-  <el-container class="admin-layout">
-    <el-aside :width="appStore.sidebarCollapsed ? '64px' : '220px'" class="sidebar">
+  <el-container class="admin-layout" :class="{ 'mobile-layout': isMobile }">
+    <!-- 移动端遮罩层 -->
+    <div v-if="isMobile && mobileSidebarVisible" class="mobile-mask" @click="closeMobileSidebar"></div>
+    
+    <el-aside 
+      :width="isMobile ? (mobileSidebarVisible ? '220px' : '0px') : (appStore.sidebarCollapsed ? '64px' : '220px')" 
+      class="sidebar"
+      :class="{ 'mobile-sidebar': isMobile, 'mobile-sidebar-open': isMobile && mobileSidebarVisible }"
+    >
       <div class="logo" @click="$router.push('/')">
-        <span v-if="!appStore.sidebarCollapsed">TLLOS 商城</span>
+        <span v-if="!isMobile && !appStore.sidebarCollapsed">TLLOS 商城</span>
         <span v-else>T</span>
       </div>
       <el-scrollbar class="menu-scroll">
-        <el-menu :default-active="$route.path" :collapse="appStore.sidebarCollapsed" router background-color="#001529" text-color="#b7bdc6" active-text-color="#1890ff">
+        <el-menu :default-active="$route.path" :collapse="isMobile ? false : appStore.sidebarCollapsed" router background-color="#001529" text-color="#b7bdc6" active-text-color="#1890ff">
           <template v-for="group in menuGroups" :key="group.title">
             <el-sub-menu v-if="group.children && group.children.length > 1" :index="group.key">
               <template #title>
                 <el-icon><component :is="group.icon" /></el-icon>
                 <span>{{ group.title }}</span>
-
-  <DocDialog v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
-  <HelpDrawer v-model="helpVisible" :module="helpModule" :page="helpPage" :title="helpTitle" />
-</template>
-              <el-menu-item v-for="item in group.children" :key="item.path" :index="item.path">
+              </template>
+              <el-menu-item v-for="item in group.children" :key="item.path" :index="item.path" @click="handleMenuClick">
                 <el-icon><component :is="item.icon" /></el-icon>
-                <template #title>{{ item.title }}
-</template>
+                <template #title>{{ item.title }}</template>
               </el-menu-item>
             </el-sub-menu>
-            <el-menu-item v-else-if="group.children && group.children.length === 1" :index="group.children[0].path">
+            <el-menu-item v-else-if="group.children && group.children.length === 1" :index="group.children[0].path" @click="handleMenuClick">
               <el-icon><component :is="group.icon" /></el-icon>
-              <template #title>{{ group.title }}
-</template>
+              <template #title>{{ group.title }}</template>
             </el-menu-item>
-</template>
+          </template>
         </el-menu>
       </el-scrollbar>
     </el-aside>
+    
     <el-container>
       <el-header class="header">
         <div class="header-left">
-          <el-icon class="collapse-btn" @click="appStore.toggleSidebar()"><Fold v-if="!appStore.sidebarCollapsed" /><Expand v-else /></el-icon>
-          <el-breadcrumb separator="/">
+          <!-- 移动端汉堡菜单按钮 -->
+          <el-icon v-if="isMobile" class="collapse-btn mobile-menu-btn" @click="toggleMobileSidebar">
+            <Menu v-if="!mobileSidebarVisible" />
+            <Close v-else />
+          </el-icon>
+          <el-icon v-else class="collapse-btn" @click="appStore.toggleSidebar()">
+            <Fold v-if="!appStore.sidebarCollapsed" />
+            <Expand v-else />
+          </el-icon>
+          <el-breadcrumb v-if="!isMobile" separator="/">
             <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item v-if="$route.meta.title">{{ $route.meta.title }}</el-breadcrumb-item>
           </el-breadcrumb>
+          <span v-else class="mobile-title">{{ $route.meta.title || 'TLLOS商城' }}</span>
         </div>
         <div class="header-right">
-          
-            <el-button type="primary" plain size="small" @click="openDoc" style="margin-right: 12px">
-              📘 技术文档
-            </el-button>
-<el-dropdown @command="handleLocale">
+          <el-button v-if="!isMobile" type="primary" plain size="small" @click="openDoc" style="margin-right: 12px">
+            📘 技术文档
+          </el-button>
+          <el-dropdown @command="handleLocale">
             <el-button text>{{ appStore.locale === 'zh' ? '中文' : 'EN' }}</el-button>
-            <template #dropdown><el-dropdown-menu><el-dropdown-item command="zh">简体中文</el-dropdown-item><el-dropdown-item command="en">English</el-dropdown-item></el-dropdown-menu>
-</template>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="zh">简体中文</el-dropdown-item>
+                <el-dropdown-item command="en">English</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
           </el-dropdown>
           <el-dropdown @command="handleCommand">
-            <div class="user-info"><el-avatar :size="32" icon="UserFilled" /><span class="username">{{ userStore.userInfo?.nickname || '管理员' }}</span></div>
-            <template #dropdown><el-dropdown-menu><el-dropdown-item command="profile">个人中心</el-dropdown-item><el-dropdown-item command="logout" divided>退出登录</el-dropdown-item></el-dropdown-menu>
-</template>
+            <div class="user-info">
+              <el-avatar :size="32" icon="UserFilled" />
+              <span v-if="!isMobile" class="username">{{ userStore.userInfo?.nickname || '管理员' }}</span>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="profile">个人中心</el-dropdown-item>
+                <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
           </el-dropdown>
         </div>
       </el-header>
       <el-main class="main-content"><router-view /></el-main>
     </el-container>
   </el-container>
+
+  <DocDialog v-model="docVisible" :module="docModule" :page="docPage" :title="docTitle" />
+  <HelpDrawer v-model="helpVisible" :module="helpModule" :page="helpPage" :title="helpTitle" />
 </template>
+
 <script setup>
 import DocDrawer from "@/components/DocDrawer.vue"
-import { ref, computed } from "vue"
+import { ref, computed, onMounted, onUnmounted } from "vue"
 import { useRoute } from "vue-router"
+import { Menu, Close, Fold, Expand } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const docVisible = ref(false)
@@ -76,8 +103,41 @@ const docModule = ref("")
 const docPage = ref("_index")
 const docTitle = ref("技术文档")
 
+// 移动端检测
+const isMobile = ref(false)
+const mobileSidebarVisible = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+  if (!isMobile.value) {
+    mobileSidebarVisible.value = false
+  }
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
+const toggleMobileSidebar = () => {
+  mobileSidebarVisible.value = !mobileSidebarVisible.value
+}
+
+const closeMobileSidebar = () => {
+  mobileSidebarVisible.value = false
+}
+
+const handleMenuClick = () => {
+  if (isMobile.value) {
+    mobileSidebarVisible.value = false
+  }
+}
+
 // 路由到文档的映射
-// 路由路径到文档模块的映射（处理特殊路径名）
 const pathToModule = {
   'dashboard': 'dashboard',
   'product': 'product',
@@ -104,7 +164,6 @@ const pathToModule = {
   'tool': 'tools',
 }
 
-// 路径名到文档页面名的映射
 const pathToPage = {
   'list': 'list',
   'index': '_index',
@@ -173,7 +232,6 @@ const pathToPage = {
   'income': 'income',
   'settlement': 'settlement',
   'settlement-record': 'settlement',
-  'setting': 'settings',
   'config': 'basic',
   'payment': 'pay',
   'pay': 'pay',
@@ -207,8 +265,6 @@ const pathToPage = {
   'oa-reply': 'reply',
 }
 
-
-// 页面中文标题映射
 const pageTitleMap = {
   'list': '列表', 'index': '总览', '_index': '模块总览', 'overview': '概览',
   'category': '分类', 'comment': '评价', 'brand': '品牌',
@@ -254,7 +310,6 @@ const openDoc = () => {
   docPage.value = page
   docTitle.value = title
   docVisible.value = true
-  // 弹窗默认最大化，方便阅读完整表格
   setTimeout(() => {
     const dialog = document.querySelector(".doc-dialog")
     if (dialog) dialog.classList.add("doc-dialog-maximized")
@@ -279,7 +334,6 @@ const openHelp = () => {
   }
   helpVisible.value = true
 }
-
 
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -418,6 +472,7 @@ const handleCommand = async cmd => {
   if (cmd === 'logout') { await ElMessageBox.confirm('确定退出登录？', '提示', { type: 'warning' }); await userStore.logout(); router.push('/login') }
 }
 </script>
+
 <style scoped>
 .admin-layout { height: 100vh; }
 .sidebar { background: #001529; transition: width 0.3s; overflow: hidden; }
@@ -431,4 +486,78 @@ const handleCommand = async cmd => {
 .user-info { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .username { font-size: 14px; color: #303133; }
 .main-content { background: #f0f2f5; padding: 20px; overflow-y: auto; }
+
+/* 移动端响应式样式 */
+.mobile-layout .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 1000;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+}
+.mobile-layout .mobile-sidebar {
+  width: 0 !important;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease, width 0.3s ease;
+}
+.mobile-layout .mobile-sidebar-open {
+  width: 220px !important;
+  transform: translateX(0);
+}
+.mobile-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+.mobile-menu-btn {
+  font-size: 22px;
+}
+.mobile-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+
+/* 移动端全局优化 */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 12px;
+    height: 56px;
+  }
+  .header-left {
+    gap: 10px;
+  }
+  .header-right {
+    gap: 8px;
+  }
+  .main-content {
+    padding: 12px;
+  }
+  .logo {
+    height: 56px;
+  }
+  .menu-scroll {
+    height: calc(100vh - 56px);
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+  .mobile-title {
+    max-width: 100px;
+    font-size: 14px;
+  }
+  .main-content {
+    padding: 8px;
+  }
+}
 </style>

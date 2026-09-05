@@ -108,4 +108,37 @@ onMounted(fetchList)
 .coupon-card.used, .coupon-card.expired { opacity: 0.7; }
 .empty-coupon { background: #fff; border-radius: 8px; padding: 60px 20px; text-align: center; }
 .empty-coupon p { color: #999; margin: 16px 0; }
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 768px) {
+  .coupon-page { padding: 10px 0; min-height: calc(100vh - 120px); }
+  .container { max-width: 100%; padding: 0 12px; }
+  .page-header { margin-bottom: 10px; }
+  .page-title { font-size: 16px; }
+  
+  /* Tab导航横向滚动 */
+  .tab-bar { display: flex; overflow-x: auto; gap: 0; margin-bottom: 10px; background: #fff; border-radius: 6px; padding: 0 8px; }
+  .tab { padding: 10px 16px; font-size: 13px; white-space: nowrap; }
+  .tab-count { font-size: 11px; }
+  
+  /* 优惠券卡片改单列 */
+  .coupon-list { display: flex; flex-direction: column; gap: 10px; }
+  .coupon-card { display: flex; flex-direction: column; border-radius: 6px; overflow: hidden; }
+  .coupon-left { width: 100%; padding: 14px; text-align: center; }
+  .coupon-amount { font-size: 24px; color: #f56c6c; font-weight: bold; }
+  .coupon-condition { font-size: 12px; color: #999; }
+  .coupon-right { width: 100%; padding: 12px; }
+  .coupon-name { font-size: 14px; margin-bottom: 6px; }
+  .coupon-desc { font-size: 12px; color: #666; margin-bottom: 6px; }
+  .coupon-time { font-size: 11px; color: #999; margin-bottom: 8px; }
+  .coupon-action .el-button { font-size: 12px !important; padding: 6px 14px !important; width: 100%; }
+  
+  .empty-coupon { padding: 40px 16px; border-radius: 6px; text-align: center; }
+  .empty-coupon p { font-size: 13px; margin: 12px 0; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+  .coupon-amount { font-size: 22px; }
+}
 </style>

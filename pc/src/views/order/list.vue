@@ -128,4 +128,62 @@ onMounted(fetchOrders)
 .empty-orders { background: #fff; border-radius: 8px; padding: 60px 20px; text-align: center; }
 .empty-orders p { color: #999; margin: 16px 0; }
 .pagination-wrap { display: flex; justify-content: center; margin-top: 20px; }
+
+/* ========== 移动端适配 ========== */
+@media (max-width: 768px) {
+  .order-list-page { padding: 10px 0; min-height: calc(100vh - 120px); }
+  .container { max-width: 100%; padding: 0 12px; }
+  .page-title { font-size: 18px; margin-bottom: 12px; }
+  
+  /* Tab导航横向滚动 */
+  .order-tabs { gap: 0; margin-bottom: 10px; overflow-x: auto; padding: 0 12px; border-radius: 6px; }
+  .tab { padding: 10px 14px; font-size: 13px; white-space: nowrap; }
+  .tab-count { font-size: 11px; }
+  
+  /* 订单卡片 */
+  .order-card { margin-bottom: 10px; border-radius: 6px; }
+  .order-header { padding: 10px 12px; flex-wrap: wrap; gap: 6px; }
+  .order-no { font-size: 12px; }
+  .order-status { font-size: 12px; }
+  .order-time { font-size: 11px; color: #999; }
+  
+  /* 订单商品 - grid改flex卡片 */
+  .order-body { padding: 0 12px; }
+  .order-items { }
+  .order-item {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
+    align-items: flex-start;
+  }
+  .item-image { width: 60px; height: 60px; flex-shrink: 0; border-radius: 4px; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 13px; line-height: 1.4; }
+  .item-spec { font-size: 11px; color: #999; }
+  .item-price { font-size: 12px; color: #666; }
+  .item-price::before { content: "¥"; color: #f56c6c; }
+  .item-quantity { font-size: 12px; color: #999; }
+  .item-quantity::before { content: "x"; }
+  .more-items { font-size: 12px; color: #999; padding: 8px 0; text-align: center; }
+  
+  /* 订单底部 */
+  .order-total { padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
+  .total-label { font-size: 13px; color: #666; }
+  .total-amount { font-size: 16px; color: #f56c6c; font-weight: bold; }
+  .order-actions { padding: 0 12px 12px; gap: 8px; flex-wrap: wrap; }
+  .action-buttons { gap: 8px; }
+  .action-buttons .el-button { font-size: 12px !important; padding: 6px 12px !important; }
+  
+  .pagination-wrap { margin-top: 10px; overflow-x: auto; }
+  .empty-orders { padding: 40px 16px; border-radius: 6px; text-align: center; }
+  .empty-orders p { font-size: 13px; margin: 12px 0; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+  .item-image { width: 50px; height: 50px; }
+  .item-name { font-size: 12px; }
+  .page-title { font-size: 16px; }
+}
 </style>

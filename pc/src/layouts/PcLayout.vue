@@ -208,4 +208,21 @@ onMounted(() => { fetchCategories() })
 .footer-col a:hover { color: #e6a23c; }
 .footer-bottom { background: #fafafa; padding: 20px 0; text-align: center; }
 .footer-bottom p { margin: 0; font-size: 12px; color: #999; }
+
+/* ========== 移动端适配 ========== */
+.show-mobile { display: none; }
+.hide-mobile { display: block; }
+
+@media (max-width: 768px) {
+  .show-mobile { display: block; }
+  .hide-mobile { display: none !important; }
+  .pc-layout { background: #f5f5f5; }
+  .container { max-width: 100%; padding: 0 12px; }
+  .pc-main { padding-bottom: 60px; }
+  .pc-footer { display: none !important; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 8px; }
+}
 </style>
