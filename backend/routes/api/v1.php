@@ -23,14 +23,12 @@ Route::middleware('auth:sanctum')->prefix('distribution')->group(function () {
     Route::post('/apply', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'submitApply']);
 });
 
-
-
-
 // 管理员公开路由
 
 Route::prefix('admin')->group(function () {
 
     Route::post('login', [\App\Modules\Admin\Controllers\AuthController::class, 'login']);
+
 Route::get('profile', [\App\Modules\Admin\Controllers\AuthController::class, 'profile']);
 Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'logout']);
 
