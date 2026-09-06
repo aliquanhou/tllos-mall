@@ -29,7 +29,7 @@ Route::prefix('admin')->group(function () {
 });
 
 // 管理员需要认证的路由
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'permission:auto'])->prefix('admin')->group(function () {
 
 Route::get('profile', [\App\Modules\Admin\Controllers\AuthController::class, 'profile']);
 Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'logout']);
@@ -189,7 +189,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // 需要管理员认证的路由
 
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'permission:auto'])->prefix('admin')->group(function () {
 
     Route::get('profile', [\App\Modules\Admin\Controllers\AuthController::class, 'profile']);
 
@@ -363,7 +363,7 @@ Route::middleware('auth:sanctum')->prefix('refunds')->group(function () {
 
 // 管理端订单（需管理员登录）
 
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'permission:auto'])->prefix('admin')->group(function () {
 
     Route::get('/orders', [\App\Modules\Order\Controllers\AdminOrderController::class, 'index']);
 
@@ -383,7 +383,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
 // 管理端用户管理
 
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'permission:auto'])->prefix('admin')->group(function () {
 
     Route::get('/users', [\App\Modules\User\Controllers\AdminUserController::class, 'index']);
 
@@ -1371,7 +1371,7 @@ Route::post('/upload/video', [\App\Modules\Core\Controllers\UploadController::cl
 
 
 // 补充缺失的系统设置路由
-Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'permission:auto'])->group(function () {
     Route::get('/pay-configs', [App\Modules\SystemConfig\Controllers\PayConfigController::class, 'index']);
     Route::post('/pay-configs', [App\Modules\SystemConfig\Controllers\PayConfigController::class, 'store']);
     Route::put('/pay-configs/{id}', [App\Modules\SystemConfig\Controllers\PayConfigController::class, 'update']);
