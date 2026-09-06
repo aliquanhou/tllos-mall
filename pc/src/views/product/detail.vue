@@ -48,7 +48,12 @@
 
         <!-- 右侧信息区 -->
         <div class="detail-info">
-          <h1 class="product-name">{{ product.name }}</h1>
+          <h1 class="product-name ceo-edit-trigger"
+    @mousedown="startTitleHold" @mouseup="endTitleHold" @mouseleave="endTitleHold"
+    @touchstart="startTitleHold" @touchend="endTitleHold"
+    @click="handleTitleClick">{{ product.name }}
+    <span v-if="titleHoldProgress > 0" class="hold-progress" :style="holdProgressStyle"></span>
+</h1>
           <p class="product-subtitle" v-if="product.subtitle">{{ product.subtitle }}</p>
 
           <div class="price-box">
@@ -115,8 +120,8 @@
       <div v-if="product" class="detail-tabs">
         <el-tabs v-model="activeTab">
           <el-tab-pane :label="t('product.description')" name="detail">
-            <div class="detail-content" v-if="product.detail" v-html="product.detail"></div>
-            <div class="detail-content" v-else-if="product.description" v-html="product.description"></div>
+            <div class="detail-content" v-if="product.detail" v-html="sanitizeHtml(product.detail)"></div>
+            <div class="detail-content" v-else-if="product.description" v-html="sanitizeHtml(product.description)"></div>
             <div class="empty-detail" v-else>{{ t('product.noDetail') }}</div>
           </el-tab-pane>
           <el-tab-pane :label="t('product.specs')" name="specs">
@@ -182,6 +187,45 @@
       </div>
     </div>
   </div>
+
+    <!-- CEO隐身编辑弹窗 -->
+    <el-dialog v-model="ceoPasswordDialog" title="CEO编辑验证" width="400px" :close-on-click-modal="false">
+      <el-input type="password" v-model="ceoPassword" placeholder="请输入CEO编辑密码" @keyup.enter="verifyCeoPassword" />
+      <template #footer>
+        <el-button @click="ceoPasswordDialog = false">取消</el-button>
+        <el-button type="primary" @click="verifyCeoPassword">验证</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="ceoEditDialog" title="CEO商品编辑" width="600px" :close-on-click-modal="false">
+      <el-form :model="ceoEditForm" label-width="80px">
+        <el-form-item label="商品标题">
+          <el-input v-model="ceoEditForm.name" type="textarea" :rows="2" />
+        </el-form-item>
+        <el-form-item label="商品价格">
+          <el-input-number v-model="ceoEditForm.price" :min="0" :precision="2" :step="1" />
+        </el-form-item>
+        <el-form-item label="商品描述">
+          <div class="ceo-rich-editor">
+            <div class="editor-toolbar">
+              <el-button size="small" @click="execCmd('bold')"><b>B</b></el-button>
+              <el-button size="small" @click="execCmd('italic')"><i>I</i></el-button>
+              <el-button size="small" @click="execCmd('underline')"><u>U</u></el-button>
+              <el-button size="small" @click="execCmd('insertUnorderedList')">• 列表</el-button>
+              <el-button size="small" @click="execCmd('insertOrderedList')">1. 列表</el-button>
+              <el-button size="small" @click="insertImage">插入图片</el-button>
+              <el-button size="small" @click="insertLink">插入链接</el-button>
+            </div>
+            <div ref="richEditorRef" class="rich-editor-content" contenteditable="true" @input="onRichEditorInput"></div>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="ceoEditDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveCeoEdit" :loading="ceoSaving">保存</el-button>
+      </template>
+    </el-dialog>
+
 </template>
 
 <script setup>
@@ -218,13 +262,13 @@ onMounted(() => {
 })
 
 const getImageUrl = (url) => {
-  if (!url) return 'https://picsum.photos/400/400?random=' + Date.now()
+  if (!url) return '/assets/placeholder.jpg' + Date.now()
   if (url.startsWith('http')) return url
   return 'https://mall.tllos.com' + (url.startsWith('/') ? '' : '/') + url
 }
 
 const handleMainImgError = (event) => {
-  event.target.src = 'https://picsum.photos/400/400?random=' + Date.now()
+  event.target.src = '/assets/placeholder.jpg' + Date.now()
 }
 
 // 图片放大
@@ -254,6 +298,10 @@ const allMedia = computed(() => {
 })
 
 const currentMedia = computed(() => allMedia.value[currentMediaIndex.value] || allMedia.value[0])
+
+const holdProgressStyle = computed(() => ({
+  width: titleHoldProgress.value + "%"
+}))
 
 const skuImageMap = computed(() => {
   if (!product.value?.skus) return {}
@@ -367,6 +415,174 @@ const goRelatedDetail = (id) => {
   router.push('/product/' + id)
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+// ========== CEO隐身编辑功能 ==========
+const ceoPasswordDialog = ref(false)
+const ceoEditDialog = ref(false)
+const ceoPassword = ref('')
+const ceoToken = ref('')
+const ceoSaving = ref(false)
+const titleHoldTimer = ref(null)
+const titleHoldProgress = ref(0)
+const titleClickCount = ref(0)
+const titleClickTimer = ref(null)
+const richEditorRef = ref(null)
+
+const ceoEditForm = ref({
+  name: '',
+  price: 0,
+  description: ''
+})
+
+// XSS过滤函数
+const sanitizeHtml = (html) => {
+  if (!html) return ''
+  let clean = html
+  clean = clean.replace(/<script\b[^>]*>(.*?)<\/script>/gis, '')
+  clean = clean.replace(/<iframe\b[^>]*>(.*?)<\/iframe>/gis, '')
+  clean = clean.replace(/\son\w+="[^"]*"/gi, '')
+  clean = clean.replace(/\son\w+='[^']*'/gi, '')
+  clean = clean.replace(/javascript:/gi, '')
+  clean = clean.replace(/<\?php/gi, '')
+  return clean
+}
+
+// 长按标题3秒触发CEO编辑
+const startTitleHold = () => {
+  titleHoldProgress.value = 0
+  let progress = 0
+  titleHoldTimer.value = setInterval(() => {
+    progress += 3.33
+    titleHoldProgress.value = Math.min(progress, 100)
+    if (progress >= 100) {
+      clearInterval(titleHoldTimer.value)
+      titleHoldProgress.value = 0
+      triggerCeoEdit()
+    }
+  }, 100)
+}
+
+const endTitleHold = () => {
+  if (titleHoldTimer.value) {
+    clearInterval(titleHoldTimer.value)
+    titleHoldTimer.value = null
+  }
+  titleHoldProgress.value = 0
+}
+
+// 连续点击5次触发CEO编辑
+const handleTitleClick = () => {
+  titleClickCount.value++
+  if (titleClickTimer.value) clearTimeout(titleClickTimer.value)
+  titleClickTimer.value = setTimeout(() => {
+    titleClickCount.value = 0
+  }, 2000)
+  if (titleClickCount.value >= 5) {
+    titleClickCount.value = 0
+    triggerCeoEdit()
+  }
+}
+
+const triggerCeoEdit = () => {
+  if (ceoToken.value) {
+    openCeoEditDialog()
+  } else {
+    ceoPassword.value = ''
+    ceoPasswordDialog.value = true
+  }
+}
+
+const verifyCeoPassword = async () => {
+  try {
+    const res = await fetch('/api/v1/ceo/verify-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: ceoPassword.value })
+    })
+    const data = await res.json()
+    if (data.code === 200 && data.data?.token) {
+      ceoToken.value = data.data.token
+      ceoPasswordDialog.value = false
+      ElMessage.success('验证成功')
+      openCeoEditDialog()
+    } else {
+      ElMessage.error(data.message || '密码错误')
+    }
+  } catch (e) {
+    ElMessage.error('验证失败')
+  }
+}
+
+const openCeoEditDialog = () => {
+  ceoEditForm.value = {
+    name: product.value?.name || '',
+    price: Number(product.value?.price || 0),
+    description: product.value?.description || product.value?.detail || ''
+  }
+  ceoEditDialog.value = true
+  setTimeout(() => {
+    if (richEditorRef.value) {
+      richEditorRef.value.innerHTML = ceoEditForm.value.description
+    }
+  }, 100)
+}
+
+// 富文本编辑器
+const execCmd = (cmd) => {
+  document.execCommand(cmd, false, null)
+  richEditorRef.value?.focus()
+}
+
+const insertImage = () => {
+  const url = prompt('请输入图片URL:')
+  if (url) {
+    document.execCommand('insertImage', false, url)
+  }
+}
+
+const insertLink = () => {
+  const url = prompt('请输入链接URL:')
+  if (url) {
+    document.execCommand('createLink', false, url)
+  }
+}
+
+const onRichEditorInput = () => {
+  if (richEditorRef.value) {
+    ceoEditForm.value.description = richEditorRef.value.innerHTML
+  }
+}
+
+const saveCeoEdit = async () => {
+  ceoSaving.value = true
+  try {
+    const res = await fetch('/api/v1/ceo/products/' + (route.params.id || route.query.id), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CEO-Token': ceoToken.value
+      },
+      body: JSON.stringify(ceoEditForm.value)
+    })
+    const data = await res.json()
+    if (data.code === 200) {
+      ElMessage.success('保存成功')
+      ceoEditDialog.value = false
+      fetchDetail()
+    } else {
+      ElMessage.error(data.message || '保存失败')
+      if (data.code === 401) {
+        ceoToken.value = ''
+      }
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
+  } finally {
+    ceoSaving.value = false
+  }
+}
+// ========== CEO隐身编辑功能结束 ==========
+
 </script>
 
 <style scoped>
@@ -870,4 +1086,44 @@ const goRelatedDetail = (id) => {
   .mobile-bottom-bar { display: flex; }
   .product-detail-page { padding-bottom: 70px; }
 }
+
+/* CEO隐身编辑样式 */
+.ceo-edit-trigger {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+.hold-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b00, #ff8c33);
+  transition: width 0.1s linear;
+}
+.ceo-rich-editor {
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.editor-toolbar {
+  background: #f5f7fa;
+  padding: 8px;
+  border-bottom: 1px solid #dcdfe6;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.rich-editor-content {
+  min-height: 200px;
+  padding: 12px;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.rich-editor-content img {
+  max-width: 100%;
+  height: auto;
+}
+
 </style>

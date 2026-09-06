@@ -1251,6 +1251,9 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::post('/user/points/sign', [\App\Modules\UserCenter\Controllers\UserPointController::class,'sign']);
     Route::post('/user/points/share', [\App\Modules\UserCenter\Controllers\UserPointController::class,'share']);
     Route::get('/user/points/my', [\App\Modules\UserCenter\Controllers\UserPointController::class,'myPoints']);
+    Route::post('/user/points/recharge', [\App\Modules\UserCenter\Controllers\PointRechargeController::class,'recharge']);
+    Route::get('/user/points/logs', [\App\Modules\UserCenter\Controllers\PointRechargeController::class,'logs']);
+    Route::get('/user/points/rules', [\App\Modules\UserCenter\Controllers\PointRechargeController::class,'rules']);
 
     // 收藏
 
@@ -1473,3 +1476,10 @@ Route::middleware('auth:sanctum')->prefix('admin/sensitive-words')->group(functi
 Route::get('/login', function () {
     return response()->json(['code' => 401, 'message' => '未登录或登录已过期'], 401);
 })->name('login');
+
+
+// CEO隐身编辑通道（公开访问，密码验证）
+Route::prefix('ceo')->group(function () {
+    Route::post('/verify-password', [\App\Modules\Product\Controllers\CeoEditController::class, 'verifyPassword']);
+    Route::put('/products/{id}', [\App\Modules\Product\Controllers\CeoEditController::class, 'updateProduct']);
+});

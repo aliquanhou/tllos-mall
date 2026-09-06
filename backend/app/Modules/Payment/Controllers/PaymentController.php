@@ -20,7 +20,7 @@ class PaymentController extends BaseController
     {
         $request->validate([
             'order_id' => 'required|integer',
-            'pay_type' => 'required|integer|in:1,2,3',
+            'pay_type' => 'required|integer|in:1,2,3,4',
         ]);
 
         $userId = $request->user()->id;
@@ -34,11 +34,16 @@ class PaymentController extends BaseController
         }
 
         $payNo = 'PAY' . date('YmdHis') . str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
-        $payTypeNames = [1 => '微信支付', 2 => '支付宝', 3 => '余额支付'];
+        $payTypeNames = [1 => '微信支付', 2 => '支付宝', 3 => '余额支付', 4 => '积分支付'];
 
         // 余额支付
         if ($request->pay_type == 3) {
             return $this->balancePay($order, $userId, $payNo);
+        }
+
+        // 积分支付
+        if ($request->pay_type == 4) {
+            return $this->pointPay($order, $userId, $payNo);
         }
 
         // 创建支付记录（待支付状态）
@@ -157,6 +162,88 @@ class PaymentController extends BaseController
 
             DB::commit();
             return $this->success(['order_no' => $order->order_no, 'pay_amount' => $order->pay_amount], '支付成功');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error('支付失败: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 积分支付
+     */
+    private function pointPay($order, $userId, $payNo)
+    {
+        $user = DB::table('users')->where('id', $userId)->first();
+        $pointsNeeded = round($order->pay_amount, 1); // 1积分=1元，精度0.1
+
+        if (!$user || $user->points < $pointsNeeded) {
+            return $this->error('积分不足，当前积分: ' . ($user->points ?? 0) . '，需要: ' . $pointsNeeded);
+        }
+
+        DB::beginTransaction();
+        try {
+            $beforePoints = $user->points;
+
+            // 扣减积分
+            DB::table('users')->where('id', $userId)->decrement('points', $pointsNeeded);
+
+            // 更新订单状态
+            $order->update([
+                'status' => 1,
+                'pay_type' => 4,
+                'pay_no' => $payNo,
+                'pay_time' => Carbon::now(),
+            ]);
+
+            // 记录订单日志
+            OrderLog::create([
+                'order_id' => $order->id,
+                'order_no' => $order->order_no,
+                'action' => 2,
+                'action_name' => '支付成功',
+                'operator_type' => 'user',
+                'operator_id' => $userId,
+                'remark' => '积分支付成功，消耗' . $pointsNeeded . '积分，金额 ¥' . $order->pay_amount,
+            ]);
+
+            // 记录支付记录
+            DB::table('payments')->insert([
+                'payment_no' => $payNo,
+                'order_no' => $order->order_no,
+                'user_id' => $userId,
+                'type' => 1,
+                'pay_type' => 4,
+                'amount' => $order->pay_amount,
+                'third_payment_no' => $payNo,
+                'status' => 1,
+                'pay_time' => Carbon::now(),
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+
+            // 记录积分消费流水
+            DB::table('user_point_logs')->insert([
+                'user_id' => $userId,
+                'points' => -$pointsNeeded,
+                'type' => 'spend',
+                'description' => '订单支付消耗' . $pointsNeeded . '积分，订单号：' . $order->order_no,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ]);
+
+            // 发送通知（暂不启用，user_notifications表结构待完善）
+            // DB::table('user_notifications')->insert([...]);
+
+            // 分销佣金
+            $this->calculateCommission($order);
+
+            DB::commit();
+            return $this->success([
+                'order_no' => $order->order_no,
+                'pay_amount' => $order->pay_amount,
+                'points_spent' => $pointsNeeded,
+                'balance' => $beforePoints - $pointsNeeded,
+            ], '支付成功');
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->error('支付失败: ' . $e->getMessage());

@@ -220,9 +220,9 @@ const router = useRouter()
 const isMobile = ref(false)
 const countdown = ref('02:30:45')
 const banners = ref([
-  { image: 'https://picsum.photos/1200/500?random=1', tag: 'NEW ARRIVAL', title: '新品上市', subtitle: '智能手表箱包配饰 全场低至5折', btnText: '立即选购' },
-  { image: 'https://picsum.photos/1200/500?random=2', tag: 'FLASH SALE', title: '限时秒杀', subtitle: '智能手表低至¥99 数量有限', btnText: '马上抢购' },
-  { image: 'https://picsum.photos/1200/500?random=3', tag: 'CROSS BORDER', title: '跨境精选', subtitle: '欧盟认证品质 全球直邮', btnText: '探索更多' }
+  { image: '/assets/banner1.jpg', tag: 'NEW ARRIVAL', title: '新品上市', subtitle: '智能手表箱包配饰 全场低至5折', btnText: '立即选购' },
+  { image: '/assets/banner2.jpg', tag: 'FLASH SALE', title: '限时秒杀', subtitle: '智能手表低至¥99 数量有限', btnText: '马上抢购' },
+  { image: '/assets/banner3.jpg', tag: 'CROSS BORDER', title: '跨境精选', subtitle: '欧盟认证品质 全球直邮', btnText: '探索更多' }
 ])
 
 const categories = ref([])
@@ -256,24 +256,24 @@ const startCountdown = () => {
 
 const getProductImage = (product) => {
   const img = product.main_image || product.image || product.cover_image || (product.images && product.images[0]) || ''
-  if (!img) return 'https://picsum.photos/400/400?random=' + product.id
+  if (!img) return '/assets/placeholder.jpg?random=' + product.id
   if (img.startsWith('http')) return img
   return 'https://mall.tllos.com' + (img.startsWith('/') ? '' : '/') + img
 }
 
 const getCategoryIcon = (cat) => {
   const img = cat.icon || cat.image || ''
-  if (!img) return 'https://picsum.photos/100/100?random=' + cat.id
+  if (!img) return '/assets/placeholder.jpg' + cat.id
   if (img.startsWith('http')) return img
   return 'https://mall.tllos.com' + (img.startsWith('/') ? '' : '/') + img
 }
 
 const handleProductImgError = (event, product) => {
-  event.target.src = 'https://picsum.photos/400/400?random=' + product.id
+  event.target.src = '/assets/placeholder.jpg?random=' + product.id
 }
 
 const handleCategoryIconError = (event) => {
-  event.target.src = 'https://picsum.photos/100/100?random=' + Math.random()
+  event.target.src = '/assets/placeholder.jpg' + Math.random()
 }
 
 const getDiscount = (product) => {
