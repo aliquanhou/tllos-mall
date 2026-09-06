@@ -24,10 +24,12 @@ Route::middleware('auth:sanctum')->prefix('distribution')->group(function () {
 });
 
 // 管理员公开路由
-
 Route::prefix('admin')->group(function () {
-
     Route::post('login', [\App\Modules\Admin\Controllers\AuthController::class, 'login']);
+});
+
+// 管理员需要认证的路由
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
 Route::get('profile', [\App\Modules\Admin\Controllers\AuthController::class, 'profile']);
 Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'logout']);
