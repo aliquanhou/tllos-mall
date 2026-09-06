@@ -5,48 +5,53 @@ use App\Core\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends BaseController
 {
     public function overview()
     {
         try {
-            $today = Carbon::today();
-            $yesterday = Carbon::yesterday();
+            $cacheKey = 'dashboard_overview_' . Carbon::today()->format('Ymd');
+            $data = Cache::remember($cacheKey, 300, function () {
+                $today = Carbon::today();
+                $yesterday = Carbon::yesterday();
 
-            $paidStatuses = [1, 2, 3, 5, 6];
+                $paidStatuses = [1, 2, 3, 5, 6];
 
-            $totalGmv = DB::table('orders')->whereIn('status', $paidStatuses)->sum('pay_amount');
-            $todayGmv = DB::table('orders')->whereIn('status', $paidStatuses)->whereDate('created_at', $today)->sum('pay_amount');
-            $yesterdayGmv = DB::table('orders')->whereIn('status', $paidStatuses)->whereDate('created_at', $yesterday)->sum('pay_amount');
+                $totalGmv = DB::table('orders')->whereIn('status', $paidStatuses)->sum('pay_amount');
+                $todayGmv = DB::table('orders')->whereIn('status', $paidStatuses)->whereDate('created_at', $today)->sum('pay_amount');
+                $yesterdayGmv = DB::table('orders')->whereIn('status', $paidStatuses)->whereDate('created_at', $yesterday)->sum('pay_amount');
 
-            $totalOrders = DB::table('orders')->count();
-            $todayOrders = DB::table('orders')->whereDate('created_at', $today)->count();
-            $totalUsers = DB::table('users')->count();
-            $todayNewUsers = DB::table('users')->whereDate('created_at', $today)->count();
-            $totalProducts = DB::table('products')->where('status', 1)->count();
+                $totalOrders = DB::table('orders')->count();
+                $todayOrders = DB::table('orders')->whereDate('created_at', $today)->count();
+                $totalUsers = DB::table('users')->count();
+                $todayNewUsers = DB::table('users')->whereDate('created_at', $today)->count();
+                $totalProducts = DB::table('products')->where('status', 1)->count();
 
-            $pendingOrders = DB::table('orders')->where('status', 1)->count();
-            $refundOrders = DB::table('orders')->where('status', 6)->count();
-            $refundRate = $totalOrders > 0 ? round($refundOrders / $totalOrders * 100, 2) : 0;
+                $pendingOrders = DB::table('orders')->where('status', 1)->count();
+                $refundOrders = DB::table('orders')->where('status', 6)->count();
+                $refundRate = $totalOrders > 0 ? round($refundOrders / $totalOrders * 100, 2) : 0;
 
-            // 安全查询可能不存在的表
-            $pendingAfterSales = 0;
-            $pendingWithdraws = 0;
-            $totalMerchants = 0;
-            try { $pendingAfterSales = DB::table('order_after_sales')->where('status', 0)->count(); } catch (\Exception $e) {}
-            try { $pendingWithdraws = DB::table('user_withdraws')->where('status', 0)->count(); } catch (\Exception $e) {}
-            try { $totalMerchants = DB::table('merchants')->count(); } catch (\Exception $e) {}
+                // 安全查询可能不存在的表
+                $pendingAfterSales = 0;
+                $pendingWithdraws = 0;
+                $totalMerchants = 0;
+                try { $pendingAfterSales = DB::table('order_after_sales')->where('status', 0)->count(); } catch (\Exception $e) {}
+                try { $pendingWithdraws = DB::table('user_withdraws')->where('status', 0)->count(); } catch (\Exception $e) {}
+                try { $totalMerchants = DB::table('merchants')->count(); } catch (\Exception $e) {}
 
-            return $this->success([
-                'gmv' => ['total' => $totalGmv, 'today' => $todayGmv, 'yesterday' => $yesterdayGmv],
-                'orders' => ['total' => $totalOrders, 'today' => $todayOrders, 'pending' => $pendingOrders],
-                'users' => ['total' => $totalUsers, 'today_new' => $todayNewUsers],
-                'merchants' => ['total' => $totalMerchants],
-                'products' => ['total' => $totalProducts],
-                'refund_rate' => $refundRate,
-                'pending' => ['orders' => $pendingOrders, 'after_sales' => $pendingAfterSales, 'withdraws' => $pendingWithdraws],
-            ]);
+                return [
+                    'gmv' => ['total' => $totalGmv, 'today' => $todayGmv, 'yesterday' => $yesterdayGmv],
+                    'orders' => ['total' => $totalOrders, 'today' => $todayOrders, 'pending' => $pendingOrders],
+                    'users' => ['total' => $totalUsers, 'today_new' => $todayNewUsers],
+                    'merchants' => ['total' => $totalMerchants],
+                    'products' => ['total' => $totalProducts],
+                    'refund_rate' => $refundRate,
+                    'pending' => ['orders' => $pendingOrders, 'after_sales' => $pendingAfterSales, 'withdraws' => $pendingWithdraws],
+                ];
+            });
+            return $this->success($data);
         } catch (\Exception $e) {
             return $this->error('数据加载失败: ' . $e->getMessage());
         }

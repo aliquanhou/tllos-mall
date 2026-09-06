@@ -7,6 +7,7 @@ use App\Modules\Product\Models\ProductCategory;
 use App\Modules\Product\Models\ProductSku;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class ProductController extends BaseController
 {
@@ -86,18 +87,24 @@ class ProductController extends BaseController
     public function hot(Request $request)
     {
         $limit = $request->limit ?: 10;
-        $list = Product::where('status', 1)->where('is_hot', 1)
-            ->select('id', 'name', 'main_image', 'price', 'market_price', 'sales')
-            ->orderBy('sales', 'desc')->limit($limit)->get();
+        $cacheKey = 'hot_products_' . $limit;
+        $list = Cache::remember($cacheKey, 600, function () use ($limit) {
+            return Product::where('status', 1)->where('is_hot', 1)
+                ->select('id', 'name', 'main_image', 'price', 'market_price', 'sales')
+                ->orderBy('sales', 'desc')->limit($limit)->get();
+        });
         return $this->success($list);
     }
 
     public function new(Request $request)
     {
         $limit = $request->limit ?: 10;
-        $list = Product::where('status', 1)->where('is_new', 1)
-            ->select('id', 'name', 'main_image', 'price', 'market_price', 'sales')
-            ->orderBy('created_at', 'desc')->limit($limit)->get();
+        $cacheKey = 'new_products_' . $limit;
+        $list = Cache::remember($cacheKey, 600, function () use ($limit) {
+            return Product::where('status', 1)->where('is_new', 1)
+                ->select('id', 'name', 'main_image', 'price', 'market_price', 'sales')
+                ->orderBy('created_at', 'desc')->limit($limit)->get();
+        });
         return $this->success($list);
     }
 }

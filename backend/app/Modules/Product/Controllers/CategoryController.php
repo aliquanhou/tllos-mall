@@ -4,6 +4,7 @@ namespace App\Modules\Product\Controllers;
 use App\Core\Controllers\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends BaseController
 {
@@ -22,8 +23,10 @@ class CategoryController extends BaseController
 
     public function tree()
     {
-        $categories = DB::table('categories')->where('status', 1)->orderBy('sort', 'asc')->get();
-        $tree = $this->buildTree($categories->toArray());
+        $tree = Cache::remember('category_tree', 3600, function () {
+            $categories = DB::table('categories')->where('status', 1)->orderBy('sort', 'asc')->get();
+            return $this->buildTree($categories->toArray());
+        });
         return $this->success($tree);
     }
 
@@ -50,6 +53,7 @@ class CategoryController extends BaseController
         $validated['created_at'] = now();
         $validated['updated_at'] = now();
         $id = DB::table('categories')->insertGetId($validated);
+        Cache::forget('category_tree');
         return $this->success(['id' => $id], '创建成功');
     }
 
@@ -65,6 +69,7 @@ class CategoryController extends BaseController
         ]);
         $validated['updated_at'] = now();
         DB::table('categories')->where('id', $id)->update($validated);
+        Cache::forget('category_tree');
         return $this->success(null, '更新成功');
     }
 
@@ -79,6 +84,7 @@ class CategoryController extends BaseController
             return $this->error('该分类下有商品，无法删除');
         }
         DB::table('categories')->where('id', $id)->delete();
+        Cache::forget('category_tree');
         return $this->success(null, '删除成功');
     }
 
