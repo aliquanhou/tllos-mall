@@ -1,0 +1,1 @@
+import{r as t}from"./request-CnpVRFvT.js";const r=e=>t({url:"/admin/categories",method:"get",params:e}),s=()=>t({url:"/admin/categories/tree",method:"get"}),g=e=>t({url:"/admin/categories",method:"post",data:e}),d=(e,a)=>t({url:`/admin/categories/${e}`,method:"put",data:a}),c=e=>t({url:`/admin/categories/${e}`,method:"delete"});export{r as a,g as c,c as d,s as g,d as u};
