@@ -31,6 +31,12 @@ const routes = [
   { path:'/about', component:()=>import('@/views/about/index.vue') },
   { path:'/agreement/user', component:()=>import('@/views/agreement/user.vue') },
   { path:'/agreement/privacy', component:()=>import('@/views/agreement/privacy.vue') },
+  // 兼容旧路径重定向
+  { path: '/product/list', redirect: '/products' },
+  { path: '/order/list', redirect: '/orders' },
+  { path: '/privacy', redirect: '/agreement/privacy' },
+  { path: '/register', component: () => import('@/views/login/index.vue'), meta: { public: true } },
+  { path: '/contact', component: () => import('@/views/about/index.vue'), meta: { public: true } },
 ]
 const router = createRouter({ history:createWebHistory('/'), routes })
 router.beforeEach((to,from,next)=>{
