@@ -90,13 +90,11 @@ const goEdit = (addr) => {
 // 设为默认
 const setDefault = async (id) => {
   try {
-    await request({ url: `/user/addresses/${id}`, method: 'put', data: { is_default: 1 } })
+    await request({ url: `/user/addresses/${id}/default`, method: 'put' })
     ElMessage.success('已设为默认地址')
     fetchAddresses()
   } catch (e) {
-    // 如果API失败，本地更新
-    addresses.value.forEach(a => a.is_default = (a.id === id ? 1 : 0))
-    ElMessage.success('已设为默认地址')
+    ElMessage.error('设置失败')
   }
 }
 

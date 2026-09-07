@@ -1,53 +1,53 @@
 <template>
   <div class="address-edit">
-    <el-form :model="form" label-position="top">
-      <!-- 自动获取地理位置按钮 -->
-      <div class="location-section">
-        <el-button 
-          type="primary" 
-          :loading="locating" 
-          @click="getLocation"
-          class="location-btn"
-          :icon="Location"
-        >
-          {{ locating ? '定位中...' : '自动获取当前位置' }}
-        </el-button>
-        <div v-if="locationResult" class="location-result">
-          <el-icon><LocationFilled /></el-icon>
-          <span>{{ locationResult }}</span>
-        </div>
-        <div v-if="locationError" class="location-error">
-          <el-icon><Warning /></el-icon>
-          <span>{{ locationError }}</span>
-        </div>
+    <!-- 自动获取地理位置 -->
+    <div class="location-section">
+      <el-button
+        type="primary"
+        :loading="locating"
+        @click="getLocation"
+        class="location-btn"
+      >
+        <el-icon><Location /></el-icon>
+        {{ locating ? '定位中...' : '自动获取当前位置' }}
+      </el-button>
+      <div v-if="locationResult" class="location-result">
+        <el-icon><LocationFilled /></el-icon>
+        <span>{{ locationResult }}</span>
       </div>
+      <div v-if="locationError" class="location-error">
+        <el-icon><Warning /></el-icon>
+        <span>{{ locationError }}</span>
+      </div>
+    </div>
 
+    <el-form :model="form" label-position="top">
       <el-form-item label="收货人">
         <el-input v-model="form.name" placeholder="请输入收货人姓名" />
       </el-form-item>
 
       <el-form-item label="手机号">
-        <el-input v-model="form.mobile" placeholder="请输入手机号" type="tel" />
+        <el-input v-model="form.mobile" placeholder="请输入手机号" type="tel" maxlength="11" />
       </el-form-item>
 
       <el-form-item label="所在地区">
-        <el-input 
-          v-model="form.region" 
+        <el-input
+          v-model="form.region"
           placeholder="省/市/区（点击上方按钮自动获取）"
         />
       </el-form-item>
 
       <el-form-item label="详细地址">
-        <el-input 
-          v-model="form.detail" 
-          type="textarea" 
-          :rows="3" 
+        <el-input
+          v-model="form.detail"
+          type="textarea"
+          :rows="3"
           placeholder="请输入详细地址（街道、门牌号等）"
         />
       </el-form-item>
 
       <el-form-item label="设为默认">
-        <el-switch v-model="form.is_default" />
+        <el-switch v-model="form.is_default" :active-value="1" :inactive-value="0" />
       </el-form-item>
     </el-form>
 
@@ -78,8 +78,7 @@ const form = reactive({
   city_name: '',
   district_name: '',
   detail: '',
-  is_default: 0,
-  label: ''
+  is_default: 0
 })
 
 const locating = ref(false)
@@ -106,25 +105,21 @@ const getLocation = async () => {
       const district = data.district || ''
       const address = data.address || ''
 
-      // 自动填充所在地区
       form.region = [province, city, district].filter(Boolean).join(' ')
       form.province_name = province
       form.city_name = city
       form.district_name = district
-      
-      // 如果有详细地址，也填充一部分
+
       if (address && !form.detail) {
         form.detail = address.replace(province, '').replace(city, '').replace(district, '').trim()
       }
 
-      // 显示定位结果
-      const provider = data.provider === 'ip-api' ? 'IP定位' : 
+      const provider = data.provider === 'ip-api' ? 'IP定位' :
                        data.provider === 'ipinfo' ? 'IP定位' :
                        data.provider === 'amap' ? '高德地图' :
                        data.provider === 'tencent' ? '腾讯地图' :
                        data.provider === 'baidu' ? '百度地图' : '定位'
       locationResult.value = `${provider}成功：${form.region || '未知位置'}`
-      
       ElMessage.success('定位成功，已自动填充地区')
     } else {
       locationError.value = res.message || '定位失败，请手动输入'
@@ -149,8 +144,16 @@ const save = async () => {
     ElMessage.warning('请输入手机号')
     return
   }
+  if (!/^1[3-9]\d{9}$/.test(form.mobile)) {
+    ElMessage.warning('请输入正确的手机号')
+    return
+  }
   if (!form.region && !form.province_name) {
     ElMessage.warning('请输入所在地区')
+    return
+  }
+  if (!form.detail) {
+    ElMessage.warning('请输入详细地址')
     return
   }
 
@@ -162,7 +165,6 @@ const save = async () => {
     if (parts.length >= 3) form.district_name = parts[2]
   }
 
-  // 构建后端期望的提交数据
   const submitData = {
     name: form.name,
     mobile: form.mobile,
@@ -170,8 +172,7 @@ const save = async () => {
     city_name: form.city_name,
     district_name: form.district_name,
     detail: form.detail,
-    is_default: form.is_default ? 1 : 0,
-    label: form.label || ''
+    is_default: form.is_default ? 1 : 0
   }
 
   saving.value = true
@@ -193,6 +194,7 @@ const save = async () => {
 onMounted(() => {
   if (route.query.id) {
     Object.assign(form, JSON.parse(route.query.data || '{}'))
+    form.region = [form.province_name, form.city_name, form.district_name].filter(Boolean).join(' ')
   }
 })
 </script>
@@ -205,7 +207,6 @@ onMounted(() => {
   background: #f5f5f5;
 }
 
-/* 定位区域 */
 .location-section {
   background: #fff;
   border-radius: 8px;
@@ -243,7 +244,6 @@ onMounted(() => {
   color: #f56c6c;
 }
 
-/* 表单项 */
 :deep(.el-form-item) {
   background: #fff;
   border-radius: 8px;
@@ -262,7 +262,6 @@ onMounted(() => {
   border-radius: 6px;
 }
 
-/* 底部按钮 */
 .footer {
   position: fixed;
   bottom: 0;
@@ -274,22 +273,18 @@ onMounted(() => {
   z-index: 100;
 }
 
-/* 移动端适配 */
 @media (max-width: 768px) {
   .address-edit {
     padding: 12px;
     padding-bottom: 90px;
   }
-  
   .location-section {
     padding: 12px;
   }
-  
   .location-btn {
     height: 42px;
     font-size: 14px;
   }
-  
   :deep(.el-form-item) {
     padding: 10px 12px;
   }

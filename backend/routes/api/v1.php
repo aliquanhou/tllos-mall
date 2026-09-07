@@ -1256,6 +1256,8 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::delete('/user/addresses/{id}', [\App\Modules\UserCenter\Controllers\AddressController::class,'delete']);
 
     Route::get('/user/addresses/{id}', [\App\Modules\UserCenter\Controllers\AddressController::class,'detail']);
+    Route::put('/user/addresses/{id}/default', [\App\Modules\UserCenter\Controllers\AddressController::class,'setDefault']);
+    Route::get('/user/addresses/default', [\App\Modules\UserCenter\Controllers\AddressController::class,'getDefault']);
     Route::post('/user/points/sign', [\App\Modules\UserCenter\Controllers\UserPointController::class,'sign']);
     Route::post('/user/points/share', [\App\Modules\UserCenter\Controllers\UserPointController::class,'share']);
     Route::get('/user/points/my', [\App\Modules\UserCenter\Controllers\UserPointController::class,'myPoints']);
