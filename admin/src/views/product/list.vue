@@ -63,9 +63,10 @@
         <el-table-column label="创建时间" width="160">
           <template #default="{row}">{{ formatDate(row.created_at) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="240" fixed="right">
           <template #default="{row}">
             <el-button type="primary" link size="small" @click="handlePreview(row)">预览</el-button>
+            <el-button type="warning" link size="small" @click="showQuickPrice(row)">改价</el-button>
             <el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button type="success" link size="small" @click="handleCopy(row)">复制</el-button>
             <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
@@ -158,6 +159,36 @@
       </template>
     </el-dialog>
 
+    <!-- 单个商品快捷改价弹窗 -->
+    <el-dialog v-model="quickPriceVisible" title="快捷改价" width="450px">
+      <div v-if="quickPriceProduct" style="margin-bottom:16px;padding:12px;background:#f5f7fa;border-radius:4px">
+        <div style="font-weight:500;margin-bottom:4px">{{ quickPriceProduct.name }}</div>
+        <div style="color:#909399;font-size:12px">当前价：¥{{ quickPriceProduct.price }}{{ quickPriceProduct.market_price ? ' / 市场价：¥' + quickPriceProduct.market_price : '' }}</div>
+      </div>
+      <el-form :model="quickPriceForm" label-width="100px">
+        <el-form-item label="销售价">
+          <el-input-number v-model="quickPriceForm.price" :min="0.01" :precision="2" style="width:200px" />
+        </el-form-item>
+        <el-form-item label="市场价">
+          <el-input-number v-model="quickPriceForm.market_price" :min="0" :precision="2" style="width:200px" />
+        </el-form-item>
+        <el-form-item label="同步SKU">
+          <el-switch v-model="quickPriceForm.update_sku" :active-value="1" :inactive-value="0" />
+          <span style="margin-left:8px;color:#909399;font-size:12px">同步更新所有SKU价格</span>
+        </el-form-item>
+        <el-form-item label="快捷设置">
+          <el-button size="small" @click="quickPriceForm.price = 0.01">0.01元</el-button>
+          <el-button size="small" @click="quickPriceForm.price = 1" style="margin-left:4px">1元</el-button>
+          <el-button size="small" @click="quickPriceForm.price = 9.9" style="margin-left:4px">9.9元</el-button>
+          <el-button size="small" @click="quickPriceForm.price = 19.9" style="margin-left:4px">19.9元</el-button>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="quickPriceVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleQuickPrice" :loading="quickPriceLoading">保存</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 商品编辑弹窗 -->
     <el-dialog v-model="dialogVisible" :title="isEdit?'编辑商品':'新增商品'" width="900px" @close="resetForm" top="5vh">
       <el-form :model="form" label-width="100px">
@@ -220,6 +251,9 @@ const selectedIds = ref([]); const selectedRows = ref([])
 const previewVisible = ref(false); const previewProduct = ref(null)
 const batchPriceVisible = ref(false); const batchPriceLoading = ref(false)
 const batchPriceForm = reactive({ mode: 'fixed', price: 0.01, discount: 9.5, update_sku: 1 })
+const quickPriceVisible = ref(false); const quickPriceLoading = ref(false)
+const quickPriceProduct = ref(null)
+const quickPriceForm = reactive({ price: 0, market_price: 0, update_sku: 1 })
 
 const previewImages = computed(() => {
   if (!previewProduct.value) return []
@@ -252,6 +286,24 @@ const handleToggleStatus = async row => { await toggleProductStatus(row.id,{stat
 const batchUpdateStatus = async (status) => { await ElMessageBox.confirm(`确定批量${status?'上架':'下架'} ${selectedIds.value.length} 件商品？`,'提示',{type:'info'}); await batchUpdateProducts({ids:selectedIds.value,status}); ElMessage.success('批量操作成功'); fetchList() }
 const batchDelete = async () => { await ElMessageBox.confirm(`确定批量删除 ${selectedIds.value.length} 件商品？此操作不可恢复！`,'警告',{type:'warning'}); await batchDeleteProducts({ids:selectedIds.value}); ElMessage.success('批量删除成功'); selectedIds.value=[]; fetchList() }
 const showBatchPriceDialog = () => { if (selectedIds.value.length === 0) { ElMessage.warning('请先选择商品'); return }; batchPriceVisible.value = true }
+const showQuickPrice = row => { quickPriceProduct.value = row; quickPriceForm.price = row.price; quickPriceForm.market_price = row.market_price || 0; quickPriceForm.update_sku = 1; quickPriceVisible.value = true }
+const handleQuickPrice = async () => {
+  quickPriceLoading.value = true
+  try {
+    const updateData = { ids: [quickPriceProduct.value.id], price: quickPriceForm.price, update_sku: quickPriceForm.update_sku }
+    if (quickPriceForm.market_price > 0) {
+      updateData.market_price = quickPriceForm.market_price
+    }
+    await batchUpdateProducts(updateData)
+    ElMessage.success('改价成功')
+    quickPriceVisible.value = false
+    fetchList()
+  } catch (e) {
+    ElMessage.error('改价失败: ' + (e.message || '未知错误'))
+  } finally {
+    quickPriceLoading.value = false
+  }
+}
 const handleBatchPrice = async () => {
   batchPriceLoading.value = true
   try {
