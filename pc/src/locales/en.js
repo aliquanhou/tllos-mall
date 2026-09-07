@@ -76,7 +76,11 @@ export default {
     followUs: 'Follow Us',
     allRightsReserved: 'All Rights Reserved',
     loginRegister: 'Login/Register',
-    viewAll: 'View All'
+    viewAll: 'View All',
+    hotTag: 'Hot',
+    freeShippingTag: 'Free Shipping',
+    hotProducts: 'Hot Products',
+    appDesc: 'Download APP, shop anytime anywhere'
   },
   product: {
     detail: 'Product Detail',

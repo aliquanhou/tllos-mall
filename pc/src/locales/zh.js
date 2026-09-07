@@ -76,7 +76,11 @@ export default {
     followUs: '关注我们',
     allRightsReserved: '版权所有',
     loginRegister: '登录/注册',
-    viewAll: '查看全部'
+    viewAll: '查看全部',
+    hotTag: '热销',
+    freeShippingTag: '包邮',
+    hotProducts: '热门商品',
+    appDesc: '下载APP，随时随地购物'
   },
   product: {
     detail: '商品详情',
