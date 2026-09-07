@@ -224,6 +224,10 @@ const getLocation = async () => {
     if (address && !form.detail) {
       form.detail = address.replace(province, '').replace(city, '').replace(district, '').trim()
     }
+    // 兜底：如果detail还是为空，用region作为详细地址
+    if (!form.detail && form.region) {
+      form.detail = form.region
+    }
 
     locationResult.value = `${provider}成功：${form.region || '未知位置'}`
     ElMessage.success('定位成功，已自动填充地区')
