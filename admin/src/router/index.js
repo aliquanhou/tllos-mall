@@ -87,8 +87,10 @@ const routes = [
       { path: 'permission/job', name: 'PermissionJob', component: () => import('@/views/permission/job.vue'), meta: { title: '岗位管理' } },
       { path: 'permission/dept', name: 'PermissionDept', component: () => import('@/views/permission/dept.vue'), meta: { title: '部门管理' } },
       // 系统设置
+      { path: 'system/config-center', name: 'ConfigCenter', component: () => import('@/views/system/configCenter.vue'), meta: { title: '配置中心' } },
       { path: 'system/config', name: 'SystemConfig', component: () => import('@/views/system/config.vue'), meta: { title: '基础配置' } },
       { path: 'system/payment', name: 'SystemPayment', component: () => import('@/views/system/payment.vue'), meta: { title: '支付配置' } },
+      { path: 'system/map-config', name: 'MapConfig', component: () => import('@/views/system/mapConfig.vue'), meta: { title: '地图服务配置' } },
       { path: 'system/express', name: 'SystemExpress', component: () => import('@/views/system/express.vue'), meta: { title: '物流配置' } },
       { path: 'system/delivery-type', name: 'SystemDeliveryType', component: () => import('@/views/system/delivery-type.vue'), meta: { title: '配送方式' } },
       { path: 'system/order-setting', name: 'SystemOrderSetting', component: () => import('@/views/system/order-setting.vue'), meta: { title: '订单设置' } },
