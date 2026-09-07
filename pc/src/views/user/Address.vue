@@ -60,7 +60,7 @@ const loading = ref(false)
 const fetchAddresses = async () => {
   loading.value = true
   try {
-    const res = await request({ url: '/addresses', method: 'get' })
+    const res = await request({ url: '/user/addresses', method: 'get' })
     if (res.code === 0 || res.success) {
       addresses.value = res.data || res.list || []
     } else {
@@ -90,12 +90,12 @@ const goEdit = (addr) => {
 // 设为默认
 const setDefault = async (id) => {
   try {
-    await request({ url: `/addresses/${id}/default`, method: 'put' })
+    await request({ url: `/user/addresses/${id}`, method: 'put', data: { is_default: 1 } })
     ElMessage.success('已设为默认地址')
     fetchAddresses()
   } catch (e) {
-    // 如果API不存在，本地更新
-    addresses.value.forEach(a => a.is_default = (a.id === id))
+    // 如果API失败，本地更新
+    addresses.value.forEach(a => a.is_default = (a.id === id ? 1 : 0))
     ElMessage.success('已设为默认地址')
   }
 }
@@ -105,7 +105,7 @@ const deleteAddress = async (id) => {
   try {
     await ElMessageBox.confirm('确定删除该地址？', '提示', { type: 'warning' })
     try {
-      await request({ url: `/addresses/${id}`, method: 'delete' })
+      await request({ url: `/user/addresses/${id}`, method: 'delete' })
     } catch (e) {
       // API可能不存在，忽略
     }

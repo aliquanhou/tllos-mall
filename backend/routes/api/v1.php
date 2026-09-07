@@ -23,6 +23,13 @@ Route::middleware('auth:sanctum')->prefix('distribution')->group(function () {
     Route::post('/apply', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'submitApply']);
 });
 
+
+// 地理位置获取（公开，IP定位 + 地图key定位）
+Route::prefix('location')->group(function () {
+    Route::get('get', [\App\Modules\UserCenter\Controllers\LocationController::class, 'getLocation']);
+    Route::get('map-config', [\App\Modules\UserCenter\Controllers\LocationController::class, 'getMapConfigStatus']);
+});
+
 // 管理员公开路由
 Route::prefix('admin')->group(function () {
     Route::post('login', [\App\Modules\Admin\Controllers\AuthController::class, 'login']);
@@ -183,11 +190,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
-    // 地理位置获取（IP定位 + 地图key定位）
-    Route::prefix('location')->group(function () {
-        Route::get('get', [\App\Modules\UserCenter\Controllers\LocationController::class, 'getLocation']);
-        Route::get('map-config', [\App\Modules\UserCenter\Controllers\LocationController::class, 'getMapConfigStatus']);
-    });
 
 });
 

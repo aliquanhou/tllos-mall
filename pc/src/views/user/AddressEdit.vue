@@ -177,14 +177,14 @@ const save = async () => {
   saving.value = true
   try {
     if (form.id) {
-      await request({ url: `/addresses/${form.id}`, method: 'put', data: submitData })
+      await request({ url: `/user/addresses/${form.id}`, method: 'put', data: submitData })
     } else {
-      await request({ url: '/addresses', method: 'post', data: submitData })
+      await request({ url: '/user/addresses', method: 'post', data: submitData })
     }
     ElMessage.success('保存成功')
     setTimeout(() => router.back(), 500)
   } catch (e) {
-    ElMessage.error('保存失败')
+    ElMessage.error('保存失败: ' + (e.message || '未知错误'))
   } finally {
     saving.value = false
   }
