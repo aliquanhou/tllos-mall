@@ -17,6 +17,7 @@
             <el-tag v-if="selectedIds.length > 0" type="info" style="margin-left:12px">已选 {{ selectedIds.length }} 件</el-tag>
           </div>
           <div class="header-right">
+            <el-button v-if="selectedIds.length > 0" type="primary" size="small" @click="showBatchPriceDialog">批量改价</el-button>
             <el-button v-if="selectedIds.length > 0" type="success" size="small" @click="batchUpdateStatus(1)">批量上架</el-button>
             <el-button v-if="selectedIds.length > 0" type="warning" size="small" @click="batchUpdateStatus(0)">批量下架</el-button>
             <el-button v-if="selectedIds.length > 0" type="danger" size="small" @click="batchDelete">批量删除</el-button>
@@ -121,6 +122,42 @@
       </div>
     </el-dialog>
 
+    <!-- 批量改价弹窗 -->
+    <el-dialog v-model="batchPriceVisible" title="批量改价" width="500px">
+      <el-form :model="batchPriceForm" label-width="120px">
+        <el-form-item label="已选商品">
+          <el-tag type="info">{{ selectedIds.length }} 件</el-tag>
+        </el-form-item>
+        <el-form-item label="改价方式">
+          <el-radio-group v-model="batchPriceForm.mode">
+            <el-radio value="fixed">固定价格</el-radio>
+            <el-radio value="discount">打折</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="batchPriceForm.mode === 'fixed'" label="销售价">
+          <el-input-number v-model="batchPriceForm.price" :min="0.01" :precision="2" style="width:200px" />
+          <span style="margin-left:8px;color:#909399">元（所有选中商品统一设置为此价格）</span>
+        </el-form-item>
+        <el-form-item v-if="batchPriceForm.mode === 'discount'" label="折扣">
+          <el-input-number v-model="batchPriceForm.discount" :min="0.1" :max="10" :precision="1" :step="0.1" style="width:200px" />
+          <span style="margin-left:8px;color:#909399">折（如9.5折 = 原价 × 0.95）</span>
+        </el-form-item>
+        <el-form-item label="同时更新SKU">
+          <el-switch v-model="batchPriceForm.update_sku" :active-value="1" :inactive-value="0" />
+          <span style="margin-left:8px;color:#909399">同步更新所有SKU价格</span>
+        </el-form-item>
+        <el-form-item label="快捷测试价">
+          <el-button size="small" @click="batchPriceForm.price = 0.01; batchPriceForm.mode = 'fixed'">0.01元（测试）</el-button>
+          <el-button size="small" @click="batchPriceForm.price = 1; batchPriceForm.mode = 'fixed'" style="margin-left:8px">1元（测试）</el-button>
+          <el-button size="small" @click="batchPriceForm.price = 9.9; batchPriceForm.mode = 'fixed'" style="margin-left:8px">9.9元</el-button>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="batchPriceVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleBatchPrice" :loading="batchPriceLoading">确定改价</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 商品编辑弹窗 -->
     <el-dialog v-model="dialogVisible" :title="isEdit?'编辑商品':'新增商品'" width="900px" @close="resetForm" top="5vh">
       <el-form :model="form" label-width="100px">
@@ -181,6 +218,8 @@ const searchForm = reactive({ keyword:'', category_id:null, status:null, is_reco
 const dialogVisible = ref(false); const isEdit = ref(false); const submitting = ref(false)
 const selectedIds = ref([]); const selectedRows = ref([])
 const previewVisible = ref(false); const previewProduct = ref(null)
+const batchPriceVisible = ref(false); const batchPriceLoading = ref(false)
+const batchPriceForm = reactive({ mode: 'fixed', price: 0.01, discount: 9.5, update_sku: 1 })
 
 const previewImages = computed(() => {
   if (!previewProduct.value) return []
@@ -205,13 +244,34 @@ const handleSelectionChange = (rows) => { selectedRows.value=rows; selectedIds.v
 
 const handleAdd = () => { isEdit.value=false; resetForm(); dialogVisible.value=true }
 const handleEdit = row => { isEdit.value=true; form.value = { ...defaultForm(), ...row, images: row.images ? (typeof row.images==='string' ? JSON.parse(row.images) : row.images) : (row.main_image ? [row.main_image] : []) }; dialogVisible.value=true }
-const handlePreview = row => { previewProduct.value = row; previewVisible.value=true }
+const handlePreview = row => { window.open(`https://mall.tllos.com/product/${row.id}`, '_blank') }
 const handleCopy = async row => { await ElMessageBox.confirm(`确定复制商品"${row.name}"？`,'提示',{type:'info'}); const copyData = {...row, id:null, name:row.name+' (副本)', status:0, sales:0, views:0, favorites:0}; await createProduct(copyData); ElMessage.success('复制成功'); fetchList() }
 const handleSubmit = async () => { if(!form.value.name){ElMessage.warning('请输入商品名称');return}; if(!form.value.category_id){ElMessage.warning('请选择商品分类');return}; submitting.value=true; try { const submitData = { ...form.value, main_image: form.value.images[0] || '' }; if(isEdit.value){await updateProduct(form.value.id,submitData);ElMessage.success('更新成功')}else{await createProduct(submitData);ElMessage.success('创建成功')}; dialogVisible.value=false; fetchList() } finally { submitting.value=false } }
 const handleDelete = async row => { await ElMessageBox.confirm(`确定删除商品"${row.name}"？`,'提示',{type:'warning'}); await deleteProduct(row.id); ElMessage.success('删除成功'); fetchList() }
 const handleToggleStatus = async row => { await toggleProductStatus(row.id,{status:row.status}); ElMessage.success('状态更新成功') }
 const batchUpdateStatus = async (status) => { await ElMessageBox.confirm(`确定批量${status?'上架':'下架'} ${selectedIds.value.length} 件商品？`,'提示',{type:'info'}); await batchUpdateProducts({ids:selectedIds.value,status}); ElMessage.success('批量操作成功'); fetchList() }
 const batchDelete = async () => { await ElMessageBox.confirm(`确定批量删除 ${selectedIds.value.length} 件商品？此操作不可恢复！`,'警告',{type:'warning'}); await batchDeleteProducts({ids:selectedIds.value}); ElMessage.success('批量删除成功'); selectedIds.value=[]; fetchList() }
+const showBatchPriceDialog = () => { if (selectedIds.value.length === 0) { ElMessage.warning('请先选择商品'); return }; batchPriceVisible.value = true }
+const handleBatchPrice = async () => {
+  batchPriceLoading.value = true
+  try {
+    let updateData = { ids: selectedIds.value }
+    if (batchPriceForm.mode === 'fixed') {
+      updateData.price = batchPriceForm.price
+    } else {
+      updateData.discount = batchPriceForm.discount
+    }
+    updateData.update_sku = batchPriceForm.update_sku
+    await batchUpdateProducts(updateData)
+    ElMessage.success(`批量改价成功，共 ${selectedIds.value.length} 件商品`)
+    batchPriceVisible.value = false
+    fetchList()
+  } catch (e) {
+    ElMessage.error('批量改价失败: ' + (e.message || '未知错误'))
+  } finally {
+    batchPriceLoading.value = false
+  }
+}
 
 onMounted(() => { fetchCategories(); fetchBrands(); fetchList() })
 </script>

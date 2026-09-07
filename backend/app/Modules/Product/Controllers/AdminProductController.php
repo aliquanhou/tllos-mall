@@ -86,9 +86,45 @@ class AdminProductController extends BaseController
     public function batchUpdate(Request $request)
     {
         $ids = $request->input("ids", []);
-        $data = $request->except("ids");
         if (empty($ids)) return $this->error("请选择商品");
-        \App\Modules\Product\Models\Product::whereIn("id", $ids)->update($data);
+
+        $price = $request->input("price");
+        $discount = $request->input("discount");
+        $updateSku = $request->input("update_sku", 0);
+        $data = $request->except(["ids", "price", "discount", "update_sku"]);
+
+        // 批量改价逻辑
+        if ($price !== null || $discount !== null) {
+            $products = \App\Modules\Product\Models\Product::whereIn("id", $ids)->get();
+            foreach ($products as $product) {
+                $newPrice = $price !== null ? floatval($price) : round($product->price * floatval($discount) / 10, 2);
+                $product->price = $newPrice;
+                // 市场价也按比例调整（如果有折扣）
+                if ($discount !== null && $product->market_price) {
+                    $product->market_price = round($product->market_price * floatval($discount) / 10, 2);
+                }
+                $product->save();
+
+                // 同步更新SKU价格
+                if ($updateSku) {
+                    $skus = \App\Modules\Product\Models\ProductSku::where("product_id", $product->id)->get();
+                    foreach ($skus as $sku) {
+                        if ($price !== null) {
+                            $sku->price = $newPrice;
+                        } else {
+                            $sku->price = round($sku->price * floatval($discount) / 10, 2);
+                        }
+                        $sku->save();
+                    }
+                }
+            }
+        }
+
+        // 更新其他字段（如status）
+        if (!empty($data)) {
+            \App\Modules\Product\Models\Product::whereIn("id", $ids)->update($data);
+        }
+
         return $this->success(["updated" => count($ids)]);
     }
 

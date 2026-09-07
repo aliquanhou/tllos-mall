@@ -113,7 +113,7 @@ const configIds = {}
 const fetchConfig = async () => {
   try {
     const res = await getPayConfigList()
-    const list = res.data?.data || res.data || []
+    const list = res.data?.list || res.data?.data || []
     list.forEach(item => {
       const config = typeof item.config === 'string' ? JSON.parse(item.config) : item.config
       configIds[item.code] = item.id
