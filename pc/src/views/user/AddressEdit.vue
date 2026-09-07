@@ -1,83 +1,69 @@
 <template>
   <div class="address-edit">
-    <!-- 自动获取地理位置 -->
-    <div class="location-section">
-      <el-button
-        type="primary"
-        :loading="locating"
-        @click="getLocation"
-        class="location-btn"
-      >
-        <el-icon><Location /></el-icon>
-        {{ locating ? '定位中...' : '自动获取当前位置' }}
-      </el-button>
-      <el-button
-        type="success"
-        :loading="autoSaving"
-        @click="getLocationAndSave"
-        class="location-btn"
-        style="margin-top: 10px"
-      >
-        <el-icon><LocationFilled /></el-icon>
-        {{ autoSaving ? '定位并保存中...' : '一键定位并自动保存地址' }}
-      </el-button>
-      <div v-if="locationResult" class="location-result">
-        <el-icon><LocationFilled /></el-icon>
-        <span>{{ locationResult }}</span>
+    <div class="container">
+      <div class="page-header">
+        <el-button @click="router.back()" link>
+          <el-icon><ArrowLeft /></el-icon> 返回
+        </el-button>
+        <h2>{{ form.id ? '编辑地址' : '新增地址' }}</h2>
       </div>
-      <div v-if="locationError" class="location-error">
-        <el-icon><Warning /></el-icon>
-        <span>{{ locationError }}</span>
+
+      <!-- 定位按钮区 -->
+      <div class="location-section">
+        <el-button type="primary" size="large" :loading="locating" @click="getLocation" class="locate-btn">
+          <el-icon><Location /></el-icon>
+          {{ locating ? '定位中...' : '自动获取当前位置' }}
+        </el-button>
+        <el-button type="success" size="large" :loading="autoSaving" @click="getLocationAndSave" class="locate-btn">
+          <el-icon><Location /></el-icon>
+          {{ autoSaving ? '定位并保存中...' : '一键定位并自动保存地址' }}
+        </el-button>
+        <div v-if="locationResult" class="location-result success">
+          <el-icon><SuccessFilled /></el-icon>
+          <span>{{ locationResult }}</span>
+        </div>
+        <div v-if="locationError" class="location-result error">
+          <el-icon><Warning /></el-icon>
+          <span>{{ locationError }}</span>
+        </div>
       </div>
-    </div>
 
-    <el-form :model="form" label-position="top">
-      <el-form-item label="收货人">
-        <el-input v-model="form.name" placeholder="请输入收货人姓名" />
-      </el-form-item>
-
-      <el-form-item label="手机号">
-        <el-input v-model="form.mobile" placeholder="请输入手机号" type="tel" maxlength="11" />
-      </el-form-item>
-
-      <el-form-item label="所在地区">
-        <el-input
-          v-model="form.region"
-          placeholder="省/市/区（点击上方按钮自动获取）"
-        />
-      </el-form-item>
-
-      <el-form-item label="详细地址">
-        <el-input
-          v-model="form.detail"
-          type="textarea"
-          :rows="3"
-          placeholder="请输入详细地址（街道、门牌号等）"
-        />
-      </el-form-item>
-
-      <el-form-item label="设为默认">
-        <el-switch v-model="form.is_default" :active-value="1" :inactive-value="0" />
-      </el-form-item>
-    </el-form>
-
-    <div class="footer">
-      <el-button type="primary" @click="save" style="width:100%" :loading="saving">
-        保存
-      </el-button>
+      <!-- 表单 -->
+      <el-form :model="form" label-position="top" class="address-form">
+        <el-form-item label="收货人">
+          <el-input v-model="form.name" placeholder="请输入收货人姓名" />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="form.mobile" placeholder="请输入手机号" type="tel" maxlength="11" />
+        </el-form-item>
+        <el-form-item label="所在地区">
+          <el-input v-model="form.region" placeholder="省/市/区（点击上方按钮自动获取）" />
+        </el-form-item>
+        <el-form-item label="详细地址">
+          <el-input v-model="form.detail" type="textarea" :rows="3" placeholder="请输入详细地址（街道、门牌号等）" />
+        </el-form-item>
+        <el-form-item label="设为默认">
+          <el-switch v-model="form.is_default" :active-value="1" :inactive-value="0" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" size="large" :loading="saving" @click="save" class="save-btn">
+            保存
+          </el-button>
+        </el-form-item>
+      </el-form>
     </div>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Location, LocationFilled, Warning } from '@element-plus/icons-vue'
+import { ArrowLeft, Location, SuccessFilled, Warning } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 
-const route = useRoute()
 const router = useRouter()
+const route = useRoute()
 
 const form = reactive({
   id: null,
@@ -92,19 +78,19 @@ const form = reactive({
 })
 
 const locating = ref(false)
-const saving = ref(false)
 const autoSaving = ref(false)
+const saving = ref(false)
 const locationResult = ref('')
 const locationError = ref('')
-const amapLoaded = ref(false)
 const amapConfig = ref({ key: '', securityCode: '' })
 
 // 加载高德地图配置
 const loadAmapConfig = async () => {
   try {
     const res = await request({ url: '/location/map-config', method: 'get' })
-    if (res.code === 0 || res.success) {
+    if (res.code === 200 || res.success) {
       amapConfig.value = res.data || {}
+      console.log('地图配置加载成功:', amapConfig.value.key ? '已配置' : '未配置')
     }
   } catch (e) {
     console.error('加载地图配置失败:', e)
@@ -119,20 +105,20 @@ const loadAmapScript = () => {
       return
     }
     if (!amapConfig.value.key) {
-      reject(new Error('未配置高德地图Key'))
+      reject(new Error('地图Key未配置'))
       return
     }
-
-    // 设置安全密钥
     window._AMapSecurityConfig = {
       securityJsCode: amapConfig.value.securityCode || ''
     }
-
     const script = document.createElement('script')
     script.src = `https://webapi.amap.com/maps?v=2.0&key=${amapConfig.value.key}&plugin=AMap.Geolocation,AMap.Geocoder`
     script.onload = () => {
-      amapLoaded.value = true
-      resolve(window.AMap)
+      if (window.AMap) {
+        resolve(window.AMap)
+      } else {
+        reject(new Error('高德地图API加载失败'))
+      }
     }
     script.onerror = () => reject(new Error('高德地图API加载失败'))
     document.head.appendChild(script)
@@ -160,19 +146,17 @@ const locateWithAmap = () => {
 
           geocoder.getAddress([result.position.lng, result.position.lat], (geoStatus, geoResult) => {
             if (geoStatus === 'complete' && geoResult.regeocode) {
-              const addressComponent = geoResult.regeocode.addressComponent
+              const ac = geoResult.regeocode.addressComponent
               resolve({
                 provider: 'amap_js',
-                province: addressComponent.province || '',
-                city: addressComponent.city || addressComponent.province || '',
-                district: addressComponent.district || '',
+                province: ac.province || '',
+                city: ac.city || ac.province || '',
+                district: ac.district || '',
                 address: geoResult.regeocode.formattedAddress || '',
                 latitude: result.position.lat,
-                longitude: result.position.lng,
-                accuracy: 'high'
+                longitude: result.position.lng
               })
             } else {
-              // 逆地理编码失败，返回经纬度
               resolve({
                 provider: 'amap_js',
                 province: '',
@@ -180,8 +164,7 @@ const locateWithAmap = () => {
                 district: '',
                 address: '',
                 latitude: result.position.lat,
-                longitude: result.position.lng,
-                accuracy: 'medium'
+                longitude: result.position.lng
               })
             }
           })
@@ -196,13 +179,13 @@ const locateWithAmap = () => {
 // 使用后端IP定位（降级方案）
 const locateWithIp = async () => {
   const res = await request({ url: '/location/get', method: 'get' })
-  if (res.code === 0 || res.success) {
+  if (res.code === 200 || res.success) {
     return res.data || res
   }
   throw new Error(res.message || 'IP定位失败')
 }
 
-// 自动获取地理位置（优先高德JS API，失败降级IP定位）
+// 自动获取地理位置（只定位，不保存）
 const getLocation = async () => {
   locating.value = true
   locationResult.value = ''
@@ -220,11 +203,11 @@ const getLocation = async () => {
       console.warn('高德JS API定位失败，降级到IP定位:', amapError.message)
       // 降级到IP定位
       data = await locateWithIp()
-      provider = data.provider === 'ip-api' || data.provider === 'ipinfo' ? 'IP定位' : '定位'
+      provider = 'IP定位'
     }
 
     if (!data) {
-      throw new Error('定位失败')
+      throw new Error('定位失败，未获取到位置信息')
     }
 
     const province = data.province || ''
@@ -232,6 +215,7 @@ const getLocation = async () => {
     const district = data.district || ''
     const address = data.address || ''
 
+    // 自动填充表单
     form.region = [province, city, district].filter(Boolean).join(' ')
     form.province_name = province
     form.city_name = city
@@ -259,20 +243,21 @@ const getLocationAndSave = async () => {
   locationError.value = ''
 
   try {
-    // 1. 定位（优先高德JS API，失败降级IP定位）
+    // 1. 定位
     let data = null
     let provider = ''
+
     try {
       data = await locateWithAmap()
       provider = '高德地图精确定位'
     } catch (amapError) {
       console.warn('高德JS API定位失败，降级到IP定位:', amapError.message)
       data = await locateWithIp()
-      provider = data.provider === 'ip-api' || data.provider === 'ipinfo' ? 'IP定位' : '定位'
+      provider = 'IP定位'
     }
 
     if (!data) {
-      throw new Error('定位失败')
+      throw new Error('定位失败，未获取到位置信息')
     }
 
     const province = data.province || ''
@@ -290,7 +275,7 @@ const getLocationAndSave = async () => {
       form.detail = address.replace(province, '').replace(city, '').replace(district, '').trim()
     }
 
-    // 3. 如果没有填写收货人和手机号，提示用户填写
+    // 3. 校验必填字段
     if (!form.name) {
       ElMessage.warning('请先填写收货人姓名')
       autoSaving.value = false
@@ -355,10 +340,6 @@ const save = async () => {
     ElMessage.warning('请输入正确的手机号')
     return
   }
-  if (!form.region && !form.province_name && !form.detail) {
-    ElMessage.warning('请输入所在地区或填写详细地址')
-    return
-  }
   if (!form.detail) {
     ElMessage.warning('请输入详细地址')
     return
@@ -399,104 +380,83 @@ const save = async () => {
 }
 
 onMounted(() => {
-  // 加载高德地图配置
   loadAmapConfig()
-
+  // 如果是编辑模式，加载地址数据
   if (route.query.id) {
-    Object.assign(form, JSON.parse(route.query.data || '{}'))
-    form.region = [form.province_name, form.city_name, form.district_name].filter(Boolean).join(' ')
+    form.id = route.query.id
+    if (route.query.data) {
+      try {
+        const data = JSON.parse(route.query.data)
+        form.name = data.name || ''
+        form.mobile = data.mobile || ''
+        form.region = [data.province_name, data.city_name, data.district_name].filter(Boolean).join(' ')
+        form.province_name = data.province_name || ''
+        form.city_name = data.city_name || ''
+        form.district_name = data.district_name || ''
+        form.detail = data.detail || ''
+        form.is_default = data.is_default || 0
+      } catch (e) {
+        console.error('解析地址数据失败:', e)
+      }
+    }
   }
 })
 </script>
 
 <style scoped>
 .address-edit {
-  padding: 20px;
-  padding-bottom: 100px;
   min-height: 100vh;
   background: #f5f5f5;
+  padding-bottom: 40px;
 }
-
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.page-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
 .location-section {
   background: #fff;
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
 }
-
-.location-btn {
+.locate-btn {
   width: 100%;
-  height: 44px;
-  font-size: 15px;
-}
-
-.location-result {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: #f0f9eb;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #67c23a;
-}
-
-.location-error {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: #fef0f0;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #f56c6c;
-}
-
-:deep(.el-form-item) {
-  background: #fff;
-  border-radius: 8px;
-  padding: 12px 16px;
   margin-bottom: 12px;
 }
-
-:deep(.el-form-item__label) {
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
-  padding-bottom: 8px;
-}
-
-:deep(.el-input__wrapper) {
+.location-result {
+  margin-top: 12px;
+  padding: 10px 12px;
   border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 15px 20px;
+.location-result.success {
+  background: #f0f9eb;
+  color: #67c23a;
+}
+.location-result.error {
+  background: #fef0f0;
+  color: #f56c6c;
+}
+.address-form {
   background: #fff;
-  border-top: 1px solid #eee;
-  z-index: 100;
+  border-radius: 8px;
+  padding: 16px;
 }
-
-@media (max-width: 768px) {
-  .address-edit {
-    padding: 12px;
-    padding-bottom: 90px;
-  }
-  .location-section {
-    padding: 12px;
-  }
-  .location-btn {
-    height: 42px;
-    font-size: 14px;
-  }
-  :deep(.el-form-item) {
-    padding: 10px 12px;
-  }
+.save-btn {
+  width: 100%;
 }
 </style>
