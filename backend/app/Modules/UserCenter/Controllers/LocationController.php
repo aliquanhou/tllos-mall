@@ -228,7 +228,8 @@ class LocationController extends BaseController
     {
         return $this->success([
             'provider' => $this->getConfig('map_provider', 'amap'),
-            'key' => $this->getConfig('amap_key', ''),
+            'key' => $this->getConfig('amap_web_js_key', $this->getConfig('amap_key', '')),
+            'web_service_key' => $this->getConfig('amap_key', ''),
             'securityCode' => $this->getConfig('amap_security_code', ''),
             'amap_key_configured' => !empty($this->getConfig('amap_key')),
             'tencent_map_key_configured' => !empty($this->getConfig('tencent_map_key')),
