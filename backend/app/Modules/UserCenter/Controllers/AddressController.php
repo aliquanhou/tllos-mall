@@ -17,15 +17,26 @@ class AddressController extends BaseController {
         return $this->success($list);
     }
 
+    // 统一校验方法
+    private function validateAddress($data) {
+        if (empty($data['name'])) return '请输入收货人姓名';
+        if (mb_strlen($data['name']) > 50) return '收货人姓名不能超过50个字符';
+        if (empty($data['mobile'])) return '请输入手机号';
+        if (!preg_match('/^1[3-9]\d{9}$/', $data['mobile'])) return '手机号格式不正确，请输入11位有效手机号';
+        if (empty($data['province_name']) && empty($data['city_name'])) return '请选择所在地区';
+        if (empty($data['detail'])) return '请输入详细地址';
+        if (mb_strlen($data['detail']) > 255) return '详细地址不能超过255个字符';
+        return null;
+    }
+
     // 添加地址
     public function add(Request $request) {
         $userId = $request->user()->id;
         $data = $request->only(['name', 'mobile', 'province_id', 'province_name', 'city_id', 'city_name', 'district_id', 'district_name', 'detail', 'is_default']);
 
-        if (empty($data['name'])) return $this->error('请输入收货人姓名');
-        if (empty($data['mobile'])) return $this->error('请输入手机号');
-        if (empty($data['province_name']) && empty($data['city_name'])) return $this->error('请选择所在地区');
-        if (empty($data['detail'])) return $this->error('请输入详细地址');
+        // 后端统一校验（不信任前端数据）
+        $error = $this->validateAddress($data);
+        if ($error) return $this->error($error);
 
         $data['user_id'] = $userId;
         $data['province_id'] = $data['province_id'] ?? 0;
@@ -61,6 +72,10 @@ class AddressController extends BaseController {
         $data = $request->only(['name', 'mobile', 'province_id', 'province_name', 'city_id', 'city_name', 'district_id', 'district_name', 'detail', 'is_default']);
         $data['updated_at'] = now();
 
+        // 后端统一校验（编辑时同样需要校验）
+        $error = $this->validateAddress($data);
+        if ($error) return $this->error($error);
+
         DB::beginTransaction();
         try {
             if (!empty($data['is_default'])) {
@@ -93,6 +108,8 @@ class AddressController extends BaseController {
     // 设置默认地址
     public function setDefault(Request $request, $id) {
         $userId = $request->user()->id;
+        $address = DB::table('user_addresses')->where('id', $id)->where('user_id', $userId)->first();
+        if (!$address) return $this->error('地址不存在');
         DB::table('user_addresses')->where('user_id', $userId)->update(['is_default' => 0]);
         DB::table('user_addresses')->where('id', $id)->where('user_id', $userId)->update(['is_default' => 1]);
         return $this->success(null, '设置成功');
