@@ -355,8 +355,8 @@ const save = async () => {
     ElMessage.warning('请输入正确的手机号')
     return
   }
-  if (!form.region && !form.province_name) {
-    ElMessage.warning('请输入所在地区')
+  if (!form.region && !form.province_name && !form.detail) {
+    ElMessage.warning('请输入所在地区或填写详细地址')
     return
   }
   if (!form.detail) {

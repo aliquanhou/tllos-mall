@@ -17,13 +17,43 @@ class AddressController extends BaseController {
         return $this->success($list);
     }
 
-    // 统一校验方法
+    // 统一字段归一化（兼容fuduoduo风格和我们自己的风格）
+    private function normalizeAddressData($data) {
+        // 收货人：兼容 name 和 consignee
+        $name = $data['name'] ?? $data['consignee'] ?? '';
+        // 省：兼容 province_name 和 province
+        $provinceName = $data['province_name'] ?? $data['province'] ?? '';
+        // 市：兼容 city_name 和 city
+        $cityName = $data['city_name'] ?? $data['city'] ?? '';
+        // 区：兼容 district_name 和 district
+        $districtName = $data['district_name'] ?? $data['district'] ?? '';
+        // 详细地址：兼容 detail 和 address
+        $detail = $data['detail'] ?? $data['address'] ?? '';
+
+        return [
+            'name' => $name,
+            'mobile' => $data['mobile'] ?? '',
+            'province_id' => $data['province_id'] ?? 0,
+            'province_name' => $provinceName,
+            'city_id' => $data['city_id'] ?? 0,
+            'city_name' => $cityName,
+            'district_id' => $data['district_id'] ?? 0,
+            'district_name' => $districtName,
+            'detail' => $detail,
+            'is_default' => $data['is_default'] ?? 0,
+        ];
+    }
+
+    // 统一校验方法（放宽地区校验：detail不为空时允许保存）
     private function validateAddress($data) {
         if (empty($data['name'])) return '请输入收货人姓名';
         if (mb_strlen($data['name']) > 50) return '收货人姓名不能超过50个字符';
         if (empty($data['mobile'])) return '请输入手机号';
         if (!preg_match('/^1[3-9]\d{9}$/', $data['mobile'])) return '手机号格式不正确，请输入11位有效手机号';
-        if (empty($data['province_name']) && empty($data['city_name'])) return '请选择所在地区';
+        // 放宽地区校验：如果详细地址不为空，允许省市区为空（兼容定位失败的情况）
+        if (empty($data['province_name']) && empty($data['city_name']) && empty($data['detail'])) {
+            return '请选择所在地区或填写详细地址';
+        }
         if (empty($data['detail'])) return '请输入详细地址';
         if (mb_strlen($data['detail']) > 255) return '详细地址不能超过255个字符';
         return null;
@@ -32,16 +62,16 @@ class AddressController extends BaseController {
     // 添加地址
     public function add(Request $request) {
         $userId = $request->user()->id;
-        $data = $request->only(['name', 'mobile', 'province_id', 'province_name', 'city_id', 'city_name', 'district_id', 'district_name', 'detail', 'is_default']);
+        $rawData = $request->only(['name', 'consignee', 'mobile', 'province_id', 'province_name', 'province', 'city_id', 'city_name', 'city', 'district_id', 'district_name', 'district', 'detail', 'address', 'is_default']);
 
-        // 后端统一校验（不信任前端数据）
+        // 字段归一化（兼容fuduoduo风格）
+        $data = $this->normalizeAddressData($rawData);
+
+        // 后端统一校验
         $error = $this->validateAddress($data);
         if ($error) return $this->error($error);
 
         $data['user_id'] = $userId;
-        $data['province_id'] = $data['province_id'] ?? 0;
-        $data['city_id'] = $data['city_id'] ?? 0;
-        $data['district_id'] = $data['district_id'] ?? 0;
         $data['created_at'] = now();
         $data['updated_at'] = now();
 
@@ -69,10 +99,11 @@ class AddressController extends BaseController {
         $address = DB::table('user_addresses')->where('id', $id)->where('user_id', $userId)->first();
         if (!$address) return $this->error('地址不存在');
 
-        $data = $request->only(['name', 'mobile', 'province_id', 'province_name', 'city_id', 'city_name', 'district_id', 'district_name', 'detail', 'is_default']);
+        $rawData = $request->only(['name', 'consignee', 'mobile', 'province_id', 'province_name', 'province', 'city_id', 'city_name', 'city', 'district_id', 'district_name', 'district', 'detail', 'address', 'is_default']);
+        $data = $this->normalizeAddressData($rawData);
         $data['updated_at'] = now();
 
-        // 后端统一校验（编辑时同样需要校验）
+        // 后端统一校验
         $error = $this->validateAddress($data);
         if ($error) return $this->error($error);
 
