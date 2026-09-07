@@ -39,6 +39,8 @@ Route::prefix('admin')->group(function () {
 Route::middleware(['auth:sanctum', 'permission:auto'])->prefix('admin')->group(function () {
 
 Route::get('profile', [\App\Modules\Admin\Controllers\AuthController::class, 'profile']);
+    Route::get('map-config', [\App\Modules\SystemConfig\Controllers\MapConfigController::class, 'index']);
+    Route::post('map-config', [\App\Modules\SystemConfig\Controllers\MapConfigController::class, 'save']);
 Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'logout']);
 
     // 工作台统计
@@ -200,6 +202,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'permission:auto'])->prefix('admin')->group(function () {
 
     Route::get('profile', [\App\Modules\Admin\Controllers\AuthController::class, 'profile']);
+    Route::get('map-config', [\App\Modules\SystemConfig\Controllers\MapConfigController::class, 'index']);
+    Route::post('map-config', [\App\Modules\SystemConfig\Controllers\MapConfigController::class, 'save']);
 
     Route::post('logout', [\App\Modules\Admin\Controllers\AuthController::class, 'logout']);
 

@@ -11,6 +11,16 @@
         <el-icon><Location /></el-icon>
         {{ locating ? '定位中...' : '自动获取当前位置' }}
       </el-button>
+      <el-button
+        type="success"
+        :loading="autoSaving"
+        @click="getLocationAndSave"
+        class="location-btn"
+        style="margin-top: 10px"
+      >
+        <el-icon><LocationFilled /></el-icon>
+        {{ autoSaving ? '定位并保存中...' : '一键定位并自动保存地址' }}
+      </el-button>
       <div v-if="locationResult" class="location-result">
         <el-icon><LocationFilled /></el-icon>
         <span>{{ locationResult }}</span>
@@ -83,6 +93,7 @@ const form = reactive({
 
 const locating = ref(false)
 const saving = ref(false)
+const autoSaving = ref(false)
 const locationResult = ref('')
 const locationError = ref('')
 
@@ -131,6 +142,97 @@ const getLocation = async () => {
     ElMessage.error('定位失败，请手动输入地址')
   } finally {
     locating.value = false
+  }
+}
+
+// 一键定位并自动保存地址
+const getLocationAndSave = async () => {
+  autoSaving.value = true
+  locationResult.value = ''
+  locationError.value = ''
+
+  try {
+    // 1. 定位
+    const res = await request({
+      url: '/location/get',
+      method: 'get'
+    })
+
+    if (res.code !== 0 && !res.success) {
+      locationError.value = res.message || '定位失败，请手动输入'
+      ElMessage.error('定位失败，请手动输入地址')
+      return
+    }
+
+    const data = res.data || res
+    const province = data.province || ''
+    const city = data.city || ''
+    const district = data.district || ''
+    const address = data.address || ''
+
+    // 2. 自动填充
+    form.region = [province, city, district].filter(Boolean).join(' ')
+    form.province_name = province
+    form.city_name = city
+    form.district_name = district
+
+    if (address && !form.detail) {
+      form.detail = address.replace(province, '').replace(city, '').replace(district, '').trim()
+    }
+
+    // 3. 如果没有填写收货人和手机号，提示用户填写
+    if (!form.name) {
+      ElMessage.warning('请先填写收货人姓名')
+      autoSaving.value = false
+      return
+    }
+    if (!form.mobile) {
+      ElMessage.warning('请先填写手机号')
+      autoSaving.value = false
+      return
+    }
+    if (!/^1[3-9]\d{9}$/.test(form.mobile)) {
+      ElMessage.warning('请输入正确的手机号')
+      autoSaving.value = false
+      return
+    }
+    if (!form.detail) {
+      ElMessage.warning('请填写详细地址')
+      autoSaving.value = false
+      return
+    }
+
+    // 4. 自动保存
+    const submitData = {
+      name: form.name,
+      mobile: form.mobile,
+      province_name: form.province_name,
+      city_name: form.city_name,
+      district_name: form.district_name,
+      detail: form.detail,
+      is_default: form.is_default ? 1 : 0
+    }
+
+    if (form.id) {
+      await request({ url: `/user/addresses/${form.id}`, method: 'put', data: submitData })
+    } else {
+      await request({ url: '/user/addresses', method: 'post', data: submitData })
+    }
+
+    const provider = data.provider === 'ip-api' ? 'IP定位' :
+                     data.provider === 'ipinfo' ? 'IP定位' :
+                     data.provider === 'amap' ? '高德地图' :
+                     data.provider === 'tencent' ? '腾讯地图' :
+                     data.provider === 'baidu' ? '百度地图' : '定位'
+    locationResult.value = `${provider}成功并自动保存：${form.region}`
+    ElMessage.success('定位成功，地址已自动保存')
+    setTimeout(() => router.back(), 1000)
+  } catch (e) {
+    console.error('定位并保存失败:', e)
+    locationError.value = '定位或保存失败，请手动操作'
+    ElMessage.error('失败: ' + (e.message || '未知错误'))
+  } finally {
+    autoSaving.value = false
   }
 }
 
