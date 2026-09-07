@@ -96,46 +96,153 @@ const saving = ref(false)
 const autoSaving = ref(false)
 const locationResult = ref('')
 const locationError = ref('')
+const amapLoaded = ref(false)
+const amapConfig = ref({ key: '', securityCode: '' })
 
-// 自动获取地理位置
+// 加载高德地图配置
+const loadAmapConfig = async () => {
+  try {
+    const res = await request({ url: '/location/map-config', method: 'get' })
+    if (res.code === 0 || res.success) {
+      amapConfig.value = res.data || {}
+    }
+  } catch (e) {
+    console.error('加载地图配置失败:', e)
+  }
+}
+
+// 动态加载高德JavaScript API
+const loadAmapScript = () => {
+  return new Promise((resolve, reject) => {
+    if (window.AMap) {
+      resolve(window.AMap)
+      return
+    }
+    if (!amapConfig.value.key) {
+      reject(new Error('未配置高德地图Key'))
+      return
+    }
+
+    // 设置安全密钥
+    window._AMapSecurityConfig = {
+      securityJsCode: amapConfig.value.securityCode || ''
+    }
+
+    const script = document.createElement('script')
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${amapConfig.value.key}&plugin=AMap.Geolocation,AMap.Geocoder`
+    script.onload = () => {
+      amapLoaded.value = true
+      resolve(window.AMap)
+    }
+    script.onerror = () => reject(new Error('高德地图API加载失败'))
+    document.head.appendChild(script)
+  })
+}
+
+// 使用高德JavaScript API精确定位
+const locateWithAmap = () => {
+  return new Promise((resolve, reject) => {
+    loadAmapScript().then(AMap => {
+      const geolocation = new AMap.Geolocation({
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+        convert: true
+      })
+
+      geolocation.getCurrentPosition((status, result) => {
+        if (status === 'complete') {
+          // 逆地理编码获取详细地址
+          const geocoder = new AMap.Geocoder({
+            radius: 1000,
+            extensions: 'all'
+          })
+
+          geocoder.getAddress([result.position.lng, result.position.lat], (geoStatus, geoResult) => {
+            if (geoStatus === 'complete' && geoResult.regeocode) {
+              const addressComponent = geoResult.regeocode.addressComponent
+              resolve({
+                provider: 'amap_js',
+                province: addressComponent.province || '',
+                city: addressComponent.city || addressComponent.province || '',
+                district: addressComponent.district || '',
+                address: geoResult.regeocode.formattedAddress || '',
+                latitude: result.position.lat,
+                longitude: result.position.lng,
+                accuracy: 'high'
+              })
+            } else {
+              // 逆地理编码失败，返回经纬度
+              resolve({
+                provider: 'amap_js',
+                province: '',
+                city: '',
+                district: '',
+                address: '',
+                latitude: result.position.lat,
+                longitude: result.position.lng,
+                accuracy: 'medium'
+              })
+            }
+          })
+        } else {
+          reject(new Error(result.message || '定位失败'))
+        }
+      })
+    }).catch(reject)
+  })
+}
+
+// 使用后端IP定位（降级方案）
+const locateWithIp = async () => {
+  const res = await request({ url: '/location/get', method: 'get' })
+  if (res.code === 0 || res.success) {
+    return res.data || res
+  }
+  throw new Error(res.message || 'IP定位失败')
+}
+
+// 自动获取地理位置（优先高德JS API，失败降级IP定位）
 const getLocation = async () => {
   locating.value = true
   locationResult.value = ''
   locationError.value = ''
 
   try {
-    const res = await request({
-      url: '/location/get',
-      method: 'get'
-    })
+    let data = null
+    let provider = ''
 
-    if (res.code === 0 || res.success) {
-      const data = res.data || res
-      const province = data.province || ''
-      const city = data.city || ''
-      const district = data.district || ''
-      const address = data.address || ''
-
-      form.region = [province, city, district].filter(Boolean).join(' ')
-      form.province_name = province
-      form.city_name = city
-      form.district_name = district
-
-      if (address && !form.detail) {
-        form.detail = address.replace(province, '').replace(city, '').replace(district, '').trim()
-      }
-
-      const provider = data.provider === 'ip-api' ? 'IP定位' :
-                       data.provider === 'ipinfo' ? 'IP定位' :
-                       data.provider === 'amap' ? '高德地图' :
-                       data.provider === 'tencent' ? '腾讯地图' :
-                       data.provider === 'baidu' ? '百度地图' : '定位'
-      locationResult.value = `${provider}成功：${form.region || '未知位置'}`
-      ElMessage.success('定位成功，已自动填充地区')
-    } else {
-      locationError.value = res.message || '定位失败，请手动输入'
-      ElMessage.warning('定位失败，请手动输入地址')
+    // 优先使用高德JavaScript API精确定位
+    try {
+      data = await locateWithAmap()
+      provider = '高德地图精确定位'
+    } catch (amapError) {
+      console.warn('高德JS API定位失败，降级到IP定位:', amapError.message)
+      // 降级到IP定位
+      data = await locateWithIp()
+      provider = data.provider === 'ip-api' || data.provider === 'ipinfo' ? 'IP定位' : '定位'
     }
+
+    if (!data) {
+      throw new Error('定位失败')
+    }
+
+    const province = data.province || ''
+    const city = data.city || ''
+    const district = data.district || ''
+    const address = data.address || ''
+
+    form.region = [province, city, district].filter(Boolean).join(' ')
+    form.province_name = province
+    form.city_name = city
+    form.district_name = district
+
+    if (address && !form.detail) {
+      form.detail = address.replace(province, '').replace(city, '').replace(district, '').trim()
+    }
+
+    locationResult.value = `${provider}成功：${form.region || '未知位置'}`
+    ElMessage.success('定位成功，已自动填充地区')
   } catch (e) {
     console.error('定位失败:', e)
     locationError.value = '定位服务暂时不可用，请手动输入'
@@ -152,19 +259,22 @@ const getLocationAndSave = async () => {
   locationError.value = ''
 
   try {
-    // 1. 定位
-    const res = await request({
-      url: '/location/get',
-      method: 'get'
-    })
-
-    if (res.code !== 0 && !res.success) {
-      locationError.value = res.message || '定位失败，请手动输入'
-      ElMessage.error('定位失败，请手动输入地址')
-      return
+    // 1. 定位（优先高德JS API，失败降级IP定位）
+    let data = null
+    let provider = ''
+    try {
+      data = await locateWithAmap()
+      provider = '高德地图精确定位'
+    } catch (amapError) {
+      console.warn('高德JS API定位失败，降级到IP定位:', amapError.message)
+      data = await locateWithIp()
+      provider = data.provider === 'ip-api' || data.provider === 'ipinfo' ? 'IP定位' : '定位'
     }
 
-    const data = res.data || res
+    if (!data) {
+      throw new Error('定位失败')
+    }
+
     const province = data.province || ''
     const city = data.city || ''
     const district = data.district || ''
@@ -219,11 +329,6 @@ const getLocationAndSave = async () => {
       await request({ url: '/user/addresses', method: 'post', data: submitData })
     }
 
-    const provider = data.provider === 'ip-api' ? 'IP定位' :
-                     data.provider === 'ipinfo' ? 'IP定位' :
-                     data.provider === 'amap' ? '高德地图' :
-                     data.provider === 'tencent' ? '腾讯地图' :
-                     data.provider === 'baidu' ? '百度地图' : '定位'
     locationResult.value = `${provider}成功并自动保存：${form.region}`
     ElMessage.success('定位成功，地址已自动保存')
     setTimeout(() => router.back(), 1000)
@@ -294,6 +399,9 @@ const save = async () => {
 }
 
 onMounted(() => {
+  // 加载高德地图配置
+  loadAmapConfig()
+
   if (route.query.id) {
     Object.assign(form, JSON.parse(route.query.data || '{}'))
     form.region = [form.province_name, form.city_name, form.district_name].filter(Boolean).join(' ')

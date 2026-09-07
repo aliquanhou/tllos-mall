@@ -228,10 +228,13 @@ class LocationController extends BaseController
     {
         return $this->success([
             'provider' => $this->getConfig('map_provider', 'amap'),
+            'key' => $this->getConfig('amap_key', ''),
+            'securityCode' => $this->getConfig('amap_security_code', ''),
             'amap_key_configured' => !empty($this->getConfig('amap_key')),
             'tencent_map_key_configured' => !empty($this->getConfig('tencent_map_key')),
             'baidu_map_key_configured' => !empty($this->getConfig('baidu_map_key')),
-            'ip_location_enabled' => $this->getConfig('ip_location_enabled', '1') == '1'
+            'ip_location_enabled' => $this->getConfig('ip_location_enabled', '1') == '1',
+            'map_location_enabled' => $this->getConfig('map_location_enabled', '1') == '1'
         ]);
     }
 }
