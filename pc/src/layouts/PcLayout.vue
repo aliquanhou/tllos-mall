@@ -54,7 +54,7 @@
 
         <!-- 右侧：用户功能 -->
         <div class="header-right">
-          <router-link to="/user/profile" class="header-icon" v-if="!isMobile">
+          <router-link to="/profile" class="header-icon" v-if="!isMobile">
             <el-icon :size="20"><User /></el-icon>
             <span>{{ t('home.account') }}</span>
           </router-link>
@@ -131,7 +131,7 @@
         </el-badge>
         <span>{{ t('home.cart') }}</span>
       </router-link>
-      <router-link to="/user/profile" class="bottom-nav-item">
+      <router-link to="/profile" class="bottom-nav-item">
         <el-icon :size="22"><User /></el-icon>
         <span>{{ t('home.me') }}</span>
       </router-link>
@@ -151,7 +151,7 @@
         <div class="footer-section">
           <h4>{{ t('home.customerService') }}</h4>
           <ul>
-            <li><router-link to="/user/profile">{{ t('home.myAccount') }}</router-link></li>
+            <li><router-link to="/profile">{{ t('home.myAccount') }}</router-link></li>
             <li><router-link to="/order/list">{{ t('home.myOrders') }}</router-link></li>
             <li><router-link to="/cart">{{ t('home.cart') }}</router-link></li>
           </ul>
@@ -200,7 +200,7 @@
           <router-link to="/" @click="showMobileMenu = false">{{ t('home.home') }}</router-link>
           <router-link to="/product/list" @click="showMobileMenu = false">{{ t('home.newArrivals') }}</router-link>
           <router-link to="/order/list" @click="showMobileMenu = false">{{ t('home.myOrders') }}</router-link>
-          <router-link to="/user/profile" @click="showMobileMenu = false">{{ t('home.myAccount') }}</router-link>
+          <router-link to="/profile" @click="showMobileMenu = false">{{ t('home.myAccount') }}</router-link>
         </div>
         <div class="menu-locale">
           <el-radio-group v-model="locale" size="small" @change="changeLocale">
@@ -276,7 +276,7 @@ const goCategory = (id) => {
 
 const goUserCenter = () => {
   showMobileMenu.value = false
-  router.push('/user/profile')
+  router.push('/profile')
 }
 
 watch(() => route.path, () => {

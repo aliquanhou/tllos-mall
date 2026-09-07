@@ -26,8 +26,8 @@
           <div class="checkout-section">
             <h3 class="section-title">商品清单</h3>
             <div class="order-items">
-              <div class="order-item" v-for="item in orderItems" :key="item.id">
-                <div class="item-image"><img :src="item.main_image" :alt="item.name" /></div>
+              <div class="order-item" v-for="item in orderItems" :key="item.id || item.product_id">
+                <div class="item-image"><img :src="getImageUrl(item.main_image || item.image)" :alt="item.name" @error="handleImgError($event)" /></div>
                 <div class="item-info">
                   <div class="item-name">{{ item.name }}</div>
                   <div class="item-spec" v-if="item.specs">{{ item.specs }}</div>
@@ -73,6 +73,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getCart } from '@/api/cart'
+import { getProductDetail } from '@/api/product'
 const router = useRouter()
 const addresses = ref([])
 const selectedAddressId = ref(null)
@@ -80,6 +81,7 @@ const orderItems = ref([])
 const paymentMethod = ref('wechat')
 const remark = ref('')
 const submitting = ref(false)
+const isBuyNow = ref(false) // 是否为立即购买模式
 const paymentMethods = [
   { value: 'wechat', label: '微信支付', icon: 'ChatDotRound' },
   { value: 'alipay', label: '支付宝', icon: 'Wallet' },
@@ -87,8 +89,41 @@ const paymentMethods = [
 ]
 const totalCount = computed(() => orderItems.value.reduce((sum, i) => sum + (i.quantity || 1), 0))
 const totalAmount = computed(() => orderItems.value.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0))
+
+// 图片URL处理函数
+const getImageUrl = (url) => {
+  if (!url) return '/assets/placeholder.jpg' + Date.now()
+  if (url.startsWith('http')) return url
+  return 'https://mall.tllos.com' + (url.startsWith('/') ? '' : '/') + url
+}
+
+// 图片加载错误处理
+const handleImgError = (event) => {
+  event.target.src = '/assets/placeholder.jpg' + Date.now()
+}
+
 const fetchData = async () => {
   try {
+    // 检查是否为立即购买模式
+    const buyNowStr = sessionStorage.getItem('buy_now_item')
+    if (buyNowStr) {
+      isBuyNow.value = true
+      const buyNowItem = JSON.parse(buyNowStr)
+      // 立即购买模式：只显示这一个商品
+      orderItems.value = [{
+        id: 'buynow_' + buyNowItem.product_id,
+        product_id: buyNowItem.product_id,
+        name: buyNowItem.name,
+        price: buyNowItem.price,
+        main_image: buyNowItem.main_image,
+        quantity: buyNowItem.quantity,
+        specs: buyNowItem.specs ? Object.entries(buyNowItem.specs).map(([k,v]) => `${k}:${v}`).join(' ') : ''
+      }]
+      return
+    }
+    
+    // 购物车结算模式
+    isBuyNow.value = false
     const cartRes = await getCart()
     orderItems.value = (cartRes.data?.list || cartRes.data || []).filter(i => i.selected !== false)
     if (orderItems.value.length === 0) { ElMessage.warning('请先选择商品'); router.push('/cart') }
@@ -98,6 +133,10 @@ const submitOrder = async () => {
   if (!selectedAddressId.value) { ElMessage.warning('请选择收货地址'); return }
   submitting.value = true
   try {
+    // 立即购买模式：清除sessionStorage
+    if (isBuyNow.value) {
+      sessionStorage.removeItem('buy_now_item')
+    }
     ElMessage.success('订单提交成功')
     setTimeout(() => router.push('/orders'), 1000)
   } catch (e) { ElMessage.error('提交失败') } finally { submitting.value = false }

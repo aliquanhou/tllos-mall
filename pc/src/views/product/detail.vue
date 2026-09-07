@@ -26,16 +26,20 @@
         <!-- 左侧图片区 -->
         <div class="detail-images">
           <div class="main-image-wrap">
-            <div class="main-image" @mousemove="handleZoom" @mouseleave="zoomShow=false" @mouseenter="zoomShow=true">
+            <div class="main-image shein-main-image" @mousemove="handleZoom" @mouseleave="zoomShow=false" @mouseenter="zoomShow=true">
               <video v-if="currentMedia.type === 'video'" :src="currentMedia.url" :poster="product.video_poster || ''" controls class="main-video" @mouseenter.stop @mousemove.stop></video>
               <img v-else :src="getImageUrl(currentMedia.url)" :alt="product.name" ref="mainImgRef" @error="handleMainImgError" />
               <div class="zoom-lens" v-if="zoomShow && currentMedia.type === 'image'" :style="lensStyle"></div>
+              <!-- 图片数量指示器 -->
+              <div class="image-counter" v-if="allMedia.length > 1">
+                <span>{{ currentMediaIndex + 1 }}/{{ allMedia.length }}</span>
+              </div>
             </div>
             <div class="zoom-result" v-if="zoomShow && currentMedia.type === 'image'" :style="resultStyle">
               <img :src="getImageUrl(currentMedia.url)" :style="zoomImgStyle" />
             </div>
           </div>
-          <div class="thumb-list">
+          <div class="thumb-list shein-thumb-list">
             <div class="thumb-item" v-for="(media, idx) in allMedia" :key="idx" :class="{active: currentMediaIndex === idx}" @click="currentMediaIndex = idx">
               <img v-if="media.type === 'image'" :src="getImageUrl(media.url)" :alt="'缩略图'+(idx+1)" />
               <div v-else class="thumb-video">
@@ -70,15 +74,21 @@
           </div>
 
           <!-- 规格选择 -->
-          <div class="spec-section" v-if="product.skus && product.skus.length">
+          <div class="spec-section shein-spec-section" v-if="product.skus && product.skus.length">
             <div class="spec-row" v-for="spec in specOptions" :key="spec.name">
               <span class="spec-label">{{ spec.name }}</span>
-              <div class="spec-values">
-                <div class="spec-value" v-for="val in spec.values" :key="val" :class="{active: selectedSpecs[spec.name] === val}" @click="selectSpec(spec.name, val)">
-                  <img v-if="getSkuImage(spec.name, val)" :src="getImageUrl(getSkuImage(spec.name, val))" class="spec-img" :alt="val" />
+              <div class="spec-values shein-spec-values">
+                <div class="spec-value shein-spec-value" v-for="val in spec.values" :key="val" :class="{active: selectedSpecs[spec.name] === val}" @click="selectSpec(spec.name, val)">
+                  <img v-if="getSkuImage(spec.name, val)" :src="getImageUrl(getSkuImage(spec.name, val))" class="spec-img shein-spec-img" :alt="val" />
                   <span class="spec-text">{{ val }}</span>
                 </div>
               </div>
+            </div>
+            <!-- 尺码表入口 -->
+            <div class="size-guide-entry" @click="showSizeGuide = true">
+              <el-icon><Guide /></el-icon>
+              <span>尺码对照表</span>
+              <el-icon><ArrowRight /></el-icon>
             </div>
           </div>
 
@@ -188,6 +198,31 @@
     </div>
   </div>
 
+    <!-- 尺码表弹窗 -->
+    <el-dialog v-model="showSizeGuide" title="尺码对照表" width="500px">
+      <div class="size-guide-content">
+        <table class="size-table">
+          <thead>
+            <tr>
+              <th>尺码</th>
+              <th>胸围(cm)</th>
+              <th>腰围(cm)</th>
+              <th>臀围(cm)</th>
+              <th>肩宽(cm)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>S</td><td>84-88</td><td>64-68</td><td>88-92</td><td>36-37</td></tr>
+            <tr><td>M</td><td>88-92</td><td>68-72</td><td>92-96</td><td>37-38</td></tr>
+            <tr><td>L</td><td>92-96</td><td>72-76</td><td>96-100</td><td>38-39</td></tr>
+            <tr><td>XL</td><td>96-100</td><td>76-80</td><td>100-104</td><td>39-40</td></tr>
+            <tr><td>XXL</td><td>100-104</td><td>80-84</td><td>104-108</td><td>40-41</td></tr>
+          </tbody>
+        </table>
+        <p class="size-tip">* 以上数据仅供参考，实际尺码请以商品详情为准。测量方式不同，可能存在1-2cm误差。</p>
+      </div>
+    </el-dialog>
+
     <!-- CEO隐身编辑弹窗 -->
     <el-dialog v-model="ceoPasswordDialog" title="CEO编辑验证" width="400px" :close-on-click-modal="false">
       <el-input type="password" v-model="ceoPassword" placeholder="请输入CEO编辑密码" @keyup.enter="verifyCeoPassword" />
@@ -250,6 +285,7 @@ const reviews = ref([])
 const relatedProducts = ref([])
 const selectedSpecs = ref({})
 const isMobile = ref(false)
+const showSizeGuide = ref(false)
 
 const checkMobile = () => {
   isMobile.value = window.innerWidth < 768
@@ -401,9 +437,17 @@ const addToCart = async () => {
 }
 
 const buyNow = () => {
-  addToCart().then(() => {
-    router.push('/checkout')
-  })
+  // 立即购买：不加入购物车，直接存储商品信息到sessionStorage
+  const buyNowItem = {
+    product_id: product.value.id,
+    name: product.value.name,
+    price: product.value.price,
+    main_image: product.value.main_image,
+    quantity: quantity.value,
+    specs: selectedSpecs.value
+  }
+  sessionStorage.setItem('buy_now_item', JSON.stringify(buyNowItem))
+  router.push('/checkout')
 }
 
 const toggleFavorite = () => {
@@ -715,6 +759,119 @@ const saveCeoEdit = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* SHEIN风格主图 - 3:4竖版 */
+.shein-main-image {
+  aspect-ratio: 3/4;
+  max-height: 600px;
+}
+.image-counter {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* SHEIN风格规格选择 */
+.shein-spec-section {
+  padding: 16px 0;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 16px;
+}
+.shein-spec-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.shein-spec-value {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s;
+}
+.shein-spec-value:hover {
+  border-color: #ff6b00;
+}
+.shein-spec-value.active {
+  border-color: #ff6b00;
+  box-shadow: 0 0 0 2px rgba(255,107,0,.2);
+}
+.shein-spec-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.shein-spec-value .spec-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 4px;
+  text-align: center;
+}
+
+/* 尺码表入口 */
+.size-guide-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #f8f8f8;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+  transition: background .2s;
+}
+.size-guide-entry:hover {
+  background: #f0f0f0;
+  color: #ff6b00;
+}
+
+/* 尺码表内容 */
+.size-guide-content {
+  padding: 10px 0;
+}
+.size-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.size-table th, .size-table td {
+  border: 1px solid #e0e0e0;
+  padding: 10px 8px;
+  text-align: center;
+}
+.size-table th {
+  background: #f8f8f8;
+  font-weight: 600;
+  color: #333;
+}
+.size-table td {
+  color: #666;
+}
+.size-tip {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #999;
+  line-height: 1.6;
 }
 
 /* 信息区 */
@@ -1071,12 +1228,39 @@ const saveCeoEdit = async () => {
   }
   .detail-images { width: 100%; }
   .main-image { border-radius: var(--radius-sm); }
+  .shein-main-image {
+    aspect-ratio: 3/4;
+    max-height: none;
+  }
+  .image-counter {
+    bottom: 8px;
+    right: 8px;
+    font-size: 11px;
+    padding: 3px 8px;
+  }
   .zoom-result { display: none !important; }
   .thumb-item { width: 56px; height: 56px; }
   .product-name { font-size: 18px; }
   .price { font-size: 26px; }
   .price-box { padding: 12px 16px; }
   .spec-label { width: 60px; font-size: 13px; }
+  .shein-spec-value {
+    width: 64px;
+    height: 64px;
+  }
+  .shein-spec-value .spec-text {
+    font-size: 9px;
+  }
+  .size-guide-entry {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  .size-table {
+    font-size: 12px;
+  }
+  .size-table th, .size-table td {
+    padding: 8px 4px;
+  }
   .action-buttons { display: none; }
   .service-guarantee { gap: 10px; }
   .service-item { font-size: 12px; }

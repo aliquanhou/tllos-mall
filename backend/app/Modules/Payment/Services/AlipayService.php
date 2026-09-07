@@ -41,7 +41,11 @@ class AlipayService extends PaymentService
                 'quit_url' => $params['quit_url'] ?? config('app.url'),
             ];
 
-            $params = [
+            $notifyUrl = $params['notify_url'] ?? config('app.url') . '/api/v1/payment/notify/alipay';
+            $returnUrl = $params['return_url'] ?? config('app.url') . '/user/orders';
+            $outTradeNo = $params['out_trade_no'];
+
+            $reqParams = [
                 'app_id' => $this->config['app_id'],
                 'method' => 'alipay.trade.wap.pay',
                 'format' => 'JSON',
@@ -49,18 +53,18 @@ class AlipayService extends PaymentService
                 'sign_type' => 'RSA2',
                 'timestamp' => date('Y-m-d H:i:s'),
                 'version' => '1.0',
-                'notify_url' => $params['notify_url'] ?? config('app.url') . '/api/v1/payment/notify/alipay',
-                'return_url' => $params['return_url'] ?? config('app.url') . '/user/orders',
+                'notify_url' => $notifyUrl,
+                'return_url' => $returnUrl,
                 'biz_content' => json_encode($bizContent, JSON_UNESCAPED_UNICODE),
             ];
 
-            $params['sign'] = $this->sign($params);
-            $payUrl = $gateway . '?' . http_build_query($params);
+            $reqParams['sign'] = $this->sign($reqParams);
+            $payUrl = $gateway . '?' . http_build_query($reqParams);
 
             return [
                 'success' => true,
                 'pay_url' => $payUrl,
-                'out_trade_no' => $params['out_trade_no'],
+                'out_trade_no' => $outTradeNo,
             ];
         } catch (\Exception $e) {
             Log::error('支付宝下单异常', ['error' => $e->getMessage()]);

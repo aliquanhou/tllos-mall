@@ -1,5 +1,14 @@
 <template>
   <div class="home-page">
+    <!-- 顶部激励通栏 -->
+    <div class="promo-bar">
+      <div class="promo-content">
+        <el-icon><Gift /></el-icon>
+        <span class="promo-text">注册立享8折 · 新用户专享 · 积分支付上线</span>
+        <el-button class="promo-btn" size="small" @click="goRegister">立即注册</el-button>
+      </div>
+    </div>
+
     <!-- 顶部Banner轮播 -->
     <div class="banner-section">
       <el-carousel :interval="4000" arrow="never" height="100%" class="main-banner">
@@ -51,16 +60,20 @@
       </div>
     </div>
 
-    <!-- 分类导航 -->
+    <!-- 分类导航（金刚区） -->
     <div class="category-section">
-      <div class="section-header">
-        <h3 class="section-title">{{ t('home.shopByCategory') }}</h3>
-        <router-link to="/products" class="view-all">{{ t('home.viewAll') }} ></router-link>
-      </div>
       <div class="category-grid" v-if="categories.length">
-        <div class="category-item" v-for="cat in categories.slice(0, 10)" :key="cat.id" @click="goCategory(cat.id)">
+        <!-- NEW IN 入口（优先级最高） -->
+        <div class="category-item new-in-item" @click="goNewIn">
+          <div class="category-icon new-in-icon">
+            <el-icon :size="28"><Sunny /></el-icon>
+          </div>
+          <span class="category-name new-in-name">NEW IN</span>
+        </div>
+        <div class="category-item" v-for="cat in categories.slice(0, 9)" :key="cat.id" @click="goCategory(cat.id)">
           <div class="category-icon">
-            <img :src="getCategoryIcon(cat)" :alt="cat.name" @error="handleCategoryIconError($event)" />
+            <span v-if="!getCategoryIcon(cat)" class="category-emoji">{{ getCategoryEmoji(cat) }}</span>
+            <img v-else :src="getCategoryIcon(cat)" :alt="cat.name" @error="handleCategoryIconError($event)" />
           </div>
           <span class="category-name">{{ cat.name }}</span>
         </div>
@@ -155,6 +168,25 @@
       </div>
     </div>
 
+    <!-- 潮流趋势（TREND） -->
+    <div class="trend-section">
+      <div class="section-header trend-header">
+        <h3 class="section-title">TREND 潮流趋势</h3>
+        <span class="trend-subtitle">穿搭灵感 · 场景化搭配</span>
+      </div>
+      <div class="trend-grid">
+        <div class="trend-card" v-for="(trend, index) in trendItems" :key="index" @click="goProductDetail(trend.product_id)">
+          <div class="trend-image">
+            <img :src="trend.image" :alt="trend.title" @error="handleTrendImgError($event)" />
+            <div class="trend-overlay">
+              <span class="trend-tag">{{ trend.tag }}</span>
+              <span class="trend-title">{{ trend.title }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 热门商品 -->
     <div class="hot-products-section" v-if="hotProducts.length">
       <div class="section-header">
@@ -229,6 +261,12 @@ const categories = ref([])
 const flashProducts = ref([])
 const newProducts = ref([])
 const hotProducts = ref([])
+const trendItems = ref([
+  { product_id: 79, image: '/assets/banner1.jpg', tag: '智能穿戴', title: '运动时尚' },
+  { product_id: 80, image: '/assets/banner2.jpg', tag: '箱包配饰', title: '通勤百搭' },
+  { product_id: 81, image: '/assets/banner3.jpg', tag: '跨境精选', title: '品质生活' },
+  { product_id: 82, image: '/assets/banner1.jpg', tag: '新品推荐', title: '潮流先锋' }
+])
 const brands = ref([
   { id: 1, name: 'TLLOS' },
   { id: 2, name: 'SmartWatch' },
@@ -261,9 +299,19 @@ const getProductImage = (product) => {
   return 'https://mall.tllos.com' + (img.startsWith('/') ? '' : '/') + img
 }
 
+// 分类默认emoji图标映射
+const categoryEmojiMap = {
+  1: '👜', 2: '👛', 19: '💼', 30: '🎒', 51: '🔑',
+  60: '⌚', 61: '⌚', 74: '📿', 81: '🔧',
+}
+
+const getCategoryEmoji = (cat) => {
+  return categoryEmojiMap[cat.id] || '📦'
+}
+
 const getCategoryIcon = (cat) => {
   const img = cat.icon || cat.image || ''
-  if (!img) return '/assets/placeholder.jpg' + cat.id
+  if (!img) return ''
   if (img.startsWith('http')) return img
   return 'https://mall.tllos.com' + (img.startsWith('/') ? '' : '/') + img
 }
@@ -274,6 +322,18 @@ const handleProductImgError = (event, product) => {
 
 const handleCategoryIconError = (event) => {
   event.target.src = '/assets/placeholder.jpg' + Math.random()
+}
+
+const handleTrendImgError = (event) => {
+  event.target.src = '/assets/banner1.jpg'
+}
+
+const goNewIn = () => {
+  router.push('/products?sort=new')
+}
+
+const goRegister = () => {
+  router.push('/register')
 }
 
 const getDiscount = (product) => {
@@ -368,6 +428,34 @@ const toggleFavorite = (product) => {
   overflow-x: hidden;
   max-width: 100%;
   padding-bottom: 20px;
+}
+
+/* 顶部激励通栏 */
+.promo-bar {
+  background: linear-gradient(90deg, #ff6b00, #ff8c33);
+  padding: 8px 20px;
+  margin: -16px -20px 0;
+  max-width: calc(100% + 40px);
+}
+.promo-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #fff;
+  font-size: 13px;
+}
+.promo-text {
+  font-weight: 500;
+}
+.promo-btn {
+  background: #fff;
+  color: #ff6b00;
+  border: none;
+  padding: 4px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
 }
 
 /* Banner */
@@ -524,10 +612,35 @@ const toggleFavorite = (product) => {
   height: 100%;
   object-fit: cover;
 }
+.category-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 28px;
+  line-height: 1;
+}
 .category-name {
   font-size: 13px;
   color: #333;
   text-align: center;
+}
+.new-in-item {
+  background: linear-gradient(135deg, #fff5f0, #ffe8d6);
+  border-radius: 12px;
+}
+.new-in-icon {
+  background: linear-gradient(135deg, #ff6b00, #ff8c33);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.new-in-name {
+  color: #ff6b00;
+  font-weight: 700;
+  font-size: 12px;
 }
 
 /* 限时秒杀 */
@@ -650,6 +763,67 @@ const toggleFavorite = (product) => {
   color: #fff;
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0,0,0,.3);
+}
+
+/* 潮流趋势（TREND） */
+.trend-section {
+  margin-bottom: 24px;
+}
+.trend-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+.trend-subtitle {
+  font-size: 13px;
+  color: #999;
+}
+.trend-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.trend-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  aspect-ratio: 3/4;
+}
+.trend-image {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.trend-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.trend-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 12px;
+  background: linear-gradient(transparent, rgba(0,0,0,.7));
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.trend-tag {
+  font-size: 11px;
+  background: rgba(255,107,0,.9);
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  width: fit-content;
+}
+.trend-title {
+  font-size: 14px;
+  font-weight: 600;
 }
 
 /* 商品网格 */
@@ -850,6 +1024,20 @@ const toggleFavorite = (product) => {
 
 /* 移动端适配 */
 @media (max-width: 768px) {
+  .promo-bar {
+    margin: -12px -12px 0;
+    max-width: calc(100% + 24px);
+    padding: 6px 12px;
+  }
+  .promo-content {
+    font-size: 11px;
+    gap: 8px;
+  }
+  .promo-btn {
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+
   .banner-section {
     margin: -12px -12px 12px;
     max-width: calc(100% + 24px);
@@ -873,7 +1061,7 @@ const toggleFavorite = (product) => {
   .service-desc { font-size: 10px; }
   .service-divider { display: none; }
 
-  .category-section, .flash-sale-section, .new-arrivals-section, .hot-products-section, .brand-section {
+  .category-section, .flash-sale-section, .new-arrivals-section, .hot-products-section, .brand-section, .trend-section {
     padding: 12px;
   }
   .section-title { font-size: 16px; }
@@ -883,6 +1071,14 @@ const toggleFavorite = (product) => {
   }
   .category-icon { width: 44px; height: 44px; }
   .category-name { font-size: 11px; }
+  .new-in-name { font-size: 10px; }
+
+  .trend-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .trend-title { font-size: 12px; }
+  .trend-tag { font-size: 10px; }
 
   .flash-header {
     margin: -12px -12px 12px;
