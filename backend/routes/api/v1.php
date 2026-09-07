@@ -1497,3 +1497,12 @@ Route::prefix('ceo')->group(function () {
     Route::post('/verify-password', [\App\Modules\Product\Controllers\CeoEditController::class, 'verifyPassword']);
     Route::put('/products/{id}', [\App\Modules\Product\Controllers\CeoEditController::class, 'updateProduct']);
 });
+
+// 设备跳转配置（后台管理，需要登录）
+Route::middleware('auth:sanctum')->prefix('admin/system/configs')->group(function () {
+    Route::get('/device-redirect', [\App\Modules\SystemConfig\Controllers\DeviceRedirectController::class, 'getConfig']);
+    Route::post('/device-redirect', [\App\Modules\SystemConfig\Controllers\DeviceRedirectController::class, 'saveConfig']);
+});
+
+// 设备跳转配置（公开，供前端智能入口使用）
+Route::get('/device-redirect/config', [\App\Modules\SystemConfig\Controllers\DeviceRedirectController::class, 'getPublicConfig']);
