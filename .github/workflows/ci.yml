@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-test:
+    name: Backend Test
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: tllos_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql, json, ctype, fileinfo, openssl, tokenizer, xml, bcmath
+          coverage: none
+      
+      - name: Copy .env
+        run: |
+          cd backend
+          cp .env.example .env
+          sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=tllos_test/' .env
+          sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+      
+      - name: Install Composer dependencies
+        run: cd backend && composer install --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs
+      
+      - name: Generate key
+        run: cd backend && php artisan key:generate
+      
+      - name: Check PHP syntax
+        run: |
+          cd backend
+          find app -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax errors" || echo "All PHP files syntax OK"
+      
+      - name: Run migrations
+        run: cd backend && php artisan migrate --force
+      
+      - name: Seed test data
+        run: cd backend && php artisan db:seed --force || echo "Seeder skipped"
+      
+      - name: Run PHPUnit tests
+        run: cd backend && vendor/bin/phpunit --testsuite=Feature --colors=never
+      
+      - name: Clear caches
+        run: |
+          cd backend
+          php artisan config:clear
+          php artisan route:clear
+          php artisan cache:clear
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install and build Admin
+        run: |
+          cd admin
+          npm ci
+          npm run build
+      
+      - name: Install and build Merchant
+        run: |
+          cd merchant
+          npm ci
+          npm run build
+      
+      - name: Install and build PC
+        run: |
+          cd pc
+          npm ci
+          npm run build

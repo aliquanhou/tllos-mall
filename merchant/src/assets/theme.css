@@ -1,0 +1,179 @@
+/* ============================================
+   TLLOS Admin 主题 - 深空蓝科技风
+   覆盖 Element Plus 默认主题
+   ============================================ */
+
+:root {
+  --el-color-primary: #1e3a5f;
+  --el-color-primary-light-3: #4a6b94;
+  --el-color-primary-light-5: #7a94b5;
+  --el-color-primary-light-7: #aabed6;
+  --el-color-primary-light-8: #c2d1e3;
+  --el-color-primary-light-9: #e8eef5;
+  --el-color-primary-dark-2: #0f2440;
+
+  --el-color-success: #10b981;
+  --el-color-warning: #f59e0b;
+  --el-color-danger: #ef4444;
+  --el-color-info: #64748b;
+
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
+  --el-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* 全局背景 */
+body {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+/* 侧边栏 */
+.el-menu {
+  background: #0f172a !important;
+  border-right: none !important;
+}
+.el-menu-item, .el-sub-menu__title {
+  color: rgba(255,255,255,0.65) !important;
+  height: 46px !important;
+  line-height: 46px !important;
+  font-size: 14px !important;
+  border-radius: 8px !important;
+  margin: 2px 8px !important;
+}
+.el-menu-item:hover, .el-sub-menu__title:hover {
+  background: rgba(6,182,212,0.1) !important;
+  color: #fff !important;
+}
+.el-menu-item.is-active {
+  background: linear-gradient(135deg, #1e3a5f, #0ea5b7) !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(6,182,212,0.2);
+}
+.el-sub-menu .el-menu-item {
+  background: transparent !important;
+  min-width: auto !important;
+  padding-left: 48px !important;
+}
+.el-menu--collapse .el-menu-item, .el-menu--collapse .el-sub-menu__title {
+  margin: 2px 0 !important;
+  border-radius: 0 !important;
+}
+
+/* 顶部导航 */
+.el-header {
+  background: #fff !important;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+}
+
+/* 按钮 */
+.el-button--primary {
+  background: linear-gradient(135deg, #1e3a5f, #2d5a8e) !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 6px rgba(30,58,95,0.2);
+}
+.el-button--primary:hover {
+  box-shadow: 0 4px 12px rgba(30,58,95,0.3) !important;
+  transform: translateY(-1px);
+}
+
+/* 卡片 */
+.el-card {
+  border-radius: 12px !important;
+  border: 1px solid #f1f5f9 !important;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.04) !important;
+}
+.el-card__header {
+  border-bottom: 1px solid #f1f5f9 !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+/* 表格 */
+.el-table {
+  --el-table-header-bg-color: #f8fafc;
+  --el-table-header-text-color: #475569;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.el-table th {
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+.el-table tr:hover > td {
+  background: #f8fafc !important;
+}
+
+/* 标签 */
+.el-tag {
+  border-radius: 6px !important;
+  font-weight: 500;
+}
+
+/* 对话框 */
+.el-dialog {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+.el-dialog__header {
+  padding: 20px 24px 16px !important;
+  border-bottom: 1px solid #f1f5f9;
+}
+.el-dialog__title {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+.el-dialog__body {
+  padding: 20px 24px !important;
+}
+
+/* 输入框 */
+.el-input__wrapper {
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 1px #e2e8f0 inset !important;
+}
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 2px #1e3a5f inset !important;
+}
+
+/* 分页 */
+.el-pagination.is-background .el-pager li.is-active {
+  background: linear-gradient(135deg, #1e3a5f, #2d5a8e) !important;
+}
+
+/* 面包屑 */
+.el-breadcrumb__inner {
+  color: #64748b !important;
+  font-weight: 500;
+}
+.el-breadcrumb__item:last-child .el-breadcrumb__inner {
+  color: #0f172a !important;
+  font-weight: 600;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* 标签页 */
+.el-tabs__item.is-active {
+  color: #1e3a5f !important;
+  font-weight: 600;
+}
+.el-tabs__active-bar {
+  background-color: #1e3a5f !important;
+}
+
+/* 下拉菜单 */
+.el-dropdown-menu {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(15,23,42,0.08) !important;
+  border: 1px solid #f1f5f9 !important;
+}

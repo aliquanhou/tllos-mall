@@ -1,0 +1,75 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Environment
+.env
+.env.backup
+.env.local
+
+# Build outputs
+admin/dist/
+merchant/dist/
+h5/dist/
+backend/public/build/
+
+# Logs
+backend/storage/logs/*.log
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+!backend/storage/framework/cache/.gitkeep
+!backend/storage/framework/sessions/.gitkeep
+!backend/storage/framework/views/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SSH
+*.pem
+*.key
+
+# Database
+*.sql
+*.sqlite
+
+# Temp
+/tmp/
+pc/dist/
+
+# Build outputs in public (deploy via npm run build)
+backend/public/admin/assets/
+backend/public/merchant/assets/
+backend/public/assets/
+backend/public/admin/index.html
+backend/public/merchant/index.html
+backend/public/index.html
+
+# Temp files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Build outputs in public (deploy via npm run build)
+backend/public/admin/assets/
+backend/public/merchant/assets/
+backend/public/assets/
+backend/public/admin/index.html
+backend/public/merchant/index.html
+backend/public/index.html
+
+# Temp files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
