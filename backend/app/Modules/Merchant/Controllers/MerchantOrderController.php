@@ -23,10 +23,42 @@ class MerchantOrderController extends BaseController {
         return $this->success(['order'=>$order,'goods'=>$goods]);
     }
     public function ship(Request $request, $id) {
+        $request->validate([
+            'express_company' => 'required|string|max:50',
+            'express_no' => 'required|string|max:100',
+        ]);
+
         $shopId = $this->getShopId($request);
-        $data = $request->only(['express_company','express_no']);
-        $data['status'] = 2; $data['shipping_at'] = now(); $data['updated_at'] = now();
-        DB::table('orders')->where('id',$id)->where('merchant_id',$shopId)->where('status',1)->update($data);
-        return $this->success(null,'发货成功');
+        $order = DB::table('orders')->where('id', $id)->where('merchant_id', $shopId)->first();
+
+        if (!$order) {
+            return $this->error('订单不存在或无权操作', 404);
+        }
+        if ($order->status != 1) {
+            return $this->error('当前订单状态不能发货，状态: ' . $order->status);
+        }
+
+        DB::table('orders')->where('id', $id)->update([
+            'status' => 2,
+            'express_company' => $request->express_company,
+            'express_no' => $request->express_no,
+            'ship_time' => now(),
+            'auto_confirm_at' => now()->addDays(7),
+            'updated_at' => now(),
+        ]);
+
+        // 记录订单日志
+        DB::table('order_logs')->insert([
+            'order_id' => $id,
+            'order_no' => $order->order_no,
+            'action' => 3,
+            'action_name' => '发货',
+            'operator_type' => 'merchant',
+            'operator_id' => $shopId,
+            'remark' => $request->express_company . ' 单号：' . $request->express_no,
+            'created_at' => now(),
+        ]);
+
+        return $this->success(null, '发货成功');
     }
 }

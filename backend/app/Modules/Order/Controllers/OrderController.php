@@ -113,10 +113,17 @@ class OrderController extends BaseController
             $shippingFee = $request->shipping_fee ?? 0;
             $payAmount = bcadd($totalAmount, $shippingFee, 2);
 
+            // 从商品获取商家ID
+            $firstItem = $request->items[0] ?? [];
+            $merchantId = 0;
+            if (!empty($firstItem['product_id'])) {
+                $merchantId = DB::table('products')->where('id', $firstItem['product_id'])->value('merchant_id') ?? 0;
+            }
+
             $order = Order::create([
                 'order_no' => $orderNo,
                 'user_id' => $userId,
-                'merchant_id' => 0,
+                'merchant_id' => $merchantId,
                 'total_amount' => $totalAmount,
                 'shipping_fee' => $shippingFee,
                 'discount_amount' => 0,

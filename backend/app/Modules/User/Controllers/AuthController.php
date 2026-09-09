@@ -86,6 +86,37 @@ class AuthController extends BaseController
         return $this->success($this->formatUser($request->user()));
     }
 
+    public function profile(Request $request)
+    {
+        $user = $request->user();
+        return $this->success(array_merge($this->formatUser($user), [
+            'email' => $user->email,
+            'gender' => $user->gender ?? 0,
+            'birthday' => $user->birthday,
+            'signature' => $user->signature,
+            'last_login_at' => $user->last_login_at,
+            'last_login_ip' => $user->last_login_ip,
+        ]));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'nickname' => 'nullable|string|max:50',
+            'avatar' => 'nullable|string|max:255',
+            'gender' => 'nullable|integer|in:0,1,2',
+            'birthday' => 'nullable|date',
+            'signature' => 'nullable|string|max:200',
+        ]);
+
+        $user = $request->user();
+        $data = $request->only(['nickname', 'avatar', 'gender', 'birthday', 'signature']);
+        $data = array_filter($data, fn($v) => $v !== null);
+        $user->update($data);
+
+        return $this->success($this->formatUser($user), '资料更新成功');
+    }
+
     private function formatUser($user)
     {
         return [

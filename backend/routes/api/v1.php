@@ -200,7 +200,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('auth')->group(function () {
 
+        Route::get('info', [\App\Modules\User\Controllers\AuthController::class, 'info']);
+
         Route::get('profile', [\App\Modules\User\Controllers\AuthController::class, 'profile']);
+
+        Route::put('profile', [\App\Modules\User\Controllers\AuthController::class, 'updateProfile']);
 
         Route::post('logout', [\App\Modules\User\Controllers\AuthController::class, 'logout']);
 
