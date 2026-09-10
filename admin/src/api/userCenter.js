@@ -1,0 +1,11 @@
+import request from '@/utils/request'
+export const getUserLevelList = () => request({ url: '/admin/user-center/levels', method: 'get' })
+export const createUserLevel = data => request({ url: '/admin/user-center/levels', method: 'post', data })
+export const updateUserLevel = (id, data) => request({ url: `/admin/user-center/levels/${id}`, method: 'put', data })
+export const deleteUserLevel = id => request({ url: `/admin/user-center/levels/${id}`, method: 'delete' })
+export const getRechargeList = params => request({ url: '/admin/user-center/recharges', method: 'get', params })
+export const getWithdrawList = params => request({ url: '/admin/user-center/withdraws', method: 'get', params })
+export const auditWithdraw = (id, data) => request({ url: `/admin/user-center/withdraws/${id}/audit`, method: 'post', data })
+export const payWithdraw = id => request({ url: `/admin/user-center/withdraws/${id}/pay`, method: 'post' })
+export const getAddressList = params => request({ url: '/admin/user-center/addresses', method: 'get', params })
+export const getAccountLogList = params => request({ url: '/admin/user-center/account-logs', method: 'get', params })

@@ -1,0 +1,12 @@
+import request from '@/utils/request'
+export const getOverview = () => request({ url: '/admin/distribute/overview', method: 'get' })
+export const getAgentList = params => request({ url: '/admin/distribute/agents', method: 'get', params })
+export const auditAgent = (id, data) => request({ url: `/admin/distribute/agents/${id}/audit`, method: 'post', data })
+export const getLevelList = () => request({ url: '/admin/distribute/levels', method: 'get' })
+export const createLevel = data => request({ url: '/admin/distribute/levels', method: 'post', data })
+export const updateLevel = (id, data) => request({ url: `/admin/distribute/levels/${id}`, method: 'put', data })
+export const getOrderList = params => request({ url: '/admin/distribute/orders', method: 'get', params })
+export const getGoodsList = params => request({ url: '/admin/distribute/goods', method: 'get', params })
+export const toggleGoods = id => request({ url: `/admin/distribute/goods/${id}/toggle`, method: 'post' })
+export const getSettings = () => request({ url: '/admin/distribute/settings', method: 'get' })
+export const saveSettings = data => request({ url: '/admin/distribute/settings', method: 'post', data })

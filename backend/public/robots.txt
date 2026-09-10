@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /merchant/
+Disallow: /api/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /pay/
+Disallow: /orders
+Disallow: /order/
+Disallow: /profile
+Disallow: /address
+Disallow: /collects
+Disallow: /coupons
+Disallow: /my-reviews
+Disallow: /review
+Disallow: /after-sale
+Disallow: /messages
+Disallow: /distribution/
+
+# Sitemap
+Sitemap: https://mall.tllos.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

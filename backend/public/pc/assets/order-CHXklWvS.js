@@ -1,0 +1,1 @@
+import{r as e}from"./request-B0j1r7bX.js";const t=r=>e({url:"/orders",method:"get",params:r}),s=r=>e({url:`/orders/${r}`,method:"get"}),d=r=>e({url:`/orders/${r}/cancel`,method:"post"}),c=r=>e({url:`/orders/${r}/confirm`,method:"post"});export{c as a,s as b,d as c,t as g};
