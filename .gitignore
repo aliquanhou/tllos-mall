@@ -1,25 +1,15 @@
-# ============================================
-# TLLOS Mall - Git Ignore Rules
-# ============================================
-
-# Dependencies
 node_modules/
 vendor/
-
-# Environment
 .env
 .env.*
 !.env.example
-
-# Build outputs
 **/dist/
 **/build/
+backend/public/pc/
 backend/public/admin/
 backend/public/merchant/
 backend/public/assets/
 backend/public/index.html
-
-# Logs & Cache
 *.log
 backend/storage/logs/*
 backend/storage/framework/cache/*
@@ -30,26 +20,17 @@ backend/storage/framework/views/*
 !backend/storage/framework/views/.gitkeep
 backend/storage/app/public/*
 !backend/storage/app/public/.gitkeep
-
-# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# Sensitive
 *.pem
 *.key
 *.sql
 *.sqlite
-
-# Backups & Temp
 *.bak
 *.backup
 *.tmp
@@ -58,11 +39,5 @@ desktop.ini
 *.tar.gz
 *.zip
 /tmp/
-
-# Test coverage
 coverage/
 .phpunit.cache/
-
-# Package manager locks (optional - keep for reproducibility)
-# package-lock.json is tracked
-# composer.lock is tracked

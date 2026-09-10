@@ -1,1 +1,0 @@
-import{r as o}from"./request-B0j1r7bX.js";const s=t=>o({url:"/products",method:"get",params:t}),r=t=>o({url:`/products/${t}`,method:"get"}),c=()=>o({url:"/products/categories",method:"get"}),d=t=>o({url:"/products/hot",method:"get",params:t}),u=t=>o({url:"/products/new",method:"get",params:t});export{c as a,u as b,d as c,r as d,s as g};
