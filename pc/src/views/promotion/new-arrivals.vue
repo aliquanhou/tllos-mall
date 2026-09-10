@@ -241,13 +241,13 @@ const activeFilters = computed(() => {
 
 const getProductImage = (p) => {
   const img = p.main_image || p.image || p.cover_image || (p.images && p.images[0]) || ''
-  if (!img) return 'https://picsum.photos/300/400?random=' + p.id
+  if (!img) return '/placeholder.svg' + p.id
   if (img.startsWith('http')) return img
   return 'https://mall.tllos.com' + (img.startsWith('/') ? '' : '/') + img
 }
 
 const handleImgError = (event, p) => {
-  event.target.src = 'https://picsum.photos/300/400?random=' + p.id
+  event.target.src = '/placeholder.svg' + p.id
 }
 
 const getDiscountPercent = (p) => {

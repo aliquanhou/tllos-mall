@@ -157,13 +157,13 @@ const fetchCart = async () => {
 // 兼容多种图片字段，相对路径拼接域名
 const getProductImage = (item) => {
   const img = item.main_image || item.image || item.cover_image || (item.images && item.images[0]) || ''
-  if (!img) return 'https://picsum.photos/200/200?random=' + item.id
+  if (!img) return '/placeholder.svg' + item.id
   if (img.startsWith('http')) return img
   return 'https://mall.tllos.com' + (img.startsWith('/') ? '' : '/') + img
 }
 
 const handleImageError = (event, item) => {
-  event.target.src = 'https://picsum.photos/200/200?random=' + item.id
+  event.target.src = '/placeholder.svg' + item.id
 }
 
 const selectAll = computed({

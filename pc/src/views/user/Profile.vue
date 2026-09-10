@@ -238,7 +238,7 @@ onMounted(() => {
 })
 
 const getImageUrl = (url) => {
-  if (!url) return 'https://picsum.photos/80/80'
+  if (!url) return '/placeholder.svg'
   if (url.startsWith('http')) return url
   return 'https://mall.tllos.com' + (url.startsWith('/') ? '' : '/') + url
 }
