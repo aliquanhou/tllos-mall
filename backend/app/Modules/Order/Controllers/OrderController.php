@@ -33,8 +33,14 @@ class OrderController extends BaseController
 
     public function show($id, Request $request)
     {
-        $order = Order::with(['items', 'logs' => function($q) { $q->orderBy('id', 'asc'); }])
-            ->where('id', $id)->where('user_id', $request->user()->id)->first();
+        $query = Order::with(['items', 'logs' => function($q) { $q->orderBy('id', 'asc'); }])
+            ->where('user_id', $request->user()->id);
+        if (is_numeric($id)) {
+            $query->where('id', $id);
+        } else {
+            $query->where('order_no', $id);
+        }
+        $order = $query->first();
         if (!$order) return $this->error('订单不存在', 404);
         return $this->success($order);
     }

@@ -83,10 +83,10 @@ const router = useRouter()
 const addresses = ref([])
 const selectedAddressId = ref(null)
 const orderItems = ref([])
-const paymentMethod = ref('wechat')
+const paymentMethod = ref('alipay')
 const remark = ref('')
 const submitting = ref(false)
-const isBuyNow = ref(false) // 是否为立即购买模式
+const isBuyNow = ref(false)
 const paymentMethods = [
   { value: 'wechat', label: '微信支付', icon: ChatDotRound },
   { value: 'alipay', label: '支付宝', icon: Wallet },
@@ -96,21 +96,18 @@ const totalCount = computed(() => orderItems.value.reduce((sum, i) => sum + (i.q
 const totalAmount = computed(() => orderItems.value.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0))
 const selectedAddress = computed(() => addresses.value.find(a => a.id === selectedAddressId.value))
 
-// 图片URL处理函数
 const getImageUrl = (url) => {
-  if (!url) return '/assets/placeholder.jpg' + Date.now()
+  if (!url) return '/placeholder.svg'
   if (url.startsWith('http')) return url
   return 'https://mall.tllos.com' + (url.startsWith('/') ? '' : '/') + url
 }
 
-// 图片加载错误处理
 const handleImgError = (event) => {
-  event.target.src = '/assets/placeholder.jpg' + Date.now()
+  event.target.src = '/placeholder.svg'
 }
 
 const fetchData = async () => {
   try {
-    // 获取收货地址列表
     try {
       const addrRes = await getAddressList()
       addresses.value = addrRes.data?.list || addrRes.data || []
@@ -121,12 +118,10 @@ const fetchData = async () => {
     } catch (addrError) {
       console.error('获取地址列表失败:', addrError)
     }
-    // 检查是否为立即购买模式
     const buyNowStr = sessionStorage.getItem('buy_now_item')
     if (buyNowStr) {
       isBuyNow.value = true
       const buyNowItem = JSON.parse(buyNowStr)
-      // 立即购买模式：只显示这一个商品
       orderItems.value = [{
         id: 'buynow_' + buyNowItem.product_id,
         product_id: buyNowItem.product_id,
@@ -139,7 +134,6 @@ const fetchData = async () => {
       return
     }
     
-    // 购物车结算模式
     isBuyNow.value = false
     const cartRes = await getCart()
     orderItems.value = (cartRes.data?.list || cartRes.data || []).filter(i => i.selected !== false)
@@ -153,13 +147,11 @@ const submitOrder = async () => {
   submitting.value = true
   try {
     const addr = selectedAddress.value
-    // 构建订单商品列表
     const items = orderItems.value.map(item => ({
       product_id: item.product_id || item.id,
       quantity: item.quantity || 1,
       sku_id: item.sku_id || null
     }))
-    // 调用订单创建API
     const orderRes = await request({
       url: '/orders',
       method: 'post',
@@ -178,21 +170,19 @@ const submitOrder = async () => {
         remark: remark.value
       }
     })
-    // 立即购买模式：清除sessionStorage
     if (isBuyNow.value) {
       sessionStorage.removeItem('buy_now_item')
     }
     const orderId = orderRes.data?.order_id || orderRes.data?.id
     const orderNo = orderRes.data?.order_no
     ElMessage.success('订单提交成功')
-    // 跳转到支付页
     setTimeout(() => {
       if (orderNo) {
         router.push(`/pay/${orderNo}`)
       } else {
         router.push('/orders')
       }
-    }, 1000)
+    }, 800)
   } catch (e) {
     console.error('提交订单失败:', e)
     ElMessage.error(e.response?.data?.message || '提交失败，请稍后重试')
@@ -212,18 +202,18 @@ onMounted(fetchData)
 .section-title { font-size: 16px; color: #333; margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
 .address-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .address-card { border: 2px solid #eee; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; }
-.address-card:hover { border-color: #e6a23c; }
-.address-card.active { border-color: #e6a23c; background: #fdf6ec; }
+.address-card:hover { border-color: #1677ff; }
+.address-card.active { border-color: #1677ff; background: #e6f4ff; }
 .address-info { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .receiver { font-size: 15px; font-weight: bold; color: #333; }
 .mobile { font-size: 13px; color: #666; }
-.default-tag { background: #e6a23c; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.default-tag { background: #1677ff; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
 .address-detail { font-size: 13px; color: #666; line-height: 1.5; }
 .no-address { text-align: center; padding: 20px; color: #999; }
 .order-items { }
 .order-item { display: grid; grid-template-columns: 60px 1fr 80px 60px 80px; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; align-items: center; }
 .order-item:last-child { border-bottom: none; }
-.item-image { width: 60px; height: 60px; border-radius: 4px; overflow: hidden; }
+.item-image { width: 60px; height: 60px; border-radius: 4px; overflow: hidden; background: #f5f5f5; }
 .item-image img { width: 100%; height: 100%; object-fit: cover; }
 .item-name { font-size: 14px; color: #333; margin-bottom: 4px; }
 .item-spec { font-size: 12px; color: #999; }
@@ -232,8 +222,8 @@ onMounted(fetchData)
 .item-subtotal { font-size: 15px; color: #f56c6c; font-weight: bold; text-align: right; }
 .payment-methods { display: flex; gap: 12px; }
 .payment-method { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border: 2px solid #eee; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-.payment-method:hover { border-color: #e6a23c; }
-.payment-method.active { border-color: #e6a23c; background: #fdf6ec; color: #e6a23c; }
+.payment-method:hover { border-color: #1677ff; }
+.payment-method.active { border-color: #1677ff; background: #e6f4ff; color: #1677ff; }
 .checkout-right { width: 300px; flex-shrink: 0; position: sticky; top: 20px; }
 .order-summary { background: #fff; border-radius: 8px; padding: 20px; }
 .order-summary h3 { font-size: 16px; color: #333; margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
@@ -241,23 +231,18 @@ onMounted(fetchData)
 .summary-row .free { color: #67c23a; }
 .summary-total { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-top: 1px solid #f0f0f0; margin-top: 8px; }
 .total-price { font-size: 24px !important; color: #f56c6c !important; font-weight: bold; }
-.submit-btn { width: 100%; margin-top: 16px; background: #f56c6c; border-color: #f56c6c; }
+.submit-btn { width: 100%; margin-top: 16px; background: #1677ff; border-color: #1677ff; }
+.submit-btn:hover { background: #4096ff; border-color: #4096ff; }
 
-/* ========== 移动端适配 ========== */
 @media (max-width: 768px) {
   .checkout-page { padding: 10px 0; min-height: calc(100vh - 120px); }
   .container { max-width: 100%; padding: 0 12px; }
   .page-title { font-size: 18px; margin-bottom: 12px; }
-  
-  /* 两栏改单列 */
   .checkout-wrapper { flex-direction: column; gap: 10px; }
   .checkout-left { width: 100%; }
-  .checkout-right { width: 100%; position: static; }
-  
+  .checkout-right { width: 100%; position: static; order: -1; }
   .checkout-section { padding: 14px; border-radius: 6px; margin-bottom: 10px; }
   .section-title { font-size: 15px; margin-bottom: 10px; padding-bottom: 8px; }
-  
-  /* 地址列表改单列 */
   .address-list { grid-template-columns: 1fr; gap: 8px; }
   .address-card { padding: 12px; border-radius: 6px; }
   .address-info { gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
@@ -266,8 +251,6 @@ onMounted(fetchData)
   .default-tag { font-size: 10px; padding: 1px 6px; }
   .address-detail { font-size: 12px; line-height: 1.5; }
   .no-address { padding: 16px; font-size: 13px; }
-  
-  /* 订单商品改flex卡片布局 */
   .order-item {
     display: flex !important;
     flex-wrap: wrap;
@@ -276,20 +259,17 @@ onMounted(fetchData)
     align-items: flex-start;
   }
   .item-image { width: 60px; height: 60px; flex-shrink: 0; border-radius: 4px; }
+  .item-info { flex: 1; min-width: 0; }
   .item-name { font-size: 13px; margin-bottom: 2px; }
   .item-spec { font-size: 11px; }
   .item-price { font-size: 12px; color: #666; text-align: left; }
   .item-price::before { content: "单价: "; color: #999; }
   .item-quantity { font-size: 12px; color: #666; text-align: left; }
   .item-quantity::before { content: "数量: "; color: #999; }
-  .item-subtotal { font-size: 14px; text-align: left; }
+  .item-subtotal { font-size: 14px; text-align: left; margin-left: auto; }
   .item-subtotal::before { content: "小计: "; color: #999; font-size: 12px; font-weight: normal; }
-  
-  /* 支付方式 */
   .payment-methods { flex-wrap: wrap; gap: 8px; }
   .payment-method { padding: 8px 14px; font-size: 13px; border-radius: 6px; }
-  
-  /* 订单摘要 */
   .order-summary { padding: 14px; border-radius: 6px; }
   .order-summary h3 { font-size: 15px; margin-bottom: 10px; padding-bottom: 8px; }
   .summary-row { font-size: 13px; margin-bottom: 8px; }

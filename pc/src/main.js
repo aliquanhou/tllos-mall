@@ -8,6 +8,7 @@ import "./assets/design_system.css"
 import "./assets/main.css"
 import "./assets/responsive.css"
 import "./assets/mobile-enhance.css"
+import "./assets/home-enhance.css"
 
 const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

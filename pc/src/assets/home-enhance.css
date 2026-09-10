@@ -1,0 +1,147 @@
+/* ===== 首页电商化风格优化 ===== */
+/* 将深色科技风 Hero 改为明亮电商风 */
+
+.tllos-home .tllos-hero {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f4ff 50%, #f0f9ff 100%) !important;
+  padding: 40px 0 80px !important;
+}
+
+.tllos-home .tllos-hero__bg {
+  display: none !important;
+}
+
+.tllos-home .tllos-hero__text {
+  color: #1a1a1a !important;
+}
+
+.tllos-home .tllos-hero__badge {
+  background: rgba(22, 119, 255, 0.1) !important;
+  border: 1px solid rgba(22, 119, 255, 0.2) !important;
+  color: #1677ff !important;
+}
+
+.tllos-home .tllos-hero__title {
+  color: #1a1a1a !important;
+}
+
+.tllos-home .tllos-gradient-text {
+  background: linear-gradient(135deg, #1677ff, #4096ff) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.tllos-home .tllos-hero__subtitle {
+  color: #666 !important;
+}
+
+.tllos-home .tllos-hero__stat-num {
+  color: #1677ff !important;
+}
+
+.tllos-home .tllos-hero__stat-label {
+  color: #999 !important;
+}
+
+.tllos-home .tllos-hero__stat-divider {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.tllos-home .tllos-hero__card {
+  box-shadow: 0 10px 40px rgba(22, 119, 255, 0.15) !important;
+  border: 1px solid rgba(22, 119, 255, 0.1) !important;
+}
+
+.tllos-home .tllos-hero__card-img {
+  background: #fff !important;
+}
+
+/* 按钮优化 */
+.tllos-home .tllos-btn--accent {
+  background: linear-gradient(135deg, #1677ff, #4096ff) !important;
+  border: none !important;
+}
+
+.tllos-home .tllos-btn--ghost {
+  background: #fff !important;
+  border: 1px solid #d9d9d9 !important;
+  color: #333 !important;
+}
+
+/* 公告条优化 */
+.tllos-home .tllos-notice-bar {
+  background: linear-gradient(90deg, #1677ff, #4096ff) !important;
+}
+
+/* 商品卡片悬停效果增强 */
+.tllos-home .tllos-product-card {
+  transition: all 0.3s ease !important;
+}
+
+.tllos-home .tllos-product-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 秒杀区域优化 */
+.tllos-home .tllos-flash-header {
+  background: linear-gradient(135deg, #ff4d4f, #ff7875) !important;
+}
+
+/* ===== 移动端首页优化 ===== */
+@media (max-width: 768px) {
+  .tllos-home .tllos-hero {
+    padding: 24px 0 60px !important;
+  }
+  
+  .tllos-home .tllos-hero__title {
+    font-size: 28px !important;
+  }
+  
+  .tllos-home .tllos-hero__subtitle {
+    font-size: 14px !important;
+  }
+  
+  .tllos-home .tllos-hero__actions {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  
+  .tllos-home .tllos-hero__actions .tllos-btn {
+    width: 100% !important;
+  }
+  
+  .tllos-home .tllos-hero__stats {
+    gap: 16px !important;
+  }
+  
+  .tllos-home .tllos-hero__stat-num {
+    font-size: 20px !important;
+  }
+  
+  .tllos-home .tllos-category-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 10px !important;
+    padding: 16px 12px !important;
+  }
+  
+  .tllos-home .tllos-product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  
+  .tllos-home .tllos-flash-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .tllos-home .tllos-category-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  .tllos-home .tllos-hero__title {
+    font-size: 24px !important;
+  }
+}
