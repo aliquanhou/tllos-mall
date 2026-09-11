@@ -6,6 +6,7 @@ use App\Modules\Refund\Constants\RefundStatus;
 use App\Modules\Refund\Contracts\RefundProviderResult;
 use App\Modules\Refund\Adapters\RefundProviderFactory;
 use App\Modules\Order\Models\Order;
+use App\Modules\Inventory\Services\InventoryLedgerService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
@@ -338,6 +339,28 @@ class RefundService
                         'provider' => $refund->provider,
                         'amount' => $refund->refund_amount,
                     ]);
+
+                    // P2-02: Record inventory REFUND event (restore stock)
+                    try {
+                        $orderItem = DB::table('order_items')->where('id', $locked->order_item_id)->first();
+                        if ($orderItem && $orderItem->sku_id) {
+                            $inventoryService = app(InventoryLedgerService::class);
+                            $quantity = intval($orderItem->quantity);
+                            $inventoryService->refund(
+                                $orderItem->sku_id,
+                                $orderItem->product_id,
+                                $quantity,
+                                $refundId,
+                                $locked->refund_no
+                            );
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Inventory refund event failed', [
+                            'refund_no' => $locked->refund_no,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+
                     return ['success' => true, 'status' => RefundStatus::SUCCESS, 'result' => $result];
                 }
 

@@ -8,6 +8,7 @@ use App\Modules\Order\Models\OrderLog;
 use App\Modules\Product\Models\Product;
 use App\Modules\Product\Models\ProductSku;
 use App\Modules\Cart\Models\Cart;
+use App\Modules\Inventory\Services\InventoryLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
@@ -173,6 +174,28 @@ class OrderController extends BaseController
             if (!empty($cartIds)) Cart::whereIn('id', $cartIds)->where('user_id', $userId)->delete();
 
             DB::commit();
+
+            // P2-02: Record inventory SALE events (dual-write with ledger)
+            try {
+                $inventoryService = app(InventoryLedgerService::class);
+                foreach ($orderItems as $item) {
+                    if (!empty($item['sku_id'])) {
+                        $inventoryService->sale(
+                            $item['sku_id'],
+                            $item['product_id'],
+                            $item['quantity'],
+                            $order->id,
+                            $orderNo
+                        );
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Inventory ledger event failed after order commit', [
+                    'order_no' => $orderNo,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             return $this->success(['order_id' => $order->id, 'order_no' => $orderNo, 'pay_amount' => $payAmount], '订单创建成功');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -200,6 +223,27 @@ class OrderController extends BaseController
                 'remark' => $request->reason ?? '用户取消',
             ]);
             DB::commit();
+
+            // P2-02: Record inventory RELEASE events
+            try {
+                $inventoryService = app(InventoryLedgerService::class);
+                foreach ($order->items as $item) {
+                    if ($item->sku_id) {
+                        $inventoryService->release(
+                            $item->sku_id,
+                            $item->product_id,
+                            $item->quantity,
+                            $order->id,
+                            $order->order_no
+                        );
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Inventory release event failed after order cancel', [
+                    'order_no' => $order->order_no,
+                    'error' => $e->getMessage(),
+                ]);
+            }
             return $this->success(null, '订单已取消');
         } catch (\Exception $e) {
             DB::rollBack();
