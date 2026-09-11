@@ -7,6 +7,8 @@ use App\Modules\Order\Models\OrderItem;
 use App\Modules\Order\Models\OrderLog;
 use App\Modules\Product\Models\Product;
 use App\Modules\Product\Models\ProductSku;
+use App\Modules\Refund\Services\RefundService;
+use App\Modules\Refund\Constants\RefundStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
@@ -84,49 +86,48 @@ class AdminOrderController extends BaseController
         return $this->success(['list' => $list->items(), 'total' => $list->total()]);
     }
 
+    /**
+     * P1-REFUND-FOUNDATION: Refund audit via unified RefundService.
+     *
+     * CRITICAL: Approval moves refund to PROCESSING, NOT SUCCESS.
+     * No fake third-party refund number. No direct order status change.
+     * Actual third-party refund API call and final SUCCESS state will be
+     * handled in P1-REFUND-PROVIDER-INTEGRATION.
+     */
     public function refundAudit($id, Request $request)
     {
         $request->validate(['action' => 'required|string|in:approve,reject', 'reason' => 'nullable|string']);
-        $refund = DB::table('order_refunds')->where('id', $id)->first();
-        if (!$refund) return $this->error('退款单不存在', 404);
-        if ($refund->status != 0) return $this->error('当前状态不能审核');
 
-        DB::beginTransaction();
-        try {
-            if ($request->action == 'approve') {
-                DB::table('order_refunds')->where('id', $id)->update([
-                    'status' => 5, 'refund_time' => Carbon::now(),
-                    'refund_no_third' => 'REF' . time(), 'updated_at' => Carbon::now(),
-                ]);
-                $order = Order::find($refund->order_id);
-                if ($order) {
-                    $order->update(['status' => 6]);
-                    if ($refund->order_item_id) {
-                        $item = OrderItem::find($refund->order_item_id);
-                        if ($item) {
-                            if ($item->sku_id) ProductSku::where('id', $item->sku_id)->increment('stock', $item->quantity);
-                            else Product::where('id', $item->product_id)->increment('stock', $item->quantity);
-                            $item->update(['is_refunded' => 1]);
-                        }
-                    }
-                    OrderLog::create([
-                        'order_id' => $order->id, 'order_no' => $order->order_no,
-                        'action' => 6, 'action_name' => '退款成功',
-                        'operator_type' => 'admin', 'operator_id' => 0,
-                        'remark' => "退款 ¥{$refund->refund_amount}",
-                    ]);
-                }
-            } else {
-                DB::table('order_refunds')->where('id', $id)->update([
-                    'status' => 2, 'refuse_reason' => $request->reason ?? '不符合退款条件',
-                    'updated_at' => Carbon::now(),
+        $refundService = app(RefundService::class);
+        $adminId = $request->user()->id ?? 0;
+
+        if ($request->action == 'approve') {
+            $result = $refundService->approveRefund($id, $adminId);
+            if (!$result['success']) {
+                return $this->error($result['message']);
+            }
+
+            // Log audit action (order status NOT changed here — waits for provider confirmation)
+            $refund = DB::table('order_refunds')->where('id', $id)->first();
+            if ($refund) {
+                OrderLog::create([
+                    'order_id' => $refund->order_id,
+                    'order_no' => DB::table('orders')->where('id', $refund->order_id)->value('order_no') ?? '',
+                    'action' => 6,
+                    'action_name' => '退款审核通过',
+                    'operator_type' => 'admin',
+                    'operator_id' => $adminId,
+                    'remark' => "退款审核通过 ¥{$refund->refund_amount}，进入处理中状态（等待第三方退款确认）",
                 ]);
             }
-            DB::commit();
-            return $this->success(null, $request->action == 'approve' ? '退款已通过' : '已拒绝退款');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return $this->error('操作失败: ' . $e->getMessage());
+
+            return $this->success(['status' => RefundStatus::PROCESSING], '退款审核通过，进入处理中状态');
+        } else {
+            $result = $refundService->rejectRefund($id, $request->reason ?? '', $adminId);
+            if (!$result['success']) {
+                return $this->error($result['message']);
+            }
+            return $this->success(null, '已拒绝退款');
         }
     }
 }
