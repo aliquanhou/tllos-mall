@@ -139,35 +139,50 @@ class PaymentNotifyController extends BaseController
             return;
         }
 
-        // P1-B Step 2: 查询本地订单
-        $order = Order::where('order_no', $outTradeNo)->first();
-        if (!$order) {
-            // 可能是充值支付
+        // P1-PRECONDITION Step 2: Provider-Originated Exact Identity
+        // out_trade_no is now payment_no (new protocol). Fall back to order_no (legacy).
+        $payment = DB::table('payments')
+            ->where('payment_no', $outTradeNo)
+            ->first();
+
+        if (!$payment) {
+            // Legacy compatibility: old payments used order_no as out_trade_no
+            $payment = DB::table('payments')
+                ->where('order_no', $outTradeNo)
+                ->where('status', 0)
+                ->orderBy('created_at', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+        }
+
+        if (!$payment) {
+            // May be a recharge payment
             $this->processRechargeSuccess($outTradeNo, $transactionId, $amount);
             return;
         }
 
-        // 幂等：订单已支付则跳过
-        if ($order->status != 0) {
-            Log::info('订单已支付，回调跳过', ['order_no' => $outTradeNo, 'status' => $order->status, 'transaction_id' => $transactionId]);
+        // Query order via payment.order_no (exact binding)
+        $order = Order::where('order_no', $payment->order_no)->first();
+        if (!$order) {
+            Log::error('支付回调失败：支付记录对应订单不存在', [
+                'payment_no' => $payment->payment_no,
+                'order_no' => $payment->order_no,
+                'transaction_id' => $transactionId,
+            ]);
             return;
         }
 
-        // P1-C Step 3: 精确绑定支付记录
-        // out_trade_no = order_no（当前协议），取该订单下最新的待支付记录
-        $payment = DB::table('payments')
-            ->where('order_no', $outTradeNo)
-            ->where('status', 0)
-            ->orderBy('created_at', 'desc')
-            ->orderBy('id', 'desc')
-            ->first();
+        // Idempotency: order already paid → skip
+        if ($order->status != 0) {
+            Log::info('订单已支付，回调跳过', ['order_no' => $order->order_no, 'status' => $order->status, 'transaction_id' => $transactionId]);
+            return;
+        }
 
-        if (!$payment) {
-            Log::error('支付回调失败：未找到待支付记录', [
-                'order_no' => $outTradeNo,
-                'transaction_id' => $transactionId,
-                'amount' => $amount,
-                'order_status' => $order->status,
+        // P1-C Step 3: payment record status check
+        if ($payment->status != 0) {
+            Log::info('支付记录已处理，回调跳过', [
+                'payment_no' => $payment->payment_no,
+                'status' => $payment->status,
             ]);
             return;
         }
@@ -189,15 +204,6 @@ class PaymentNotifyController extends BaseController
                 'payment_amount' => $paymentAmount,
                 'third_payment_no' => $transactionId,
                 'pay_type' => $payType,
-            ]);
-            return;
-        }
-
-        // P1-C Step 5: 支付记录状态校验（双重检查）
-        if ($payment->status != 0) {
-            Log::info('支付记录已处理，回调跳过', [
-                'payment_no' => $payment->payment_no,
-                'status' => $payment->status,
             ]);
             return;
         }

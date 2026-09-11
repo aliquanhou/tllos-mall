@@ -52,6 +52,7 @@ class RefundStatus
     public const ACTIVE_REFUND_STATUSES = [
         self::REQUESTED,
         self::PROCESSING,
+        self::UNKNOWN,
         self::SUCCESS,
     ];
 

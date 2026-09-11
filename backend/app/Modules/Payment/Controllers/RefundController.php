@@ -2,23 +2,39 @@
 namespace App\Modules\Payment\Controllers;
 
 use App\Core\Controllers\BaseController;
-use App\Modules\Payment\Services\WechatPayService;
-use App\Modules\Payment\Services\AlipayService;
 use App\Modules\Order\Models\Order;
 use App\Modules\Order\Models\OrderLog;
+use App\Modules\Refund\Services\RefundService;
+use App\Modules\Refund\Constants\RefundStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
 
+/**
+ * P1-REFUND-PROVIDER-PRECONDITION: Canonical Refund Entry
+ *
+ * This controller now uses RefundService as the canonical refund entry.
+ * It NO LONGER writes to the legacy `refunds` table.
+ * It NO LONGER calls third-party refund APIs directly.
+ *
+ * Flow:
+ *   createRefund (REQUESTED) → approveRefund (PROCESSING)
+ *
+ * Provider Integration (actual Alipay/WeChat refund API calls) will be
+ * handled in the next phase: P1-REFUND-PROVIDER-INTEGRATION-IMPLEMENTATION.
+ *
+ * The legacy `refunds` table is now READ-ONLY / LEGACY-ONLY.
+ */
 class RefundController extends BaseController
 {
     /**
-     * 退款列表
+     * Refund list — reads from canonical order_refunds table.
+     * Legacy refunds table is no longer written to.
      */
     public function index(Request $request)
     {
-        $query = DB::table('refunds')->orderBy('id', 'desc');
+        $query = DB::table('order_refunds')->orderBy('id', 'desc');
 
         if ($request->order_no) {
             $query->where('refund_no', 'like', '%' . $request->order_no . '%');
@@ -36,17 +52,22 @@ class RefundController extends BaseController
             'list' => $list,
             'total' => $total,
             'stats' => [
-                'total' => DB::table('refunds')->count(),
-                'pending' => DB::table('refunds')->where('status', 0)->count(),
-                'approved' => DB::table('refunds')->where('status', 1)->count(),
-                'rejected' => DB::table('refunds')->where('status', 2)->count(),
-                'total_amount' => DB::table('refunds')->where('status', 1)->sum('refund_amount'),
+                'total' => DB::table('order_refunds')->count(),
+                'pending' => DB::table('order_refunds')->where('status', RefundStatus::REQUESTED)->count(),
+                'processing' => DB::table('order_refunds')->where('status', RefundStatus::PROCESSING)->count(),
+                'success' => DB::table('order_refunds')->where('status', RefundStatus::SUCCESS)->count(),
+                'total_amount' => DB::table('order_refunds')->where('status', RefundStatus::SUCCESS)->sum('refund_amount'),
             ],
         ]);
     }
 
     /**
-     * 申请退款
+     * Admin direct refund — canonical entry via RefundService.
+     *
+     * Creates a REQUESTED refund and immediately approves it to PROCESSING.
+     * Does NOT call third-party APIs (next phase).
+     * Does NOT modify order status or rollback stock (next phase).
+     * Does NOT write to legacy refunds table.
      */
     public function refund(Request $request)
     {
@@ -63,94 +84,48 @@ class RefundController extends BaseController
         if (!in_array($order->status, [1, 2, 3])) {
             return $this->error('当前订单状态不支持退款，状态: ' . $order->status);
         }
-        if ($request->amount > $order->pay_amount) {
-            return $this->error('退款金额不能超过订单支付金额');
+
+        $refundService = app(RefundService::class);
+        $adminId = $request->user()->id ?? 0;
+
+        // Step 1: Create refund request (REQUESTED) with cumulative amount check
+        $result = $refundService->createRefund([
+            'order_id' => $order->id,
+            'order_item_id' => 0,
+            'user_id' => $order->user_id,
+            'type' => 1,
+            'refund_amount' => $request->amount,
+            'reason' => $request->reason ?? '后台直接退款',
+            'description' => '管理员后台直接退款',
+        ]);
+
+        if (!$result['success']) {
+            return $this->error($result['message']);
         }
 
-        $refundNo = 'REF' . date('YmdHis') . str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
-
-        // 调用第三方退款
-        $refundResult = $this->callThirdPartyRefund($order, $request->amount, $refundNo, $request->reason ?? '');
-
-        DB::beginTransaction();
-        try {
-            // 创建退款记录
-            DB::table('refunds')->insert([
-                'refund_no' => $refundNo,
-                'order_id' => $order->id,
-                'user_id' => $order->user_id,
-                'merchant_id' => $order->merchant_id,
-                'refund_amount' => $request->amount,
-                'reason' => $request->reason ?? '',
-                'status' => $refundResult['success'] ? 1 : 0,
-                'audit_at' => $refundResult['success'] ? Carbon::now() : null,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
-
-            if ($refundResult['success']) {
-                // 更新订单状态为退款中
-                $order->update(['status' => 5]);
-
-                // 订单日志
-                OrderLog::create([
-                    'order_id' => $order->id,
-                    'order_no' => $order->order_no,
-                    'action' => 6,
-                    'action_name' => '退款成功',
-                    'operator_type' => 'admin',
-                    'operator_id' => $request->user()->id ?? 0,
-                    'remark' => '退款金额 ¥' . $request->amount . '，原因: ' . ($request->reason ?? ''),
-                ]);
-
-                // 库存回滚
-                $orderItems = DB::table('order_items')->where('order_id', $order->id)->get();
-                foreach ($orderItems as $item) {
-                    DB::table('products')->where('id', $item->product_id)->increment('stock', $item->quantity);
-                }
-
-                // 回滚分销佣金
-                if ($order->commission > 0) {
-                    DB::table('distribute_orders')->where('order_id', $order->id)->update(['status' => 2]);
-                    if ($order->agent_id > 0) {
-                        DB::table('distribute_agents')->where('id', $order->agent_id)->decrement('total_income', $order->commission);
-                    }
-                }
-            }
-
-            DB::commit();
-            return $this->success([
-                'refund_no' => $refundNo,
-                'status' => $refundResult['success'] ? 1 : 0,
-            ], $refundResult['success'] ? '退款成功' : '退款申请已提交，等待处理');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('退款处理失败', ['error' => $e->getMessage()]);
-            return $this->error('退款处理失败: ' . $e->getMessage());
+        // Step 2: Immediately approve to PROCESSING
+        // Provider Integration phase will handle actual third-party refund call
+        $approveResult = $refundService->approveRefund($result['refund_id'], $adminId);
+        if (!$approveResult['success']) {
+            return $this->error($approveResult['message']);
         }
-    }
 
-    /**
-     * 调用第三方退款
-     */
-    private function callThirdPartyRefund($order, $amount, $outRefundNo, $reason)
-    {
-        $params = [
-            'out_trade_no' => $order->order_no,
-            'out_refund_no' => $outRefundNo,
-            'amount' => $amount,
-            'total_amount' => $order->pay_amount,
-            'reason' => $reason,
-        ];
+        // Log the action (order status NOT changed here — waits for provider confirmation)
+        OrderLog::create([
+            'order_id' => $order->id,
+            'order_no' => $order->order_no,
+            'action' => 6,
+            'action_name' => '后台退款申请',
+            'operator_type' => 'admin',
+            'operator_id' => $adminId,
+            'remark' => "后台直接退款 ¥{$request->amount}，原因：" . ($request->reason ?? '后台直接退款') . "，已进入处理中状态，等待第三方退款确认",
+        ]);
 
-        if ($order->pay_type == 1) {
-            $service = new WechatPayService();
-            return $service->refund($params);
-        } elseif ($order->pay_type == 2) {
-            $service = new AlipayService();
-            return $service->refund($params);
-        } else {
-            return ['success' => true, 'refund_id' => 'BALANCE' . time()];
-        }
+        return $this->success([
+            'refund_no' => $result['refund_no'],
+            'refund_id' => $result['refund_id'],
+            'status' => RefundStatus::PROCESSING,
+            'message' => '退款申请已提交，进入处理中状态。第三方退款将在后续阶段处理。',
+        ], '退款申请已提交');
     }
 }

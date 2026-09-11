@@ -71,13 +71,14 @@ class PaymentController extends BaseController
             'pay_type' => $request->pay_type,
             'amount' => $order->pay_amount,
             'status' => 0,
+            'provider' => $request->pay_type == 1 ? 'wechat' : ($request->pay_type == 2 ? 'alipay' : ($request->pay_type == 3 ? 'balance' : 'points')),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
 
         // 调用第三方支付下单
         $params = [
-            'out_trade_no' => $order->order_no,
+            'out_trade_no' => $payNo,
             'amount' => $order->pay_amount,
             'description' => '订单支付-' . $order->order_no,
             'notify_url' => config('app.url') . '/api/v1/payment/notify/' . ($request->pay_type == 1 ? 'wechat' : 'alipay'),
