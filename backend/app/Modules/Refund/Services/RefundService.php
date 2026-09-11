@@ -3,6 +3,8 @@
 namespace App\Modules\Refund\Services;
 
 use App\Modules\Refund\Constants\RefundStatus;
+use App\Modules\Refund\Contracts\RefundProviderResult;
+use App\Modules\Refund\Adapters\RefundProviderFactory;
 use App\Modules\Order\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -222,6 +224,183 @@ class RefundService
         ]);
 
         return ['success' => true];
+    }
+
+    /**
+     * P1-PI-02: Initiate provider refund for an existing refund record.
+     *
+     * CRITICAL ARCHITECTURE:
+     *   1. Local state (PROCESSING) is ALREADY committed before this method is called
+     *   2. Provider API call happens OUTSIDE any DB transaction
+     *   3. Result persistence happens in a SEPARATE DB transaction
+     *   4. If persistence fails, refund stays PROCESSING (recoverable), NOT FAILED
+     *
+     * This prevents the dangerous scenario:
+     *   Provider refund succeeds → our DB write fails → we think it failed → retry → double refund
+     *
+     * State transitions:
+     *   PROCESSING + provider success    → SUCCESS (Alipay sync)
+     *   PROCESSING + provider processing → PROCESSING (WeChat async, save provider_refund_no)
+     *   PROCESSING + provider failed     → FAILED
+     *   PROCESSING + provider unknown    → UNKNOWN (timeout, needs query)
+     *   UNKNOWN    + retry               → re-uses same refund_no (idempotent)
+     *
+     * @param int $refundId
+     * @return array{success: bool, status: int, message?: string, result?: RefundProviderResult}
+     */
+    public function initiateProviderRefund(int $refundId): array
+    {
+        // Step 1: Read refund record (read-only, no transaction needed)
+        $refund = DB::table('order_refunds')->where('id', $refundId)->first();
+        if (!$refund) {
+            return ['success' => false, 'status' => 0, 'message' => '退款单不存在'];
+        }
+
+        // Only PROCESSING or UNKNOWN can initiate/retry provider refund
+        if (!in_array($refund->status, [RefundStatus::PROCESSING, RefundStatus::UNKNOWN], true)) {
+            return [
+                'success' => false,
+                'status' => $refund->status,
+                'message' => '当前状态不能发起退款，status=' . $refund->status,
+            ];
+        }
+
+        // Step 2: Verify payment record exists for identity binding
+        $payment = DB::table('payments')->where('payment_no', $refund->payment_no)->first();
+        if (!$payment) {
+            return ['success' => false, 'status' => $refund->status, 'message' => '支付记录不存在，无法建立Provider身份'];
+        }
+
+        // Step 3: Resolve provider adapter
+        $factory = app(RefundProviderFactory::class);
+        $provider = $factory->make($refund->provider);
+        if (!$provider) {
+            return ['success' => false, 'status' => $refund->status, 'message' => '不支持的支付渠道: ' . $refund->provider];
+        }
+
+        // Production + unconfigured = FAIL CLOSED (never mock)
+        if (!$provider->isConfigured()) {
+            return ['success' => false, 'status' => $refund->status, 'message' => '支付渠道未配置完成: ' . $refund->provider];
+        }
+
+        // Step 4: CRITICAL — Provider API call is OUTSIDE any DB transaction
+        // The local PROCESSING state was already committed by approveRefund().
+        // We must NOT wrap this HTTP call in DB::transaction().
+        try {
+            $result = $provider->refund([
+                'out_trade_no' => $refund->payment_no,
+                'out_request_no' => $refund->refund_no,  // Idempotency key = TLL refund_no
+                'amount' => (string)$refund->refund_amount,
+                'reason' => $refund->reason ?? '退款',
+                'notify_url' => config('app.url') . '/api/v1/payment/refund-notify/' . $refund->provider,
+            ]);
+        } catch (\Throwable $e) {
+            // Double protection: adapter should catch this, but if it leaks,
+            // treat as UNKNOWN (provider may have received the request)
+            Log::warning('Provider退款调用异常泄漏，进入UNKNOWN', [
+                'refund_id' => $refundId,
+                'refund_no' => $refund->refund_no,
+                'provider' => $refund->provider,
+                'error' => $e->getMessage(),
+            ]);
+            $result = RefundProviderResult::unknown('Provider调用异常: ' . $e->getMessage());
+        }
+
+        // Step 5: Persist result in a SEPARATE DB transaction.
+        // If this fails, refund stays PROCESSING (recoverable). We do NOT claim FAILED
+        // because the provider may have already processed the refund successfully.
+        try {
+            return DB::transaction(function () use ($refundId, $result, $refund) {
+                $locked = DB::table('order_refunds')
+                    ->where('id', $refundId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$locked) {
+                    throw new \RuntimeException('退款记录在事务中消失');
+                }
+
+                if ($result->isSuccess()) {
+                    // Provider confirmed refund completed (Alipay synchronous)
+                    DB::table('order_refunds')->where('id', $refundId)->update([
+                        'status' => RefundStatus::SUCCESS,
+                        'provider_refund_no' => $result->providerRefundNo !== '' ? $result->providerRefundNo : $locked->provider_refund_no,
+                        'provider_transaction_no' => $result->providerTransactionNo !== '' ? $result->providerTransactionNo : $locked->provider_transaction_no,
+                        'refunded_at' => Carbon::now(),
+                        'failure_reason' => null,
+                        'updated_at' => Carbon::now(),
+                    ]);
+                    Log::info('退款成功', [
+                        'refund_id' => $refundId,
+                        'refund_no' => $refund->refund_no,
+                        'provider' => $refund->provider,
+                        'amount' => $refund->refund_amount,
+                    ]);
+                    return ['success' => true, 'status' => RefundStatus::SUCCESS, 'result' => $result];
+                }
+
+                if ($result->isProcessing()) {
+                    // Provider accepted async request (WeChat). Keep PROCESSING,
+                    // save provider identity for callback matching.
+                    DB::table('order_refunds')->where('id', $refundId)->update([
+                        'provider_refund_no' => $result->providerRefundNo !== '' ? $result->providerRefundNo : $locked->provider_refund_no,
+                        'provider_transaction_no' => $result->providerTransactionNo !== '' ? $result->providerTransactionNo : $locked->provider_transaction_no,
+                        'updated_at' => Carbon::now(),
+                    ]);
+                    return ['success' => true, 'status' => RefundStatus::PROCESSING, 'result' => $result];
+                }
+
+                if ($result->isFailed()) {
+                    // Provider explicitly rejected the refund
+                    DB::table('order_refunds')->where('id', $refundId)->update([
+                        'status' => RefundStatus::FAILED,
+                        'failure_reason' => $result->message,
+                        'updated_at' => Carbon::now(),
+                    ]);
+                    Log::warning('退款失败', [
+                        'refund_id' => $refundId,
+                        'refund_no' => $refund->refund_no,
+                        'provider' => $refund->provider,
+                        'reason' => $result->message,
+                    ]);
+                    return ['success' => false, 'status' => RefundStatus::FAILED, 'result' => $result];
+                }
+
+                // UNKNOWN: timeout / uncertain delivery. Must query to resolve.
+                DB::table('order_refunds')->where('id', $refundId)->update([
+                    'status' => RefundStatus::UNKNOWN,
+                    'failure_reason' => $result->message,
+                    'attempts' => DB::raw('attempts + 1'),
+                    'updated_at' => Carbon::now(),
+                ]);
+                Log::warning('退款进入未知状态，需查询确认', [
+                    'refund_id' => $refundId,
+                    'refund_no' => $refund->refund_no,
+                    'provider' => $refund->provider,
+                    'reason' => $result->message,
+                ]);
+                return ['success' => false, 'status' => RefundStatus::UNKNOWN, 'result' => $result];
+            });
+        } catch (\Throwable $e) {
+            // ============================================================
+            // CRITICAL (Acceptance #7):
+            // Provider may have already processed the refund, but our DB
+            // write failed. Do NOT claim FAILED. Keep PROCESSING as a
+            // recoverable state. The refund_no remains the same for retry.
+            // ============================================================
+            Log::critical('退款结果持久化失败，退款保持处理中状态（可恢复，需人工/查询确认）', [
+                'refund_id' => $refundId,
+                'refund_no' => $refund->refund_no,
+                'provider' => $refund->provider,
+                'provider_result_status' => $result->status,
+                'error' => $e->getMessage(),
+            ]);
+            return [
+                'success' => false,
+                'status' => RefundStatus::PROCESSING,
+                'message' => '退款结果保存失败，保持处理中状态，需查询确认',
+            ];
+        }
     }
 
     /**
