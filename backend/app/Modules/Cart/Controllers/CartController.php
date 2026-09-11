@@ -54,7 +54,7 @@ class CartController extends BaseController
     {
         $request->validate([
             'product_id' => 'required|integer',
-            'sku_id' => 'nullable|integer',
+            'sku_id' => 'required|integer|min:0',
             'quantity' => 'required|integer|min:1',
         ]);
 
@@ -62,16 +62,20 @@ class CartController extends BaseController
         $product = Product::find($request->product_id);
         if (!$product || $product->status != 1) return $this->error('商品不存在或已下架');
 
+        // P2-03: SKU必须绑定，库存读取SKU stock
         $sku = null;
-        $stock = $product->stock;
-        if ($request->sku_id) {
+        $stock = 0;
+        if ($request->sku_id > 0) {
             $sku = ProductSku::where('id', $request->sku_id)->where('product_id', $request->product_id)->first();
             if (!$sku) return $this->error('规格不存在');
             $stock = $sku->stock;
+        } else {
+            // 无SKU商品，使用product stock（过渡兼容）
+            $stock = $product->stock;
         }
 
         $cart = Cart::where('user_id', $userId)->where('product_id', $request->product_id)
-            ->where('sku_id', $request->sku_id ?: 0)->first();
+            ->where('sku_id', $request->sku_id)->first();
 
         if ($cart) {
             $newQty = $cart->quantity + $request->quantity;
@@ -82,7 +86,7 @@ class CartController extends BaseController
             Cart::create([
                 'user_id' => $userId,
                 'product_id' => $request->product_id,
-                'sku_id' => $request->sku_id ?: 0,
+                'sku_id' => $request->sku_id,
                 'quantity' => $request->quantity,
                 'selected' => 1,
             ]);

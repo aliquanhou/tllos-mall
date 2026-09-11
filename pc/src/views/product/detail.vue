@@ -617,9 +617,35 @@ const fetchRelated = async () => {
   }
 }
 
+const getSelectedSkuId = () => {
+  if (!product.value?.skus || !product.value.skus.length) {
+    return null // 无SKU，使用默认
+  }
+  // 找匹配的SKU
+  for (const sku of product.value.skus) {
+    if (!sku.specs) continue
+    let match = true
+    for (const [k, v] of Object.entries(selectedSpecs.value)) {
+      if (sku.specs[k] !== v) { match = false; break }
+    }
+    // 必须所有规格都选了
+    const requiredKeys = Object.keys(product.value.skus[0]?.specs || {})
+    const selectedKeys = Object.keys(selectedSpecs.value)
+    if (requiredKeys.length !== selectedKeys.length) match = false
+    if (match) return sku.id
+  }
+  return null
+}
+
 const addToCart = async () => {
   try {
-    await addCartApi({ product_id: product.value.id, quantity: quantity.value, specs: selectedSpecs.value })
+    // P2-03: 必须选择SKU
+    let skuId = getSelectedSkuId()
+    if (product.value?.skus?.length > 0 && !skuId) {
+      ElMessage.warning('请选择商品规格')
+      return
+    }
+    await addCartApi({ product_id: product.value.id, sku_id: skuId || 0, quantity: quantity.value })
     ElMessage.success(t('product.addCartSuccess'))
   } catch (e) {
     ElMessage.error(t('product.addCartFailed'))
