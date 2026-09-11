@@ -26,7 +26,7 @@ On failure, partial backup files are automatically cleaned up.
 ### Deprecated Script
 
 - **Old script**: `/usr/local/bin/tllos-backup.sh.deprecated.p0`
-- **Reason**: Incorrect credentials (DB_NAME="tllos", DB_PASS="tllos2026")
+- **Reason**: Incorrect credentials (DB_NAME="tllos", DB_PASS="<incorrect_old_password>")
 - **Status**: Removed from crontab, renamed to `.deprecated.p0`
 - **Impact**: Produced empty 20-byte backup files from 2026-09-04 to 2026-09-11
 
@@ -60,10 +60,10 @@ mysql -u root -e "CREATE DATABASE tllos_mall_restore CHARACTER SET utf8mb4 COLLA
 mysql -u root -e "GRANT ALL PRIVILEGES ON tllos_mall_restore.* TO 'tllos'@'localhost'; GRANT ALL PRIVILEGES ON tllos_mall_restore.* TO 'tllos'@'127.0.0.1'; FLUSH PRIVILEGES;"
 
 # 4. Restore
-zcat /var/backups/tllos-mall/tllos_mall_YYYYMMDD_HHMMSS.sql.gz | mysql -u tllos -p'TllosMall2026Secure' -h 127.0.0.1 tllos_mall_restore
+zcat /var/backups/tllos-mall/tllos_mall_YYYYMMDD_HHMMSS.sql.gz | mysql -u tllos -p'<DB_PASSWORD>' -h 127.0.0.1 tllos_mall_restore
 
 # 5. Verify table count
-mysql -u tllos -p'TllosMall2026Secure' -h 127.0.0.1 -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='tllos_mall_restore';"
+mysql -u tllos -p'<DB_PASSWORD>' -h 127.0.0.1 -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='tllos_mall_restore';"
 
 # 6. After verification, drop the restore database
 mysql -u root -e "DROP DATABASE tllos_mall_restore;"
