@@ -73,7 +73,7 @@
           <!-- 联系客服 -->
           <div class="contact-support">
             <h3>没有找到答案？</h3>
-            <p>您可以联系在线客服，我们将竭诚为您服务</p>
+            <p>客服热线：0532-85501573（周一至周日 9:00-22:00），或联系在线客服</p>
             <el-button type="primary" size="large"><el-icon><Service /></el-icon> 联系在线客服</el-button>
           </div>
         </div>
@@ -95,7 +95,21 @@ const categories = [
   { id: 'account', name: '账户管理', icon: 'User' },
   { id: 'other', name: '其他问题', icon: 'MoreFilled' },
 ]
-const allQuestions = ref([])
+const allQuestions = ref(defaultQuestions.map(q => ({...q})))
+const defaultQuestions = [
+  { id: 1, category: 'shopping', title: '如何下单购买商品？', answer: '浏览商品选择心仪的商品，加入购物车后去结算，填写收货地址并选择支付方式完成支付即可。', open: false },
+  { id: 2, category: 'shopping', title: '如何修改订单信息？', answer: '订单未支付前可在订单详情页修改收货地址；订单支付后如需修改请联系客服 0532-85501573 处理。', open: false },
+  { id: 3, category: 'payment', title: '支持哪些支付方式？', answer: '目前支持支付宝支付（含电脑网站支付和手机网站支付），后续将开通微信支付等更多支付方式。', open: false },
+  { id: 4, category: 'payment', title: '支付成功后订单未更新怎么办？', answer: '支付成功后订单状态可能有延迟，请耐心等待1-2分钟；如仍未更新请联系客服 0532-85501573 并提供支付凭证。', open: false },
+  { id: 5, category: 'delivery', title: '发货时间是多久？', answer: '一般商品在付款后24-48小时内发货，预售商品以商品详情页说明为准。发货后可在订单详情中查看物流信息。', open: false },
+  { id: 6, category: 'delivery', title: '配送范围和运费？', answer: '全国大部分地区均可配送，偏远地区可能加收运费。具体运费以结算页显示为准，部分商品满额包邮。', open: false },
+  { id: 7, category: 'aftersale', title: '如何申请退换货？', answer: '在订单详情页点击"申请售后"，选择退换货类型并填写原因，提交后等待商家审核。支持7天无理由退换货（特殊商品除外）。', open: false },
+  { id: 8, category: 'aftersale', title: '退款多久到账？', answer: '退款审核通过后，将原路退回至您的支付账户，支付宝退款一般1-3个工作日到账，具体以支付机构处理时间为准。', open: false },
+  { id: 9, category: 'account', title: '如何修改收货地址？', answer: '登录后进入"个人中心-收货地址"，可添加、编辑或删除收货地址，最多可保存10个收货地址。', open: false },
+  { id: 10, category: 'account', title: '忘记密码怎么办？', answer: '在登录页点击"忘记密码"，通过注册手机号验证后重置密码。如手机号已更换请联系客服 0532-85501573 处理。', open: false },
+  { id: 11, category: 'other', title: '客服联系方式？', answer: '客服热线：0532-85501573，工作时间：周一至周日 9:00-22:00。也可在网站联系在线客服。', open: false },
+  { id: 12, category: 'other', title: '商城的经营主体是谁？', answer: 'TLLOS商城由惠州市大亚湾福多多信息科技中心运营，ICP备案号：鲁ICP备2025191415号-2。', open: false },
+]
 const loading = ref(false)
 
 // 获取帮助文章列表
@@ -113,7 +127,7 @@ const fetchArticles = async () => {
     }))
   } catch (e) {
     console.error('获取帮助文章失败:', e)
-    allQuestions.value = []
+    allQuestions.value = defaultQuestions.map(q => ({...q}))
   } finally {
     loading.value = false
   }

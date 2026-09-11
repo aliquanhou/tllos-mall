@@ -8,7 +8,7 @@
       <div class="about-content">
         <div class="section">
           <h2>公司简介</h2>
-          <p>TLLOS商城是一家综合性电商平台，致力于为广大消费者提供品质优良、价格实惠的商品和便捷高效的购物服务。平台涵盖服装、数码、美妆、家居、食品等多个品类，满足用户一站式购物需求。</p>
+          <p>TLLOS商城由惠州市大亚湾福多多信息科技中心运营，是一家综合性电商平台，致力于为广大消费者提供品质优良、价格实惠的商品和便捷高效的购物服务。平台涵盖服装、数码、美妆、家居、食品等多个品类，满足用户一站式购物需求。</p>
           <p>我们秉承"用户至上、品质第一"的经营理念，严格把控商品质量，优化购物流程，提升服务水平，努力打造值得信赖的电商品牌。</p>
         </div>
         <!-- 动态文章内容 -->
@@ -69,7 +69,7 @@
           <div class="contact-info">
             <div class="contact-item">
               <el-icon><Phone /></el-icon>
-              <div><h4>客服热线</h4><p>400-888-8888</p></div>
+              <div><h4>客服热线</h4><p>0532-85501573</p></div>
             </div>
             <div class="contact-item">
               <el-icon><Message /></el-icon>
@@ -77,7 +77,7 @@
             </div>
             <div class="contact-item">
               <el-icon><Location /></el-icon>
-              <div><h4>公司地址</h4><p>广东省惠州市大亚湾</p></div>
+              <div><h4>公司地址</h4><p>广东省惠州市大亚湾（个体工商户：惠州市大亚湾福多多信息科技中心）</p></div>
             </div>
             <div class="contact-item">
               <el-icon><Clock /></el-icon>

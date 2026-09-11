@@ -285,42 +285,6 @@
     </section>
 
     <!-- ===== 页脚 ===== -->
-    <footer class="tllos-footer">
-      <div class="tllos-container">
-        <div class="tllos-footer__main">
-          <div class="tllos-footer__brand">
-            <div class="tllos-footer__logo">TLLOS</div>
-            <p class="tllos-footer__slogan">科技点亮生活 · 品质触手可及</p>
-            <div class="tllos-footer__contact">
-              <div><el-icon><Phone /></el-icon> 400-888-8888</div>
-              <div><el-icon><Message /></el-icon> service@tllos.com</div>
-            </div>
-          </div>
-          <div class="tllos-footer__links">
-            <div class="tllos-footer__col">
-              <h4>购物指南</h4>
-              <a>购物流程</a><a>会员介绍</a><a>常见问题</a><a>联系客服</a>
-            </div>
-            <div class="tllos-footer__col">
-              <h4>配送方式</h4>
-              <a>上门自提</a><a>配送方式</a><a>配送范围</a><a>配送时间</a>
-            </div>
-            <div class="tllos-footer__col">
-              <h4>支付方式</h4>
-              <a>货到付款</a><a>在线支付</a><a>分期付款</a><a>公司转账</a>
-            </div>
-            <div class="tllos-footer__col">
-              <h4>售后服务</h4>
-              <a>售后政策</a><a>退换货流程</a><a>退款说明</a><a>价格保护</a>
-            </div>
-          </div>
-        </div>
-        <div class="tllos-footer__bottom">
-          <span>© 2026 TLLOS 商城 版权所有</span>
-          <span>粤ICP备2026000000号</span>
-        </div>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -690,21 +654,6 @@ onMounted(() => {
 .tllos-brand-story__card-desc { font-size: 12px; color: rgba(255,255,255,0.5); }
 
 /* ===== 页脚 ===== */
-.tllos-footer { background: var(--tllos-bg-dark); color: rgba(255,255,255,0.6); padding-top: 60px; }
-.tllos-footer__main { display: flex; gap: 60px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-.tllos-footer__brand { flex: 0 0 280px; }
-.tllos-footer__logo { font-size: 32px; font-weight: 900; color: #fff; letter-spacing: 0.05em; margin-bottom: 12px; }
-.tllos-footer__slogan { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
-.tllos-footer__contact { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
-.tllos-footer__contact > div { display: flex; align-items: center; gap: 8px; }
-.tllos-footer__links { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-.tllos-footer__col h4 { font-size: 14px; font-weight: 700; color: #fff; margin: 0 0 16px; }
-.tllos-footer__col a { display: block; font-size: 13px; color: rgba(255,255,255,0.5); padding: 5px 0; cursor: pointer; transition: color 0.2s; }
-.tllos-footer__col a:hover { color: var(--tllos-accent-light); }
-.tllos-footer__bottom {
-  display: flex; justify-content: center; gap: 24px;
-  padding: 20px 0; font-size: 12px; color: rgba(255,255,255,0.4);
-}
 
 /* ===== 响应式 ===== */
 @media (max-width: 1024px) {

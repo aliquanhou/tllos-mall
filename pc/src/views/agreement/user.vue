@@ -5,6 +5,10 @@
         <h1>用户服务协议</h1>
         <p class="update-time">更新日期：2026年9月1日</p>
         <div class="agreement-content" v-if="articleContent" v-html="articleContent"></div><div class="agreement-content" v-else>
+          <p><strong>经营主体：</strong>惠州市大亚湾福多多信息科技中心</p>
+          <p><strong>客服热线：</strong>0532-85501573</p>
+          <p><strong>ICP备案：</strong>鲁ICP备2025191415号-2</p>
+          <br/>
           <h2>一、协议的接受与修改</h2>
           <p>1.1 本协议是您与TLLOS商城（以下简称"本平台"）之间就使用本平台服务所订立的协议。您在注册、登录或使用本平台服务前，应仔细阅读本协议全部内容。</p>
           <p>1.2 您点击"同意"按钮或实际使用本平台服务，即视为您已充分理解并同意接受本协议的全部条款。</p>
