@@ -48,6 +48,8 @@ class WechatRefundAdapter implements RefundProviderInterface
                 'out_trade_no' => $params['out_trade_no'],
                 'out_refund_no' => $params['out_request_no'],
                 'amount' => $params['amount'],
+                'total_amount' => $params['payment_amount'] ?? $params['amount'],
+                'provider_transaction_no' => $params['provider_transaction_no'] ?? '',
                 'reason' => $params['reason'] ?? '退款',
                 'notify_url' => $params['notify_url'] ?? '',
             ]);
@@ -60,10 +62,12 @@ class WechatRefundAdapter implements RefundProviderInterface
             }
 
             // WeChat asynchronous: HTTP 200 means request ACCEPTED, not completed
-            // Final status comes via callback
+            // Final status comes via callback.
+            // Note: WeChat refund response does NOT include transaction_id.
+            // provider_transaction_no comes from local payment record.
             return RefundProviderResult::processing(
                 providerRefundNo: $result['refund_id'] ?? '',
-                providerTransactionNo: $result['transaction_id'] ?? '',
+                providerTransactionNo: $params['provider_transaction_no'] ?? '',
                 amount: $params['amount'],
                 raw: $result,
             );

@@ -291,6 +291,8 @@ class RefundService
                 'out_trade_no' => $refund->payment_no,
                 'out_request_no' => $refund->refund_no,  // Idempotency key = TLL refund_no
                 'amount' => (string)$refund->refund_amount,
+                'payment_amount' => (string)$payment->amount,  // Original payment amount for provider
+                'provider_transaction_no' => $payment->third_payment_no ?? '',  // Provider transaction ID
                 'reason' => $refund->reason ?? '退款',
                 'notify_url' => config('app.url') . '/api/v1/payment/refund-notify/' . $refund->provider,
             ]);

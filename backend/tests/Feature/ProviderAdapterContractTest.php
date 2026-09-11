@@ -285,7 +285,7 @@ class ProviderAdapterContractTest extends TestCase
             'success' => true,
             'refund_id' => '503018000100202609110001',
             'out_refund_no' => 'RF20260911001',
-            'transaction_id' => '4200001234202609110001',
+            // Note: WeChat refund response does NOT include transaction_id
         ]);
 
         $adapter = new WechatRefundAdapter($mockWechat);
@@ -293,6 +293,8 @@ class ProviderAdapterContractTest extends TestCase
             'out_trade_no' => 'PAY001',
             'out_request_no' => 'RF20260911001',
             'amount' => '50.00',
+            'payment_amount' => '100.00',
+            'provider_transaction_no' => '4200001234202609110001',
             'reason' => 'test',
             'notify_url' => 'https://mall.tllos.com/callback',
         ]);
@@ -377,13 +379,15 @@ class ProviderAdapterContractTest extends TestCase
             'success' => true,
             'refund_id' => 'REFUND_WECHAT_001',
             'out_refund_no' => 'RF_MERCHANT_002',
-            'transaction_id' => 'TXN_WECHAT_001',
+            // Note: WeChat refund response does NOT include transaction_id
         ]);
         $wechatAdapter = new WechatRefundAdapter($mockWechat);
         $wechatResult = $wechatAdapter->refund([
             'out_trade_no' => 'PAY002',
             'out_request_no' => 'RF_MERCHANT_002',
             'amount' => '50.00',
+            'payment_amount' => '100.00',
+            'provider_transaction_no' => 'TXN_WECHAT_001',
             'reason' => 'test',
             'notify_url' => 'https://mall.tllos.com/callback',
         ]);

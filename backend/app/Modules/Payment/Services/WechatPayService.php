@@ -178,7 +178,7 @@ class WechatPayService extends PaymentService
                 'notify_url' => $params['notify_url'] ?? config('app.url') . '/api/v1/payment/refund-notify/wechat',
                 'amount' => [
                     'refund' => intval($params['amount'] * 100),
-                    'total' => intval($params['total_amount'] * 100),
+                    'total' => intval(($params['total_amount'] ?? $params['amount']) * 100),
                     'currency' => 'CNY',
                 ],
             ];
