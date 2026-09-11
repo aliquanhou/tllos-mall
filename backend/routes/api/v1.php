@@ -1419,13 +1419,12 @@ Route::prefix('merchant')->group(function() {
 
 
 
-// 文件上传
-
-Route::post('/upload', [\App\Modules\Core\Controllers\UploadController::class, 'upload']);
-
-Route::post('/upload/image', [\App\Modules\Core\Controllers\UploadController::class, 'uploadImage']);
-
-Route::post('/upload/video', [\App\Modules\Core\Controllers\UploadController::class, 'uploadVideo']);
+// 文件上传（需登录）
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/upload', [\App\Modules\Core\Controllers\UploadController::class, 'upload']);
+    Route::post('/upload/image', [\App\Modules\Core\Controllers\UploadController::class, 'uploadImage']);
+    Route::post('/upload/video', [\App\Modules\Core\Controllers\UploadController::class, 'uploadVideo']);
+});
 
 
 // 补充缺失的系统设置路由
@@ -1473,6 +1472,7 @@ Route::prefix('admin/help')->middleware('auth:sanctum')->group(function () {
 // 支付回调（不需要认证）
 Route::post('/payment/notify/wechat', [\App\Modules\Payment\Controllers\PaymentNotifyController::class, 'wechat']);
 Route::post('/payment/notify/alipay', [\App\Modules\Payment\Controllers\PaymentNotifyController::class, 'alipay']);
+Route::get('/payment/return/alipay', [\App\Modules\Payment\Controllers\PaymentNotifyController::class, 'alipayReturn']);
 Route::post('/payment/refund-notify/wechat', [\App\Modules\Payment\Controllers\PaymentNotifyController::class, 'wechatRefund']);
 Route::post('/payment/refund-notify/alipay', [\App\Modules\Payment\Controllers\PaymentNotifyController::class, 'alipayRefund']);
 
