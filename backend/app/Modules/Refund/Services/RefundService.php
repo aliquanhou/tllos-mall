@@ -313,7 +313,7 @@ class RefundService
         // If this fails, refund stays PROCESSING (recoverable). We do NOT claim FAILED
         // because the provider may have already processed the refund successfully.
         try {
-            return DB::transaction(function () use ($refundId, $result, $refund) {
+            $result = DB::transaction(function () use ($refundId, $result, $refund) {
                 $locked = DB::table('order_refunds')
                     ->where('id', $refundId)
                     ->lockForUpdate()
@@ -406,6 +406,28 @@ class RefundService
                 ]);
                 return ['success' => false, 'status' => RefundStatus::UNKNOWN, 'result' => $result];
             });
+
+            // P2-UI-04: Send refund success notification
+            if ($result['status'] == RefundStatus::SUCCESS) {
+                try {
+                    $order = DB::table('orders')->where('id', $refund->order_id)->first();
+                    if ($order) {
+                        $notificationService = app(\App\Modules\UserCenter\Services\NotificationService::class);
+                        $notificationService->sendRefundSuccess(
+                            $order->user_id,
+                            $refund->refund_no,
+                            $refund->refund_amount
+                        );
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Refund notification failed', [
+                        'refund_no' => $refund->refund_no,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            return $result;
         } catch (\Throwable $e) {
             // ============================================================
             // CRITICAL (Acceptance #7):

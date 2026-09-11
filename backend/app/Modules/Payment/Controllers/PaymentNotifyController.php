@@ -305,6 +305,18 @@ class PaymentNotifyController extends BaseController
                 'amount' => $callbackAmount,
                 'transaction_id' => $transactionId,
             ]);
+
+            // P2-UI-04: Send payment success notification
+            try {
+                $notificationService = app(\App\Modules\UserCenter\Services\NotificationService::class);
+                $notificationService->sendPaymentSuccess(
+                    $lockedOrder->user_id,
+                    $lockedOrder->order_no,
+                    $callbackAmount
+                );
+            } catch (\Exception $e) {
+                Log::warning('Payment notification failed', ['order_no' => $outTradeNo, 'error' => $e->getMessage()]);
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('支付成功处理失败', [

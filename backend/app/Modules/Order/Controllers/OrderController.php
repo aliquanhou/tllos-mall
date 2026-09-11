@@ -244,6 +244,20 @@ class OrderController extends BaseController
                     'error' => $e->getMessage(),
                 ]);
             }
+
+            // P2-UI-04: Send order cancelled notification
+            try {
+                $notificationService = app(\App\Modules\UserCenter\Services\NotificationService::class);
+                $notificationService->sendOrderStatusChange(
+                    $order->user_id,
+                    $order->order_no,
+                    'CANCELLED',
+                    '订单已取消'
+                );
+            } catch (\Exception $e) {
+                \Log::warning('Order cancel notification failed', ['order_no' => $order->order_no, 'error' => $e->getMessage()]);
+            }
+
             return $this->success(null, '订单已取消');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -263,6 +277,20 @@ class OrderController extends BaseController
             'action' => 4, 'action_name' => '确认收货',
             'operator_type' => 'user', 'operator_id' => $request->user()->id,
         ]);
+
+        // P2-UI-04: Send order completed notification
+        try {
+            $notificationService = app(\App\Modules\UserCenter\Services\NotificationService::class);
+            $notificationService->sendOrderStatusChange(
+                $order->user_id,
+                $order->order_no,
+                'COMPLETED',
+                '订单已完成，感谢您的购买'
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Order complete notification failed', ['order_no' => $order->order_no, 'error' => $e->getMessage()]);
+        }
+
         return $this->success(null, '已确认收货');
     }
 
