@@ -146,7 +146,25 @@ class PaymentNotifyController extends BaseController
             ->first();
 
         if (!$payment) {
-            // Legacy compatibility: old payments used order_no as out_trade_no
+            // ============================================================
+            // LEGACY ONLY — DO NOT USE FOR NEW PROVIDER INTEGRATION
+            // ============================================================
+            // Old payments (pre-Precondition) used order_no as out_trade_no.
+            // This fallback uses "latest pending" deterministic selection,
+            // which is NOT provider-originated exact identity.
+            //
+            // New Provider Integration MUST use payment_no as out_trade_no.
+            // This fallback exists ONLY to handle callbacks for legacy payments
+            // created before the payment_no identity migration.
+            //
+            // WARNING: If multiple pending payments exist for the same order,
+            // this selects the latest one — this is ambiguous and should never
+            // be used for new payment flows.
+            // ============================================================
+            Log::warning('支付回调使用LEGACY order_no fallback（非精确身份匹配）', [
+                'out_trade_no' => $outTradeNo,
+                'note' => 'New payments should use payment_no as out_trade_no',
+            ]);
             $payment = DB::table('payments')
                 ->where('order_no', $outTradeNo)
                 ->where('status', 0)

@@ -225,6 +225,76 @@ class RefundService
     }
 
     /**
+     * P1-R2: Retry idempotency — get existing refund by refund_no.
+     *
+     * Used by Provider Integration retry logic: if a refund already exists
+     * for a given refund_no, return it instead of creating a duplicate.
+     */
+    public function getRefundByNo(string $refundNo): ?object
+    {
+        return DB::table('order_refunds')->where('refund_no', $refundNo)->first();
+    }
+
+    /**
+     * P1-R2: Retry idempotency — initiate or retry provider refund for an existing refund.
+     *
+     * CRITICAL: This method does NOT create a new refund record. It operates on
+     * an existing refund_id. The same refund_no is reused across all retries,
+     * ensuring provider-side idempotency (out_request_no = refund_no).
+     *
+     * Flow:
+     *   REQUESTED → approve → PROCESSING → provider call → timeout → UNKNOWN
+     *              → retryRefund() → re-uses SAME refund_no → provider call
+     *
+     * This prevents the dangerous scenario:
+     *   RF001 → provider accepted → timeout → UNKNOWN → retry creates RF002 → duplicate refund
+     *
+     * Returns the existing refund record (never creates a new one).
+     * Provider Integration phase will implement the actual API call inside this method.
+     */
+    public function retryRefund(int $refundId): array
+    {
+        $refund = DB::table('order_refunds')->where('id', $refundId)->first();
+        if (!$refund) {
+            return ['success' => false, 'message' => '退款单不存在'];
+        }
+
+        // Only PROCESSING or UNKNOWN refunds can be retried
+        if (!in_array($refund->status, [RefundStatus::PROCESSING, RefundStatus::UNKNOWN])) {
+            return [
+                'success' => false,
+                'message' => '当前状态不支持重试，status=' . $refund->status,
+                'refund' => $refund,
+            ];
+        }
+
+        // Idempotency: return existing refund, increment attempts
+        DB::table('order_refunds')->where('id', $refundId)->update([
+            'attempts' => DB::raw('attempts + 1'),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        $refund = DB::table('order_refunds')->where('id', $refundId)->first();
+
+        Log::info('退款重试（幂等，复用同一refund_no）', [
+            'refund_id' => $refundId,
+            'refund_no' => $refund->refund_no,
+            'attempts' => $refund->attempts,
+            'status' => $refund->status,
+        ]);
+
+        // Provider Integration phase will call actual Alipay/WeChat API here
+        // using $refund->refund_no as out_request_no (idempotency key)
+        return [
+            'success' => true,
+            'refund' => $refund,
+            'refund_no' => $refund->refund_no,
+            'attempts' => $refund->attempts,
+            'message' => '重试已登记，复用同一退款身份 ' . $refund->refund_no,
+        ];
+    }
+
+    /**
      * P1-PRECONDITION: Mark refund as UNKNOWN due to provider timeout/uncertainty.
      *
      * CRITICAL: HTTP timeout / connection reset does NOT mean refund failed.
