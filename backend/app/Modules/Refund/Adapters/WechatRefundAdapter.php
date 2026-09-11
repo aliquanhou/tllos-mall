@@ -87,12 +87,63 @@ class WechatRefundAdapter implements RefundProviderInterface
 
     public function query(string $outRequestNo, string $outTradeNo): RefundProviderResult
     {
-        // WeChat refund query: GET /v3/refund/domestic/refunds/out-refund-no/{out_refund_no}
-        // Not yet implemented in WechatPayService; return unknown for now
-        // P1-PI-05 will implement actual query
-        return RefundProviderResult::unknown(
-            '微信退款查询接口尚未实现 (GET /v3/refund/domestic/refunds/out-refund-no)',
-        );
+        // P1-PI-05: WeChat refund query via GET /v3/refund/domestic/refunds/out-refund-no/{out_refund_no}
+        if (!$this->isConfigured()) {
+            return RefundProviderResult::failed('微信未配置，无法查询退款');
+        }
+
+        try {
+            // WeChat query uses out_refund_no (= TLL refund_no)
+            $result = $this->wechatService->queryRefund($outRequestNo);
+
+            if (!($result['success'] ?? false)) {
+                // API/network error → UNKNOWN
+                return RefundProviderResult::unknown(
+                    '微信退款查询失败: ' . ($result['message'] ?? 'unknown'),
+                    $result,
+                );
+            }
+
+            $refundStatus = $result['refund_status'] ?? '';
+
+            // WeChat refund status mapping:
+            //   SUCCESS     → TLL SUCCESS
+            //   PROCESSING  → TLL PROCESSING
+            //   ABNORMAL    → TLL FAILED
+            //   CLOSED      → TLL FAILED
+            if ($refundStatus === 'SUCCESS') {
+                return RefundProviderResult::success(
+                    providerRefundNo: $result['refund_id'] ?? '',
+                    providerTransactionNo: $result['transaction_id'] ?? '',
+                    amount: isset($result['amount']['refund'])
+                        ? number_format($result['amount']['refund'] / 100, 2, '.', '')
+                        : '',
+                    raw: $result,
+                );
+            }
+
+            if (in_array($refundStatus, ['ABNORMAL', 'CLOSED'], true)) {
+                return RefundProviderResult::failed(
+                    '微信退款状态: ' . $refundStatus,
+                    $result,
+                );
+            }
+
+            // PROCESSING → keep PROCESSING
+            return RefundProviderResult::processing(
+                providerRefundNo: $result['refund_id'] ?? '',
+                providerTransactionNo: $result['transaction_id'] ?? '',
+                amount: isset($result['amount']['refund'])
+                    ? number_format($result['amount']['refund'] / 100, 2, '.', '')
+                    : '',
+                raw: $result,
+            );
+        } catch (\Throwable $e) {
+            return RefundProviderResult::unknown(
+                '微信退款查询异常: ' . $e->getMessage(),
+                ['exception' => get_class($e)],
+            );
+        }
     }
 
     public function verifyNotify(array $request): bool

@@ -77,12 +77,54 @@ class AlipayRefundAdapter implements RefundProviderInterface
 
     public function query(string $outRequestNo, string $outTradeNo): RefundProviderResult
     {
-        // Alipay refund query: alipay.trade.fastpay.refund.query
-        // Not yet implemented in AlipayService; return unknown for now
-        // P1-PI-05 will implement actual query
-        return RefundProviderResult::unknown(
-            '支付宝退款查询接口尚未实现 (alipay.trade.fastpay.refund.query)',
-        );
+        // P1-PI-05: Alipay refund query via alipay.trade.fastpay.refund.query
+        if (!$this->isConfigured()) {
+            return RefundProviderResult::failed('支付宝未配置，无法查询退款');
+        }
+
+        try {
+            $result = $this->alipayService->queryRefund($outTradeNo, $outRequestNo);
+
+            if (!($result['success'] ?? false)) {
+                // API/network error → UNKNOWN (not FAILED, provider may be reachable later)
+                return RefundProviderResult::unknown(
+                    '支付宝退款查询失败: ' . ($result['message'] ?? 'unknown'),
+                    $result,
+                );
+            }
+
+            $refundStatus = $result['refund_status'] ?? '';
+
+            // Alipay refund status: REFUND_SUCCESS / REFUND_FAIL / PROCESSING
+            if ($refundStatus === 'REFUND_SUCCESS') {
+                return RefundProviderResult::success(
+                    providerRefundNo: '',  // Alipay has no independent refund ID
+                    providerTransactionNo: $result['trade_no'] ?? '',
+                    amount: $result['refund_amount'] ?? '',
+                    raw: $result,
+                );
+            }
+
+            if (in_array($refundStatus, ['REFUND_FAIL', 'REFUND_CLOSED'], true)) {
+                return RefundProviderResult::failed(
+                    '支付宝退款状态: ' . $refundStatus,
+                    $result,
+                );
+            }
+
+            // PROCESSING or unknown status → keep PROCESSING/UNKNOWN
+            return RefundProviderResult::processing(
+                providerRefundNo: '',
+                providerTransactionNo: $result['trade_no'] ?? '',
+                amount: $result['refund_amount'] ?? '',
+                raw: $result,
+            );
+        } catch (\Throwable $e) {
+            return RefundProviderResult::unknown(
+                '支付宝退款查询异常: ' . $e->getMessage(),
+                ['exception' => get_class($e)],
+            );
+        }
     }
 
     public function verifyNotify(array $request): bool

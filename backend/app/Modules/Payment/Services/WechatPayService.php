@@ -219,6 +219,51 @@ class WechatPayService extends PaymentService
     }
 
     /**
+     * P1-PI-05: Query refund status from WeChat.
+     * API: GET /v3/refund/domestic/refunds/out-refund-no/{out_refund_no}
+     *
+     * WeChat refund status mapping:
+     *   SUCCESS     → TLL SUCCESS
+     *   PROCESSING  → TLL PROCESSING
+     *   ABNORMAL    → TLL FAILED
+     *   CLOSED      → TLL FAILED
+     *
+     * @param string $outRefundNo TLL refund_no
+     * @return array{success: bool, refund_status?: string, amount?: array, message?: string}
+     */
+    public function queryRefund(string $outRefundNo): array
+    {
+        // Production + incomplete config → FAIL CLOSED
+        if ($this->isProduction() && !$this->isConfigured()) {
+            return ['success' => false, 'message' => '微信支付未配置'];
+        }
+
+        if ($this->isSandbox) {
+            Log::info('微信沙箱模式退款查询', ['out_refund_no' => $outRefundNo]);
+            return [
+                'success' => true,
+                'refund_status' => 'SUCCESS',
+                'out_refund_no' => $outRefundNo,
+            ];
+        }
+
+        try {
+            $urlPath = '/v3/refund/domestic/refunds/out-refund-no/' . $outRefundNo;
+            $url = 'https://api.mch.weixin.qq.com' . $urlPath;
+            $response = Http::withHeaders($this->buildHeaders('GET', $urlPath, ''))
+                ->get($url);
+
+            if ($response->successful()) {
+                return ['success' => true] + $response->json();
+            }
+            return ['success' => false, 'message' => $response->body()];
+        } catch (\Exception $e) {
+            // Network/API error → caller should treat as UNKNOWN
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
      * 构建请求头
      */
     private function buildHeaders($method, $urlPath, $body)

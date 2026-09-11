@@ -413,18 +413,29 @@ class ProviderAdapterContractTest extends TestCase
         }
     }
 
-    public function test_alipay_query_returns_unknown_not_implemented()
+    public function test_alipay_query_timeout_returns_unknown()
     {
+        // P1-PI-05: Alipay query now implemented. API failure → UNKNOWN.
         $mockAlipay = Mockery::mock(AlipayService::class);
+        $mockAlipay->shouldReceive('isConfigured')->andReturn(true);
+        $mockAlipay->shouldReceive('queryRefund')->once()->andReturn([
+            'success' => false,
+            'message' => 'Connection timed out',
+        ]);
         $adapter = new AlipayRefundAdapter($mockAlipay);
         $result = $adapter->query('RF001', 'PAY001');
-        // Query not yet implemented (P1-PI-05), should return UNKNOWN
         $this->assertTrue($result->isUnknown());
     }
 
-    public function test_wechat_query_returns_unknown_not_implemented()
+    public function test_wechat_query_timeout_returns_unknown()
     {
+        // P1-PI-05: WeChat query now implemented. API failure → UNKNOWN.
         $mockWechat = Mockery::mock(WechatPayService::class);
+        $mockWechat->shouldReceive('isConfigured')->andReturn(true);
+        $mockWechat->shouldReceive('queryRefund')->once()->andReturn([
+            'success' => false,
+            'message' => 'Connection timed out',
+        ]);
         $adapter = new WechatRefundAdapter($mockWechat);
         $result = $adapter->query('RF001', 'PAY001');
         $this->assertTrue($result->isUnknown());
