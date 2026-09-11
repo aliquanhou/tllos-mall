@@ -3,6 +3,7 @@ namespace App\Modules\Payment\Controllers;
 
 use App\Core\Controllers\BaseController;
 use App\Modules\Payment\Services\WechatPayService;
+use App\Modules\Refund\Services\RefundCallbackService;
 use App\Modules\Payment\Services\AlipayService;
 use App\Modules\Order\Models\Order;
 use App\Modules\Order\Models\OrderLog;
@@ -429,20 +430,36 @@ class PaymentNotifyController extends BaseController
     }
 
     /**
-     * 微信退款回调
+     * 微信退款回调 (P1-PI-03: RefundCallbackService统一处理)
+     * 安全流程: 验签 → 身份匹配(refund_no) → 金额校验 → 状态机 → 幂等更新
      */
     public function wechatRefund(Request $request)
     {
-        Log::info('微信退款回调', $request->all());
+        $service = app(RefundCallbackService::class);
+        $result = $service->handleWechatCallback($request->all());
+
+        if (!($result['success'] ?? false)) {
+            Log::warning('微信退款回调处理失败', $result);
+            return response('FAIL', $result['http_code'] ?? 400);
+        }
+
         return response('SUCCESS', 200);
     }
 
     /**
-     * 支付宝退款回调
+     * 支付宝退款回调 (P1-PI-03: RefundCallbackService统一处理)
+     * 安全流程: 验签 → 身份匹配(refund_no) → 金额校验 → 状态机 → 幂等更新
      */
     public function alipayRefund(Request $request)
     {
-        Log::info('支付宝退款回调', $request->all());
+        $service = app(RefundCallbackService::class);
+        $result = $service->handleAlipayCallback($request->all());
+
+        if (!($result['success'] ?? false)) {
+            Log::warning('支付宝退款回调处理失败', $result);
+            return response('fail', $result['http_code'] ?? 400);
+        }
+
         return 'success';
     }
 }
