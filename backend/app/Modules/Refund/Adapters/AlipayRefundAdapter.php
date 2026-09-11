@@ -52,8 +52,10 @@ class AlipayRefundAdapter implements RefundProviderInterface
             }
 
             // Alipay synchronous: success means refund completed
+            // providerRefundNo = NULL: Alipay has no independent Provider Refund ID.
+            // out_request_no (= TLL refund_no) is the merchant identity, NOT provider identity.
             return RefundProviderResult::success(
-                providerRefundNo: $result['out_refund_no'] ?? $params['out_request_no'],
+                providerRefundNo: '',
                 providerTransactionNo: $result['refund_id'] ?? '',
                 amount: $params['amount'],
                 raw: $result,
@@ -102,8 +104,10 @@ class AlipayRefundAdapter implements RefundProviderInterface
         $refundStatus = $request['refund_status'] ?? '';
 
         if ($refundStatus === 'REFUND_SUCCESS') {
+            // providerRefundNo = NULL: Alipay has no independent Provider Refund ID.
+            // out_request_no is merchant identity, must not be forged as provider identity.
             return RefundProviderResult::success(
-                providerRefundNo: $request['out_request_no'] ?? '',
+                providerRefundNo: '',
                 providerTransactionNo: $request['trade_no'] ?? '',
                 amount: $request['refund_amount'] ?? '',
                 raw: $request,

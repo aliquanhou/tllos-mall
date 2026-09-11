@@ -131,8 +131,12 @@ class ProviderAdapterContractTest extends TestCase
         ]);
 
         $this->assertTrue($result->isSuccess());
-        $this->assertEquals('RF20260911001', $result->providerRefundNo);
+        // CRITICAL: Alipay has no independent Provider Refund ID.
+        // providerRefundNo must be empty (NULL), NOT out_request_no.
+        // out_request_no is merchant identity, must not be forged as provider identity.
+        $this->assertEmpty($result->providerRefundNo, 'Alipay must NOT forge provider_refund_no from out_request_no');
         $this->assertEquals('50.00', $result->amount);
+        $this->assertEquals('202100619764856820260911001', $result->providerTransactionNo);
     }
 
     public function test_alipay_adapter_returns_failed_on_provider_error()
@@ -240,6 +244,154 @@ class ProviderAdapterContractTest extends TestCase
 
         $this->assertTrue($result->isUnknown());
         $this->assertFalse($result->isFailed());
+    }
+
+    // ============================================================
+    // Provider Identity Semantics Tests (PI-01-R1 CORE)
+    // ============================================================
+
+    public function test_alipay_success_does_not_forge_provider_refund_no()
+    {
+        $mockAlipay = Mockery::mock(AlipayService::class);
+        $mockAlipay->shouldReceive('isConfigured')->andReturn(true);
+        $mockAlipay->shouldReceive('refund')->once()->andReturn([
+            'success' => true,
+            'refund_id' => '202100619764856820260911001',
+            'out_refund_no' => 'RF20260911001',
+        ]);
+
+        $adapter = new AlipayRefundAdapter($mockAlipay);
+        $result = $adapter->refund([
+            'out_trade_no' => 'PAY001',
+            'out_request_no' => 'RF20260911001',
+            'amount' => '50.00',
+            'reason' => 'test',
+        ]);
+
+        // Alipay has NO independent Provider Refund ID.
+        // providerRefundNo must be empty, even though out_request_no = RF20260911001.
+        $this->assertTrue($result->isSuccess());
+        $this->assertEmpty($result->providerRefundNo,
+            'Alipay provider_refund_no must be NULL, not out_request_no');
+        // providerTransactionNo = trade_no (Alipay transaction ID) — this IS provider identity
+        $this->assertEquals('202100619764856820260911001', $result->providerTransactionNo);
+    }
+
+    public function test_wechat_processing_saves_refund_id_as_provider_identity()
+    {
+        $mockWechat = Mockery::mock(WechatPayService::class);
+        $mockWechat->shouldReceive('isConfigured')->andReturn(true);
+        $mockWechat->shouldReceive('refund')->once()->andReturn([
+            'success' => true,
+            'refund_id' => '503018000100202609110001',
+            'out_refund_no' => 'RF20260911001',
+            'transaction_id' => '4200001234202609110001',
+        ]);
+
+        $adapter = new WechatRefundAdapter($mockWechat);
+        $result = $adapter->refund([
+            'out_trade_no' => 'PAY001',
+            'out_request_no' => 'RF20260911001',
+            'amount' => '50.00',
+            'reason' => 'test',
+            'notify_url' => 'https://mall.tllos.com/callback',
+        ]);
+
+        // WeChat HAS independent refund_id — this IS provider identity
+        $this->assertTrue($result->isProcessing());
+        $this->assertEquals('503018000100202609110001', $result->providerRefundNo,
+            'WeChat provider_refund_no must be refund_id');
+        $this->assertEquals('4200001234202609110001', $result->providerTransactionNo);
+    }
+
+    public function test_alipay_timeout_does_not_forge_any_identity()
+    {
+        $mockAlipay = Mockery::mock(AlipayService::class);
+        $mockAlipay->shouldReceive('isConfigured')->andReturn(true);
+        $mockAlipay->shouldReceive('refund')->once()->andThrow(new \RuntimeException('timeout'));
+
+        $adapter = new AlipayRefundAdapter($mockAlipay);
+        $result = $adapter->refund([
+            'out_trade_no' => 'PAY001',
+            'out_request_no' => 'RF001',
+            'amount' => '50.00',
+            'reason' => 'test',
+        ]);
+
+        // Timeout = UNKNOWN. No provider identity can be forged.
+        $this->assertTrue($result->isUnknown());
+        $this->assertEmpty($result->providerRefundNo, 'timeout must not forge provider_refund_no');
+        $this->assertEmpty($result->providerTransactionNo, 'timeout must not forge provider_transaction_no');
+    }
+
+    public function test_wechat_timeout_does_not_forge_any_identity()
+    {
+        $mockWechat = Mockery::mock(WechatPayService::class);
+        $mockWechat->shouldReceive('isConfigured')->andReturn(true);
+        $mockWechat->shouldReceive('refund')->once()->andThrow(new \RuntimeException('timeout'));
+
+        $adapter = new WechatRefundAdapter($mockWechat);
+        $result = $adapter->refund([
+            'out_trade_no' => 'PAY001',
+            'out_request_no' => 'RF001',
+            'amount' => '50.00',
+            'reason' => 'test',
+        ]);
+
+        $this->assertTrue($result->isUnknown());
+        $this->assertEmpty($result->providerRefundNo, 'timeout must not forge provider_refund_no');
+        $this->assertEmpty($result->providerTransactionNo, 'timeout must not forge provider_transaction_no');
+    }
+
+    public function test_identity_separation_merchant_vs_provider()
+    {
+        // Verify the conceptual separation:
+        //   merchant identity = refund_no (we generate, sent as out_request_no/out_refund_no)
+        //   provider identity = provider_refund_no (provider generates, or NULL)
+        //   provider transaction = provider_transaction_no (original payment transaction)
+
+        // Alipay: merchant identity exists, provider refund identity = NULL
+        $mockAlipay = Mockery::mock(AlipayService::class);
+        $mockAlipay->shouldReceive('isConfigured')->andReturn(true);
+        $mockAlipay->shouldReceive('refund')->once()->andReturn([
+            'success' => true,
+            'refund_id' => 'TXN_ALIPAY_001',
+            'out_refund_no' => 'RF_MERCHANT_001',
+        ]);
+        $alipayAdapter = new AlipayRefundAdapter($mockAlipay);
+        $alipayResult = $alipayAdapter->refund([
+            'out_trade_no' => 'PAY001',
+            'out_request_no' => 'RF_MERCHANT_001',
+            'amount' => '50.00',
+            'reason' => 'test',
+        ]);
+
+        // merchant identity (RF_MERCHANT_001) is sent TO provider but NOT stored as provider identity
+        $this->assertEmpty($alipayResult->providerRefundNo);
+        $this->assertEquals('TXN_ALIPAY_001', $alipayResult->providerTransactionNo);
+
+        // WeChat: merchant identity exists, provider refund identity = refund_id
+        $mockWechat = Mockery::mock(WechatPayService::class);
+        $mockWechat->shouldReceive('isConfigured')->andReturn(true);
+        $mockWechat->shouldReceive('refund')->once()->andReturn([
+            'success' => true,
+            'refund_id' => 'REFUND_WECHAT_001',
+            'out_refund_no' => 'RF_MERCHANT_002',
+            'transaction_id' => 'TXN_WECHAT_001',
+        ]);
+        $wechatAdapter = new WechatRefundAdapter($mockWechat);
+        $wechatResult = $wechatAdapter->refund([
+            'out_trade_no' => 'PAY002',
+            'out_request_no' => 'RF_MERCHANT_002',
+            'amount' => '50.00',
+            'reason' => 'test',
+            'notify_url' => 'https://mall.tllos.com/callback',
+        ]);
+
+        // provider identity = WeChat refund_id (different from merchant identity)
+        $this->assertEquals('REFUND_WECHAT_001', $wechatResult->providerRefundNo);
+        $this->assertNotEquals('RF_MERCHANT_002', $wechatResult->providerRefundNo);
+        $this->assertEquals('TXN_WECHAT_001', $wechatResult->providerTransactionNo);
     }
 
     // ============================================================
