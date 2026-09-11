@@ -158,6 +158,10 @@ class AlipayService extends PaymentService
             ksort($data);
             $message = urldecode(http_build_query($data));
             $publicKey = $this->config['alipay_public_key'];
+            // Convert base64 public key to PEM format if needed
+            if (strpos($publicKey, '-----BEGIN PUBLIC KEY-----') === false) {
+                $publicKey = "-----BEGIN PUBLIC KEY-----\n" . wordwrap($publicKey, 64, "\n", true) . "\n-----END PUBLIC KEY-----";
+            }
             $verified = openssl_verify($message, base64_decode($sign), $publicKey, OPENSSL_ALGO_SHA256);
 
             if (!$verified) {
@@ -221,7 +225,7 @@ class AlipayService extends PaymentService
             ];
             $reqParams['sign'] = $this->sign($reqParams);
 
-            $response = Http::post($gateway, $reqParams);
+            $response = Http::get($gateway . '?' . http_build_query($reqParams));
             $result = $response->json();
             $refundResult = $result['alipay_trade_refund_response'] ?? [];
 
