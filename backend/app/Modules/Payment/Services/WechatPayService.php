@@ -22,10 +22,32 @@ class WechatPayService extends PaymentService
     }
 
     /**
+     * 微信支付配置是否完整
+     */
+    public function isConfigured()
+    {
+        if (empty($this->config)) return false;
+        $required = ['app_id', 'mch_id', 'api_v3_key', 'serial_no', 'private_key'];
+        foreach ($required as $key) {
+            if (empty($this->config[$key])) return false;
+        }
+        return true;
+    }
+
+    /**
      * 微信支付JSAPI下单
      */
     public function unifiedOrder(array $params)
     {
+        // 生产环境配置不完整：Fail-Closed，不进入沙箱
+        if ($this->isProduction() && !$this->isConfigured()) {
+            Log::warning('微信支付生产环境配置不完整，拒绝下单', [
+                'out_trade_no' => $params['out_trade_no'] ?? '',
+                'config_keys' => $this->config ? array_keys($this->config) : [],
+            ]);
+            return ['success' => false, 'message' => '微信支付暂未配置完成，请使用其他支付方式'];
+        }
+
         if ($this->isSandbox) {
             Log::info('微信支付沙箱模式下单', $params);
             return $this->mockPayResult($params['out_trade_no'], $params['amount']);
@@ -93,6 +115,12 @@ class WechatPayService extends PaymentService
      */
     public function verifyNotify($data)
     {
+        // 生产环境配置不完整：拒绝回调
+        if ($this->isProduction() && !$this->isConfigured()) {
+            Log::warning('微信支付生产环境配置不完整，拒绝回调处理');
+            return ['success' => false, 'message' => '微信支付未配置'];
+        }
+
         if ($this->isSandbox) {
             Log::info('微信支付沙箱模式回调', $data);
             return [
@@ -104,19 +132,15 @@ class WechatPayService extends PaymentService
         }
 
         try {
-            // 微信支付V3回调验签
             $signature = $_SERVER['HTTP_WECHATPAY_SIGNATURE'] ?? '';
             $timestamp = $_SERVER['HTTP_WECHATPAY_TIMESTAMP'] ?? '';
             $nonce = $_SERVER['HTTP_WECHATPAY_NONCE'] ?? '';
             $serial = $_SERVER['HTTP_WECHATPAY_SERIAL'] ?? '';
 
             $message = $timestamp . "\n" . $nonce . "\n" . file_get_contents('php://input') . "\n";
-            // 验签逻辑（使用平台证书公钥）
-            // $verified = openssl_verify($message, base64_decode($signature), $publicKey, OPENSSL_ALGO_SHA256);
 
             $result = json_decode(file_get_contents('php://input'), true);
             $resource = $result['resource'] ?? [];
-            // 解密resource.ciphertext
             $decrypted = $this->decryptResource($resource);
 
             return [
@@ -136,6 +160,10 @@ class WechatPayService extends PaymentService
      */
     public function refund(array $params)
     {
+        if ($this->isProduction() && !$this->isConfigured()) {
+            return ['success' => false, 'message' => '微信支付未配置'];
+        }
+
         if ($this->isSandbox) {
             Log::info('微信支付沙箱模式退款', $params);
             return $this->mockRefundResult($params['out_trade_no'], $params['out_refund_no'], $params['amount']);
@@ -229,7 +257,6 @@ class WechatPayService extends PaymentService
         $key = $this->config['api_v3_key'];
         $nonce = $resource['nonce'];
         $associatedData = $resource['associated_data'] ?? '';
-        // AES-256-GCM解密
         $tag = substr($ciphertext, -16);
         $ciphertext = substr($ciphertext, 0, -16);
         $plaintext = openssl_decrypt($ciphertext, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $nonce, $tag, $associatedData);

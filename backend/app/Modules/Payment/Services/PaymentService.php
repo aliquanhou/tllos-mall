@@ -16,11 +16,37 @@ abstract class PaymentService
         } else {
             $this->config = $this->loadConfig();
         }
-        // 配置不完整时使用沙箱模式
-        $this->isSandbox = $this->checkSandboxMode();
+        // 生产环境：配置不完整时 Fail-Closed，不自动进入沙箱
+        if ($this->isProduction() && !$this->isConfigured()) {
+            $this->isSandbox = false;
+            Log::warning('支付服务生产环境配置不完整，已Fail-Closed', [
+                'pay_code' => $this->getPayCode(),
+                'config_keys' => $this->config ? array_keys($this->config) : [],
+            ]);
+        } else {
+            $this->isSandbox = $this->checkSandboxMode();
+        }
     }
 
     abstract protected function getPayCode();
+
+    /**
+     * 生产环境判断
+     */
+    protected function isProduction()
+    {
+        return config('app.env') === 'production';
+    }
+
+    /**
+     * 配置是否完整（子类实现具体检查）
+     * 生产环境下配置不完整必须 Fail-Closed
+     */
+    public function isConfigured()
+    {
+        if (empty($this->config)) return false;
+        return true;
+    }
 
     protected function loadConfig()
     {
@@ -34,7 +60,6 @@ abstract class PaymentService
     protected function checkSandboxMode()
     {
         if (empty($this->config)) return true;
-        // 检查关键配置是否存在
         return false;
     }
 

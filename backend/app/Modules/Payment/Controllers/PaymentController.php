@@ -46,6 +46,22 @@ class PaymentController extends BaseController
             return $this->pointPay($order, $userId, $payNo);
         }
 
+        // 实例化支付服务并检查配置（生产环境配置不完整则 Fail-Closed）
+        if ($request->pay_type == 1) {
+            $service = new WechatPayService();
+        } else {
+            $service = new AlipayService();
+        }
+
+        if (config('app.env') === 'production' && !$service->isConfigured()) {
+            Log::warning('支付请求被拒绝：生产环境支付配置不完整', [
+                'pay_type' => $request->pay_type,
+                'order_no' => $order->order_no,
+                'user_id' => $userId,
+            ]);
+            return $this->error($payTypeNames[$request->pay_type] . '暂未配置完成，请使用其他支付方式');
+        }
+
         // 创建支付记录（待支付状态）
         DB::table('payments')->insert([
             'payment_no' => $payNo,
@@ -67,13 +83,7 @@ class PaymentController extends BaseController
             'notify_url' => config('app.url') . '/api/v1/payment/notify/' . ($request->pay_type == 1 ? 'wechat' : 'alipay'),
         ];
 
-        if ($request->pay_type == 1) {
-            $service = new WechatPayService();
-            $result = $service->unifiedOrder($params);
-        } else {
-            $service = new AlipayService();
-            $result = $service->unifiedOrder($params);
-        }
+        $result = $service->unifiedOrder($params);
 
         if (!$result['success']) {
             return $this->error('支付下单失败: ' . ($result['message'] ?? '未知错误'));
@@ -231,9 +241,6 @@ class PaymentController extends BaseController
                 'updated_at' => Carbon::now(),
             ]);
 
-            // 发送通知（暂不启用，user_notifications表结构待完善）
-            // DB::table('user_notifications')->insert([...]);
-
             // 分销佣金
             $this->calculateCommission($order);
 
@@ -252,6 +259,7 @@ class PaymentController extends BaseController
 
     /**
      * 沙箱模式支付成功处理
+     * P1-C: 精确绑定当前 payment_no，不批量更新同订单其他 payment
      */
     private function processMockPaySuccess($order, $userId, $payNo, $payType, $payTypeName, $payResult)
     {
@@ -274,7 +282,8 @@ class PaymentController extends BaseController
                 'remark' => "{$payTypeName}支付成功（沙箱），金额 ¥{$order->pay_amount}",
             ]);
 
-            DB::table('payments')->where('order_no', $order->order_no)->update([
+            // P1-C: 只更新当前 payment_no 对应的记录，不影响同订单其他待支付记录
+            DB::table('payments')->where('payment_no', $payNo)->update([
                 'third_payment_no' => $payResult['transaction_id'] ?? $payNo,
                 'status' => 1,
                 'pay_time' => Carbon::now(),
@@ -357,10 +366,40 @@ class PaymentController extends BaseController
 
     /**
      * 支付方式列表
+     * P1-A: 生产环境过滤掉未配置完成的支付方式
      */
     public function methods()
     {
         $methods = DB::table('pay_configs')->where('status', 1)->orderBy('sort', 'asc')->get();
-        return $this->success(['list' => $methods]);
+        $list = [];
+        foreach ($methods as $m) {
+            $config = $m->config ? json_decode($m->config, true) : [];
+            $isConfigured = !empty($config);
+            if ($m->code === 'wechat') {
+                $required = ['app_id', 'mch_id', 'api_v3_key', 'serial_no', 'private_key'];
+                $isConfigured = true;
+                foreach ($required as $key) {
+                    if (empty($config[$key])) { $isConfigured = false; break; }
+                }
+            } elseif ($m->code === 'alipay') {
+                $required = ['app_id', 'merchant_private_key', 'alipay_public_key'];
+                $isConfigured = true;
+                foreach ($required as $key) {
+                    if (empty($config[$key])) { $isConfigured = false; break; }
+                }
+            }
+            // 生产环境：未配置完成的支付方式不返回给前端
+            if (config('app.env') === 'production' && !$isConfigured) {
+                continue;
+            }
+            $list[] = [
+                'id' => $m->id,
+                'code' => $m->code,
+                'name' => $m->name,
+                'sort' => $m->sort,
+                'configured' => $isConfigured,
+            ];
+        }
+        return $this->success(['list' => $list]);
     }
 }
