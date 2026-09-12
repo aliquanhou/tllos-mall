@@ -43,7 +43,7 @@
     <div class="section-card">
       <div class="section-header">
         <span class="section-title">我的订单</span>
-        <span class="section-more" @click="$router.push('/order')">全部订单 ›</span>
+        <span class="section-more" @click="$router.push('/orders')">全部订单 ›</span>
       </div>
       <div class="order-grid">
         <div v-for="tab in orderTabs" :key="tab.key" class="order-item" @click="goOrder(tab.key)">
@@ -104,11 +104,11 @@ const menus = [
   { name: '我的收藏', icon: '❤️', path: '/collects', color: '#fff0f6' },
   { name: '优惠券', icon: '🎫', path: '/coupons', color: '#fff7e6' },
   { name: '我的评价', icon: '⭐', path: '/my-reviews', color: '#f6ffed' },
-  { name: '消息通知', icon: '🔔', path: '/message', color: '#fff1f0' },
+  { name: '消息通知', icon: '🔔', path: '/messages', color: '#fff1f0' },
   { name: '帮助中心', icon: '💬', path: '/help', color: '#f9f0ff' },
 ]
 
-const goOrder = status => router.push('/order?status=' + status)
+const goOrder = status => router.push('/orders?status=' + status)
 const handleMenu = menu => {
   if (menu.path) router.push(menu.path)
 }

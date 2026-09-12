@@ -70,7 +70,7 @@ const goCategory = () => { router.push('/category'); menuVisible.value = false }
 const goProducts = () => { router.push('/products'); menuVisible.value = false }
 const goOrders = () => { router.push('/orders'); menuVisible.value = false }
 const goCart = () => { router.push('/cart'); menuVisible.value = false }
-const goProfile = () => { router.push('/profile'); menuVisible.value = false }
+const goProfile = () => { router.push('/user'); menuVisible.value = false }
 const goCollects = () => { router.push('/collects'); menuVisible.value = false }
 const goSearch = () => { router.push('/products'); menuVisible.value = false }
 const goLogin = () => { router.push('/login'); menuVisible.value = false }
