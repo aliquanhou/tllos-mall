@@ -97,6 +97,7 @@ class ApplicationController extends BaseController
     public function userArticles(Request $request) {
         $query = DB::table('articles')->where('status', 1);
         if ($request->filled('category_id')) $query->where('category_id', $request->category_id);
+        if ($request->filled('category')) $query->where('category_name', $request->category);
         if ($request->filled('keyword')) $query->where('title', 'like', '%'.$request->keyword.'%');
         $total = $query->count();
         $page = $request->get('page', 1);

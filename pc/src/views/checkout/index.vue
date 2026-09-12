@@ -88,7 +88,6 @@ const remark = ref('')
 const submitting = ref(false)
 const isBuyNow = ref(false)
 const paymentMethods = [
-  { value: 'wechat', label: '微信支付', icon: ChatDotRound },
   { value: 'alipay', label: '支付宝', icon: Wallet },
   { value: 'balance', label: '余额支付', icon: CreditCard },
 ]

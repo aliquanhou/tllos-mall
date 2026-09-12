@@ -19,6 +19,7 @@ const routes = [
     { path:'order/:id', component:()=>import('@/views/order/detail.vue') },
     { path:'checkout', component:()=>import('@/views/checkout/index.vue') },
     { path:'pay/:orderNo', component:()=>import('@/views/pay/index.vue') },
+    { path:'pay/result/:orderNo', component:()=>import('@/views/pay/result.vue') },
     { path:'address', component:()=>import('@/views/user/Address.vue') },
     { path:'address/edit', component:()=>import('@/views/user/AddressEdit.vue') },
     { path:'collects', component:()=>import('@/views/user/Collect.vue') },
