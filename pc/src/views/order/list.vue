@@ -19,9 +19,9 @@
           <div class="order-body">
             <div class="order-items">
               <div class="order-item" v-for="item in order.items?.slice(0, 3) || []" :key="item.id" @click="goDetail(order.id)">
-                <div class="item-image"><img loading="lazy" :src="item.main_image" :alt="item.name" /></div>
+                <div class="item-image"><img loading="lazy" :src="item.product_image" :alt="item.product_name" /></div>
                 <div class="item-info">
-                  <div class="item-name">{{ item.name }}</div>
+                  <div class="item-name">{{ item.product_name }}</div>
                   <div class="item-spec" v-if="item.specs">{{ item.specs }}</div>
                 </div>
                 <div class="item-price">¥{{ item.price }}</div>

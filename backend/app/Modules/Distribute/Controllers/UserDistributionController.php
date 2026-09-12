@@ -256,6 +256,10 @@ class UserDistributionController extends BaseController
      */
     private function createAgent($userId, $realName = '')
     {
+        // 已是分销商则跳过
+        $existing = DB::table('distribute_agents')->where('user_id', $userId)->first();
+        if ($existing) return;
+
         $defaultLevel = DB::table('distribute_levels')->where('level', 1)->where('status', 1)->first();
         $user = DB::table('users')->where('id', $userId)->first();
 
