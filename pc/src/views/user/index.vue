@@ -1,152 +1,328 @@
 <template>
-  <div class="user-page">
-    <PageHeader title="用户中心" subtitle="个人中心 一站式管理" />
+  <div class="mine-page">
+    <!-- 用户头部卡片 -->
     <div class="user-header">
-      <div v-if="userStore.userInfo" class="user-info">
-        <div class="avatar">{{ userStore.userInfo.nickname?.charAt(0) || 'U' }}</div>
-        <div class="user-detail">
-          <div class="nickname">{{ userStore.userInfo.nickname }}</div>
-          <div class="mobile">{{ userStore.userInfo.mobile }}</div>
+      <div v-if="userStore.userInfo" class="user-info" @click="$router.push('/user/profile')">
+        <div class="avatar">
+          <img v-if="userStore.userInfo.avatar" :src="userStore.userInfo.avatar" />
+          <span v-else>{{ userStore.userInfo.nickname?.charAt(0) || 'U' }}</span>
         </div>
+        <div class="user-detail">
+          <div class="nickname">{{ userStore.userInfo.nickname || '未设置昵称' }}</div>
+          <div class="mobile">{{ userStore.userInfo.mobile || '' }}</div>
+        </div>
+        <span class="edit-arrow">编辑 ›</span>
       </div>
       <div v-else class="login-prompt" @click="$router.push('/login')">
         <div class="avatar">👤</div>
-        <span>{{ t('user.loginFirst') }}</span>
+        <span>点击登录/注册</span>
       </div>
-      <div class="lang-switch" @click="switchLang">{{ locale === 'zh' ? 'EN' : '中文' }}</div>
     </div>
 
-    <div class="order-section card">
-      <div class="section-title">
-        <span>{{ t('user.orders') }}</span>
-        <span class="more" @click="$router.push('/order')">全部订单 ></span>
+    <!-- 资产卡片 -->
+    <div v-if="userStore.userInfo" class="asset-card">
+      <div class="asset-item">
+        <div class="asset-value">{{ userStore.userInfo.points || 0 }}</div>
+        <div class="asset-label">积分</div>
       </div>
-      <div class="order-tabs">
-        <div v-for="tab in orderTabs" :key="tab.key" class="order-tab" @click="goOrder(tab.key)">
+      <div class="asset-item">
+        <div class="asset-value">¥{{ userStore.userInfo.balance || '0.00' }}</div>
+        <div class="asset-label">余额</div>
+      </div>
+      <div class="asset-item">
+        <div class="asset-value">{{ userStore.userInfo.coupon_count || 0 }}</div>
+        <div class="asset-label">优惠券</div>
+      </div>
+      <div class="asset-item">
+        <div class="asset-value">{{ userStore.userInfo.favorite_count || 0 }}</div>
+        <div class="asset-label">收藏</div>
+      </div>
+    </div>
+
+    <!-- 我的订单 -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">我的订单</span>
+        <span class="section-more" @click="$router.push('/order')">全部订单 ›</span>
+      </div>
+      <div class="order-grid">
+        <div v-for="tab in orderTabs" :key="tab.key" class="order-item" @click="goOrder(tab.key)">
           <div class="order-icon">{{ tab.icon }}</div>
           <span>{{ tab.name }}</span>
         </div>
       </div>
     </div>
 
-    <div class="menu-section card">
-      <div v-for="menu in menus" :key="menu.name" class="menu-item" @click="handleMenu(menu)">
-        <span class="menu-icon">{{ menu.icon }}</span>
-        <span class="menu-name">{{ t(menu.name) }}</span>
-        <span class="menu-arrow">></span>
+    <!-- 分销推广（醒目位置） -->
+    <div v-if="userStore.userInfo" class="distribute-banner" @click="goDistribute">
+      <div class="distribute-left">
+        <div class="distribute-title">分销推广赚佣金</div>
+        <div class="distribute-desc">分享商品，好友下单你拿钱</div>
+      </div>
+      <div class="distribute-right">
+        <span class="distribute-btn">{{ isAgent ? '进入分销中心' : '申请分销' }}</span>
       </div>
     </div>
 
-    <div v-if="userStore.userInfo" class="logout-section">
-      <button class="logout-btn" @click="handleLogout">{{ t('common.logout') }}</button>
+    <!-- 功能宫格 -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-title">常用功能</span></div>
+      <div class="menu-grid">
+        <div v-for="menu in menus" :key="menu.name" class="menu-item" @click="handleMenu(menu)">
+          <div class="menu-icon" :style="{background: menu.color}">{{ menu.icon }}</div>
+          <span>{{ menu.name }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 退出登录 -->
+    <div v-if="userStore.userInfo" class="logout-area">
+      <button class="logout-btn" @click="handleLogout">退出登录</button>
     </div>
   </div>
 </template>
+
 <script setup>
-import PageHeader from "@/components/PageHeader.vue"
-import { onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-const { t, locale } = useI18n()
+
 const router = useRouter()
 const userStore = useUserStore()
+const isAgent = ref(false)
 
 const orderTabs = [
-  { key: 'pending', name: '待付款', icon: '💰' },
+  { key: 'pending', name: '待付款', icon: '💳' },
   { key: 'paid', name: '待发货', icon: '📦' },
   { key: 'shipped', name: '待收货', icon: '🚚' },
   { key: 'completed', name: '已完成', icon: '✅' },
-  { key: 'refund', name: '退款', icon: '↩️' }
+  { key: 'refund', name: '退款/售后', icon: '↩️' },
 ]
 
 const menus = [
-  { name: 'user.distribution', icon: '💰', path: '/distribution/apply' },
-  { name: 'user.address', icon: '📍', path: '' },
-  { name: 'user.coupons', icon: '🎫', path: '' },
-  { name: 'user.favorites', icon: '❤️', path: '' },
-  { name: 'user.history', icon: '👁️', path: '' },
-  { name: 'user.customerService', icon: '💬', path: '' },
-  { name: 'user.settings', icon: '⚙️', path: '' },
-  { name: 'user.about', icon: 'ℹ️', path: '' }
+  { name: '收货地址', icon: '📍', path: '/address', color: '#e6f7ff' },
+  { name: '我的收藏', icon: '❤️', path: '/collects', color: '#fff0f6' },
+  { name: '优惠券', icon: '🎫', path: '/coupons', color: '#fff7e6' },
+  { name: '我的评价', icon: '⭐', path: '/my-reviews', color: '#f6ffed' },
+  { name: '消息通知', icon: '🔔', path: '/message', color: '#fff1f0' },
+  { name: '帮助中心', icon: '💬', path: '/help', color: '#f9f0ff' },
 ]
 
-const goOrder = status => router.push('/order')
-const handleMenu = menu => { if (menu.path) router.push(menu.path); else alert('功能开发中') }
-const switchLang = () => {
-  const newLang = locale.value === 'zh' ? 'en' : 'zh'
-  locale.value = newLang
-  localStorage.setItem('tllos_locale', newLang)
+const goOrder = status => router.push('/order?status=' + status)
+const handleMenu = menu => {
+  if (menu.path) router.push(menu.path)
+}
+const goDistribute = () => {
+  if (isAgent.value) {
+    router.push('/distribution')
+  } else {
+    router.push('/distribution/apply')
+  }
 }
 const handleLogout = async () => {
   await userStore.logout()
   router.push('/home')
 }
-onMounted(() => {
+
+onMounted(async () => {
   if (userStore.token) {
-    userStore.fetchProfile().catch(e => console.error(e))
+    try {
+      await userStore.fetchProfile()
+      // 查分销状态
+      const res = await fetch('/api/v1/distribution/apply-status', {
+        headers: { 'Authorization': 'Bearer ' + userStore.token }
+      })
+      const data = await res.json()
+      if (data.data) isAgent.value = data.data.is_agent || false
+    } catch (e) {
+      console.error(e)
+    }
   }
 })
 </script>
-<style scoped>
-.user-page { padding-bottom: 20px; }
-.user-header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); padding: 40px 20px 30px; display: flex; align-items: center; gap: 12px; position: relative; }
-.user-info { display: flex; align-items: center; gap: 12px; flex: 1; }
-.avatar { width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; }
-.user-detail { color: #fff; }
-.nickname { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
-.mobile { font-size: 13px; opacity: 0.9; }
-.login-prompt { display: flex; align-items: center; gap: 12px; color: #fff; cursor: pointer; flex: 1; }
-.lang-switch { background: rgba(255,255,255,0.2); color: #fff; padding: 6px 14px; border-radius: 16px; font-size: 12px; cursor: pointer; }
-.order-section { margin: -16px 10px 10px; position: relative; z-index: 1; }
-.section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 15px; font-weight: 500; }
-.more { font-size: 12px; color: var(--text-secondary); }
-.order-tabs { display: flex; justify-content: space-around; }
-.order-tab { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.order-icon { font-size: 24px; }
-.order-tab span { font-size: 12px; color: var(--text); }
-.menu-section { margin: 0 10px 10px; padding: 0; }
-.menu-item { display: flex; align-items: center; padding: 14px 12px; border-bottom: 1px solid var(--border); }
-.menu-item:last-child { border-bottom: none; }
-.menu-icon { font-size: 18px; margin-right: 12px; }
-.menu-name { flex: 1; font-size: 14px; }
-.menu-arrow { color: var(--text-secondary); font-size: 14px; }
-.logout-section { padding: 20px 10px; }
-.logout-btn { width: 100%; padding: 12px; background: #fff; border: 1px solid var(--border); border-radius: 8px; color: var(--danger); font-size: 14px; cursor: pointer; }
 
-/* ========== 移动端适配 ========== */
-@media (max-width: 768px) {
-  .user-page { padding: 10px 0; min-height: calc(100vh - 120px); }
-  .container { max-width: 100%; padding: 0 12px; }
-  
-  /* 用户头部 */
-  .user-header { flex-direction: column; text-align: center; gap: 10px; padding: 16px; }
-  .avatar { width: 60px; height: 60px; }
-  .user-detail .nickname { font-size: 16px; }
-  .user-detail .mobile { font-size: 13px; }
-  
-  /* 订单Tab */
-  .order-section { padding: 12px; border-radius: 6px; margin-bottom: 10px; }
-  .section-title { font-size: 15px; margin-bottom: 10px; }
-  .order-tabs { flex-wrap: wrap; gap: 4px; }
-  .order-tab { flex: 1; min-width: 60px; padding: 10px 4px; }
-  .order-tab .order-icon { font-size: 20px; }
-  .order-tab span { font-size: 11px; }
-  
-  /* 菜单 */
-  .menu-section { padding: 12px; border-radius: 6px; margin-bottom: 10px; }
-  .menu-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .menu-item { padding: 10px 4px; font-size: 12px; text-align: center; border-radius: 6px; }
-  .menu-item .menu-icon { display: block; margin: 0 auto 4px; font-size: 18px; }
-  
-  /* 退出按钮 */
-  .logout-section { margin-bottom: 20px; }
-  .logout-btn { padding: 10px; font-size: 13px; border-radius: 6px; }
+<style scoped>
+.mine-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 20px;
 }
 
-@media (max-width: 480px) {
-  .container { padding: 0 8px; }
-  .menu-list { grid-template-columns: repeat(2, 1fr); }
-  .avatar { width: 50px; height: 50px; }
+/* 用户头部 */
+.user-header {
+  background: linear-gradient(135deg, #ff6a00, #ff9500);
+  padding: 40px 20px 50px;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #fff;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.user-detail { flex: 1; color: #fff; }
+.nickname { font-size: 18px; font-weight: 600; }
+.mobile { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+.edit-arrow { color: #fff; font-size: 13px; opacity: 0.8; }
+.login-prompt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* 资产卡片 */
+.asset-card {
+  margin: -30px 12px 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 0;
+  display: flex;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.asset-item {
+  flex: 1;
+  text-align: center;
+}
+.asset-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+}
+.asset-label {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+/* 通用卡片 */
+.section-card {
+  margin: 0 12px 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+.section-more {
+  font-size: 12px;
+  color: #999;
+  cursor: pointer;
+}
+
+/* 订单宫格 */
+.order-grid {
+  display: flex;
+  justify-content: space-around;
+}
+.order-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.order-icon { font-size: 26px; }
+.order-item span { font-size: 12px; color: #666; }
+
+/* 分销横幅 */
+.distribute-banner {
+  margin: 0 12px 12px;
+  background: linear-gradient(135deg, #ff4d4f, #ff7a45);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+.distribute-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+.distribute-desc {
+  font-size: 12px;
+  color: rgba(255,255,255,0.85);
+  margin-top: 4px;
+}
+.distribute-btn {
+  background: #fff;
+  color: #ff4d4f;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 功能宫格 */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px 8px;
+}
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.menu-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.menu-item span {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 退出 */
+.logout-area {
+  margin: 20px 12px;
+}
+.logout-btn {
+  width: 100%;
+  padding: 13px;
+  background: #fff;
+  border: none;
+  border-radius: 12px;
+  color: #ff4d4f;
+  font-size: 15px;
+  cursor: pointer;
 }
 </style>

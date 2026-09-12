@@ -54,7 +54,7 @@
 
         <!-- 右侧：用户功能 -->
         <div class="header-right">
-          <router-link to="/profile" class="header-icon" v-if="!isMobile">
+          <router-link to="/user" class="header-icon" v-if="!isMobile">
             <el-icon :size="20"><User /></el-icon>
             <span>{{ t('home.account') }}</span>
           </router-link>
@@ -131,7 +131,7 @@
         </el-badge>
         <span>{{ t('home.cart') }}</span>
       </router-link>
-      <router-link to="/profile" class="bottom-nav-item">
+      <router-link to="/user" class="bottom-nav-item">
         <el-icon :size="22"><User /></el-icon>
         <span>{{ t('home.me') }}</span>
       </router-link>
@@ -209,7 +209,7 @@
           <router-link to="/" @click="showMobileMenu = false">{{ t('home.home') }}</router-link>
           <router-link to="/product/list" @click="showMobileMenu = false">{{ t('home.newArrivals') }}</router-link>
           <router-link to="/order/list" @click="showMobileMenu = false">{{ t('home.myOrders') }}</router-link>
-          <router-link to="/profile" @click="showMobileMenu = false">{{ t('home.myAccount') }}</router-link>
+          <router-link to="/user" @click="showMobileMenu = false">{{ t('home.myAccount') }}</router-link>
         </div>
         <div class="menu-locale">
           <el-radio-group v-model="locale" size="small" @change="changeLocale">
@@ -299,7 +299,7 @@ const goCategory = (id) => {
 
 const goUserCenter = () => {
   showMobileMenu.value = false
-  router.push('/profile')
+  router.push('/user')
 }
 
 watch(() => route.path, () => {
