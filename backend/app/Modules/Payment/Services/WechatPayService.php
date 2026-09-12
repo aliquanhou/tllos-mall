@@ -89,6 +89,52 @@ class WechatPayService extends PaymentService
         }
     }
 
+
+    /**
+     * Native 扫码下单（PC端浏览器）
+     */
+    public function nativeOrder(array $params)
+    {
+        if ($this->isProduction() && !$this->isConfigured()) {
+            return ['success' => false, 'message' => '微信支付暂未配置完成'];
+        }
+
+        if ($this->isSandbox) {
+            return $this->mockPayResult($params['out_trade_no'], $params['amount']);
+        }
+
+        try {
+            $url = 'https://api.mch.weixin.qq.com/v3/pay/transactions/native';
+            $body = [
+                'appid' => $this->config['app_id'],
+                'mchid' => $this->config['mch_id'],
+                'description' => $params['description'] ?? '商品支付',
+                'out_trade_no' => $params['out_trade_no'],
+                'notify_url' => $params['notify_url'] ?? config('app.url') . '/api/v1/payment/notify/wechat',
+                'amount' => [
+                    'total' => intval($params['amount'] * 100),
+                    'currency' => 'CNY',
+                ],
+            ];
+
+            $response = Http::withHeaders($this->buildHeaders('POST', '/v3/pay/transactions/native', json_encode($body)))
+                ->post($url, $body);
+
+            if ($response->successful()) {
+                $result = $response->json();
+                return [
+                    'success' => true,
+                    'code_url' => $result['code_url'] ?? '',
+                ];
+            }
+            Log::error('微信Native下单失败', ['response' => $response->body()]);
+            return ['success' => false, 'message' => $response->body()];
+        } catch (\Exception $e) {
+            Log::error('微信Native下单异常', ['error' => $e->getMessage()]);
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     /**
      * 构建JSAPI支付参数
      */

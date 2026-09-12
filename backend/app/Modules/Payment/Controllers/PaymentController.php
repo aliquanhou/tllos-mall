@@ -84,7 +84,12 @@ class PaymentController extends BaseController
             'notify_url' => config('app.url') . '/api/v1/payment/notify/' . ($request->pay_type == 1 ? 'wechat' : 'alipay'),
         ];
 
-        $result = $service->unifiedOrder($params);
+        // 微信支付：PC端浏览器走Native扫码，微信内走JSAPI
+        if ($request->pay_type == 1 && !$this->isWechatBrowser()) {
+            $result = $service->nativeOrder($params);
+        } else {
+            $result = $service->unifiedOrder($params);
+        }
 
         if (!$result['success']) {
             return $this->error('支付下单失败: ' . ($result['message'] ?? '未知错误'));
@@ -402,5 +407,14 @@ class PaymentController extends BaseController
             ];
         }
         return $this->success(['list' => $list]);
+    }
+
+    /**
+     * 判断是否微信浏览器
+     */
+    private function isWechatBrowser()
+    {
+        $userAgent = request()->header('User-Agent', '');
+        return (bool) preg_match('/MicroMessenger/i', $userAgent);
     }
 }

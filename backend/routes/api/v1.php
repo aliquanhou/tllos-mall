@@ -19,8 +19,15 @@ Route::prefix('auth')->group(function () {
 
 // 用户端分销
 Route::middleware('auth:sanctum')->prefix('distribution')->group(function () {
+    Route::get('/', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'index']);
     Route::get('/apply-status', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'applyStatus']);
     Route::post('/apply', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'submitApply']);
+    Route::get('/commissions', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'commissions']);
+    Route::get('/team', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'team']);
+    Route::get('/share', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'share']);
+    Route::get('/goods', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'goods']);
+    Route::post('/withdraw', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'withdraw']);
+    Route::get('/withdraws', [\App\Modules\Distribute\Controllers\UserDistributionController::class, 'withdraws']);
 });
 
 
